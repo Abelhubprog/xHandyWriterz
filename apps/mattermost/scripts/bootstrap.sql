@@ -1,0 +1,4 @@
+﻿CREATE USER mmuser WITH PASSWORD 'mmuserpass';
+ALTER ROLE mmuser WITH LOGIN;
+CREATE DATABASE mattermost OWNER mmuser;
+GRANT ALL PRIVILEGES ON DATABASE mattermost TO mmuser;

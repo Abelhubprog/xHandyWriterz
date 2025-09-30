@@ -1,0 +1,21 @@
+name = "mm-auth"
+main = "src/index.ts"
+compatibility_date = "2025-06-17"
+route = ""
+
+[vars]
+CLERK_JWKS_URL = "https://example.clerk.accounts.dev/.well-known/jwks.json"
+CLERK_ISSUER = "https://example.clerk.accounts.dev"
+CLERK_AUDIENCE = "https://handywriterz.app"
+MATTERMOST_BASE_URL = "https://mattermost.local/api"
+MATTERMOST_ADMIN_TOKEN = "changeme"
+MATTERMOST_TEAM_ID = "teamid"
+SESSION_COOKIE_DOMAIN = ".handywriterz.local"
+SESSION_TTL_SECONDS = "86400"
+SESSION_COOKIE_NAME = "MMSESSION"
+
+[env.staging.vars]
+SESSION_COOKIE_DOMAIN = ".staging.handywriterz.dev"
+
+[env.production.vars]
+SESSION_COOKIE_DOMAIN = ".handywriterz.com"

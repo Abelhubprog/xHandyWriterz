@@ -1,0 +1,91 @@
+{
+  "domains": [
+    {
+      "tag": "domain:adult-health",
+      "slug": "adult-health",
+      "label": "Adult Health Nursing",
+      "description": "Clinical practice updates, care plans, and evidence-based research for adult health specialists."
+    },
+    {
+      "tag": "domain:mental-health",
+      "slug": "mental-health",
+      "label": "Mental Health Nursing",
+      "description": "Therapeutic techniques, behavioural health insights, and support resources."
+    },
+    {
+      "tag": "domain:child-nursing",
+      "slug": "child-nursing",
+      "label": "Child Nursing",
+      "description": "Pediatric nursing best practices, growth milestones, and family education."
+    },
+    {
+      "tag": "domain:social-work",
+      "slug": "social-work",
+      "label": "Social Work",
+      "description": "Policy updates, community programmes, and case management toolkits."
+    },
+    {
+      "tag": "domain:technology",
+      "slug": "technology",
+      "label": "Healthcare Technology",
+      "description": "Applied AI workflows, healthcare informatics, and digital transformation guidance."
+    },
+    {
+      "tag": "domain:ai",
+      "slug": "ai",
+      "label": "Artificial Intelligence",
+      "description": "AI applications in healthcare, machine learning models, and intelligent automation solutions."
+    },
+    {
+      "tag": "domain:crypto",
+      "slug": "crypto",
+      "label": "Blockchain & Crypto",
+      "description": "Cryptocurrency applications in healthcare, blockchain security, and decentralized health records."
+    }
+  ],
+  "types": [
+    {
+      "tag": "type:article",
+      "slug": "article",
+      "label": "Article",
+      "description": "Long-form editorial posts and research explainers."
+    },
+    {
+      "tag": "type:news",
+      "slug": "news",
+      "label": "News",
+      "description": "Curated external links with HandyWriterz commentary."
+    },
+    {
+      "tag": "type:video",
+      "slug": "video",
+      "label": "Video",
+      "description": "Hosted or embedded video content and screen recordings."
+    },
+    {
+      "tag": "type:audio",
+      "slug": "audio",
+      "label": "Audio",
+      "description": "Standalone audio clips and narrated explainers."
+    },
+    {
+      "tag": "type:podcast",
+      "slug": "podcast",
+      "label": "Podcast",
+      "description": "Episodic podcast entries distributed to listening apps."
+    },
+    {
+      "tag": "type:image",
+      "slug": "image",
+      "label": "Image",
+      "description": "High-resolution imagery and galleries."
+    },
+    {
+      "tag": "type:code-image",
+      "slug": "code-image",
+      "label": "Code Image",
+      "description": "Annotated code screenshots and visual snippets."
+    }
+  ],
+  "defaultType": "type:article"
+}

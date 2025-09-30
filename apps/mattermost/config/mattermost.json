@@ -1,0 +1,73 @@
+﻿{
+  "ServiceSettings": {
+    "SiteURL": "",
+    "ListenAddress": ":8065",
+    "EnableDeveloper": true,
+    "EnableOAuthServiceProvider": false,
+    "EnableOpenTracing": false,
+    "TrustedProxyIPHeader": ["X-Forwarded-For", "X-Real-IP"],
+    "TLSStrictTransport": false,
+    "EnableTesting": false,
+    "ExperimentalEnableLdapCertificateRefresh": false
+  },
+  "TeamSettings": {
+    "SiteName": "HandyWriterz",
+    "MaxUsersPerTeam": 1000,
+    "EnableUserCreation": true,
+    "EnableOpenServer": false
+  },
+  "SqlSettings": {
+    "DriverName": "postgres",
+    "DataSource": "postgres://${MM_DB_USER}:${MM_DB_PASSWORD}@postgres:5432/${MM_DB_NAME}?sslmode=${MM_DB_SSL_MODE}",
+    "DataSourceReplicas": [],
+    "MaxIdleConns": 10,
+    "MaxOpenConns": 128,
+    "Trace": false
+  },
+  "LogSettings": {
+    "EnableConsole": true,
+    "ConsoleLevel": "INFO",
+    "EnableFile": false
+  },
+  "FileSettings": {
+    "DriverName": "amazons3",
+    "Directory": "./data/",
+    "EnablePublicLink": false,
+    "AmazonS3AccessKeyId": "${MM_R2_ACCESS_KEY_ID}",
+    "AmazonS3SecretAccessKey": "${MM_R2_SECRET_ACCESS_KEY}",
+    "AmazonS3Bucket": "${MM_R2_BUCKET}",
+    "AmazonS3PathPrefix": "${MM_R2_PATH_PREFIX}",
+    "AmazonS3Region": "${MM_R2_REGION}",
+    "AmazonS3Endpoint": "${MM_R2_ENDPOINT}",
+    "AmazonS3SSL": true,
+    "AmazonS3SSE": false,
+    "AmazonS3SignV2": false
+  },
+  "EmailSettings": {
+    "EnableSignUpWithEmail": false,
+    "EnableSignInWithEmail": true,
+    "RequireEmailVerification": false,
+    "SendEmailNotifications": false
+  },
+  "PluginSettings": {
+    "Enable": true,
+    "EnableUploads": true
+  },
+  "ClusterSettings": {
+    "Enable": false
+  },
+  "MetricsSettings": {
+    "Enable": true,
+    "BlockProfileRate": 0
+  },
+  "ExperimentalSettings": {
+    "ClientSideCertEnable": false
+  },
+  "AnalyticsSettings": {
+    "MaxUsersForStatistics": 2500
+  },
+  "ComplianceSettings": {
+    "Enabled": true,
+    "Directory": "./data/compliance"
+  }
+}

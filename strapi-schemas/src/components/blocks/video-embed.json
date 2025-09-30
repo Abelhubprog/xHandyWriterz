@@ -1,0 +1,51 @@
+{
+  "collectionName": "components_blocks_video_embeds",
+  "info": {
+    "displayName": "Video Embed",
+    "description": "Embedded video from external sources or R2 storage"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "videoType": {
+      "type": "enumeration",
+      "enum": ["youtube", "vimeo", "direct", "r2"],
+      "required": true,
+      "default": "youtube"
+    },
+    "embedUrl": {
+      "type": "string",
+      "required": false
+    },
+    "videoFile": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["videos"]
+    },
+    "thumbnail": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "description": {
+      "type": "text"
+    },
+    "autoplay": {
+      "type": "boolean",
+      "default": false
+    },
+    "controls": {
+      "type": "boolean",
+      "default": true
+    },
+    "aspectRatio": {
+      "type": "enumeration",
+      "enum": ["16:9", "4:3", "1:1", "21:9"],
+      "default": "16:9"
+    }
+  }
+}

@@ -1,0 +1,879 @@
+# HandyWriterz Architecture Intel
+
+## Table of contents
+- [TOC-01] 1. Platform overview and guiding principles
+- [TOC-02] 2. Component inventory and file map
+- [TOC-03] 3. Strapi 5 content model and services
+- [TOC-04] 4. Content creation pipeline (editor journey)
+- [TOC-05] 5. Content publishing and delivery pipeline
+- [TOC-06] 6. Front-end consumption surfaces
+- [TOC-07] 7. Admin and role-based operations
+- [TOC-08] 8. Mattermost messaging ecosystem
+- [TOC-09] 9. File sharing and R2 storage pipeline
+- [TOC-10] 10. Security, authentication, and governance
+- [TOC-11] 11. Observability, reliability, and support readiness
+- [TOC-12] 12. Progressive migration roadmap and open actions
+
+## 1. Platform overview and guiding principles
+- [OVERVIEW-01] HandyWriterz operates as a progressive migration from Microfeed toward a Strapi 5 + Mattermost + Cloudflare R2 stack.
+- [OVERVIEW-02] The web SPA under `apps/web` orchestrates both marketing and application experiences using React Router v6.
+- [OVERVIEW-03] Authentication is powered by Clerk, with session wiring centralized in `apps/web/src/providers/ClerkProvider.tsx` and consumed via hooks like `useAuth`.
+- [OVERVIEW-04] Strapi 5 under `apps/strapi` supplies structured CMS capabilities for Services and Articles with GraphQL and REST endpoints.
+- [OVERVIEW-05] Mattermost under `apps/mattermost` supplies resilient messaging with native file attachments and WebSocket delivery.
+- [OVERVIEW-06] Cloudflare R2 acts as unified object storage, with presign management handled by the worker in `workers/upload-broker`.
+- [OVERVIEW-07] The migration strategy retains Microfeed compatibility through `/api/content` and `apps/web/src/types/microfeed.ts` to avoid regressions.
+- [OVERVIEW-08] Marketing surfaces such as Homepage, Pricing, and Domain pages remain accessible prior to authentication.
+- [OVERVIEW-09] Authenticated flows pivot around `/dashboard`, `/dashboard/messages`, `/dashboard/documents`, and `/admin` for different roles.
+- [OVERVIEW-10] Upload pipelines enforce presigned access and antivirus readiness via the upload broker’s HMAC signatures.
+- [OVERVIEW-11] Observability is evolving; current instrumentation logs failures via console warnings while future plan adds structured logging.
+- [OVERVIEW-12] The repo is a pnpm monorepo, with workspace definitions in `pnpm-workspace.yaml` supporting apps and workers.
+- [OVERVIEW-13] Clerk gating ensures unauthorized visitors are redirected, as seen in `DashboardWrapper` and admin components.
+- [OVERVIEW-14] React Query is configured in `apps/web/src/main.tsx` to cache CMS data with staleTime and gcTime defaults.
+- [OVERVIEW-15] The field guide and AGENTS documents communicate the multi-phase migration plan (chat first, files, CMS swap, harden).
+- [OVERVIEW-16] Services pages under `/services` derive from Strapi data but maintain fallback to Microfeed until Strapi parity.
+- [OVERVIEW-17] Mattermost embed is toggled via env `VITE_MATTERMOST_URL`, failing gracefully with UI alerts when unset.
+- [OVERVIEW-18] Upload broker environment enforces separation of secrets: `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`.
+- [OVERVIEW-19] Strapi configuration references Postgres via `config/database.ts` and R2 via `config/plugins.ts`.
+- [OVERVIEW-20] Admin dashboard fetches Strapi data with helper functions in `apps/web/src/lib/cms-client.ts`.
+- [OVERVIEW-21] Service detail rendering uses `RichContentRenderer` for MDX-like blocks, bridging Strapi’s JSON and React components.
+- [OVERVIEW-22] Messaging components rely on `MessageCenter` and embed an iframe for Mattermost until native REST integration is implemented.
+- [OVERVIEW-23] Documents upload page uses `useDocumentSubmission` to coordinate presign, upload, backend notifications, and receipts.
+- [OVERVIEW-24] The worker `workers/subpath-router` continues to orchestrate path routing for Cloudflare Pages deployment.
+- [OVERVIEW-25] The repo maintains thorough documentation in `docs/`, mirrored from top-level architecture guides.
+- [OVERVIEW-26] Role-based UI gating depends on Clerk metadata stored in `user.publicMetadata`, enabling admin/editors segregation.
+- [OVERVIEW-27] Legacy Microfeed assets remain accessible via `public/` and `components/mdx` to maintain continuity.
+- [OVERVIEW-28] Payment flows still exist via `/payment` pages, though not central to Strapi or Mattermost integration.
+- [OVERVIEW-29] Analytics placeholders within the dashboard anticipate future integration with Strapi metrics and external telemetry.
+- [OVERVIEW-30] Environmental logging occurs via `logEnvironmentStatus()` to verify required variables at runtime.
+- [OVERVIEW-31] Multi-tenancy stands ready via domain-based navigation and Strapi domain fields.
+- [OVERVIEW-32] Service links in `RootLayout` align marketing navigation with Strapi-managed service categories.
+- [OVERVIEW-33] Upload history and retrieval depends on R2 keys shaped as `users/<userId>/timestamp-filename` for deterministic lookup.
+- [OVERVIEW-34] Worker-based presign ensures downloads require short-lived URLs, gating access until antivirus results mark objects clean.
+- [OVERVIEW-35] `docs/dataflow.md` elaborates on flows while this intel document deep dives into feature-by-feature mapping.
+- [OVERVIEW-36] TypeScript configuration across `apps/web` uses `tsconfig.app.json` for Vite, ensuring path aliases align with `@/` prefix.
+- [OVERVIEW-37] Styling leverages Tailwind (configured via `tailwind.config.cjs`) and custom CSS for marketing visuals.
+- [OVERVIEW-38] Animations on Homepage rely on `framer-motion`, providing responsive marketing hero experiences.
+- [OVERVIEW-39] Services list uses dynamic BY domain filtering and React state to personalize experiences per domain.
+- [OVERVIEW-40] Clerk’s `SignedIn` and `SignedOut` components differentiate navigation CTA states in the navbar.
+- [OVERVIEW-41] Admin analytics page includes placeholders for view, like, comment counts aggregated from Strapi.
+- [OVERVIEW-42] Microfeed API integration continues via `apps/web/src/lib/api.ts`, aligning with fallback strategy.
+- [OVERVIEW-43] Upload broker’s HMAC uses AWS Signature Version 4 compatibility for R2’s S3 API.
+- [OVERVIEW-44] Zones and worker binding ensure Cloudflare deployment handles path routing and API proxy.
+- [OVERVIEW-45] Editor preview tokens will leverage Strapi’s preview mode for drafts before publication.
+- [OVERVIEW-46] `Apps/mattermost/docker-compose.yml` seeds a local environment with Postgres and Mattermost server for development.
+- [OVERVIEW-47] Admin dashboard provides quick actions to create content, manage users, and review analytics.
+- [OVERVIEW-48] Document submission uses `fetch` requests to backend API endpoints `/api/uploads` and `/api/turnitin/*` for notifications.
+- [OVERVIEW-49] Messaging page ensures minimal friction by simply embedding Mattermost until deeper integration is ready.
+- [OVERVIEW-50] Courses of action for future upgrades involve hooking analytics, adding observability, and finalizing Microfeed retirement.
+- [OVERVIEW-51] Content editors utilize Strapi’s admin UI to manage Services and Articles with relational metadata.
+- [OVERVIEW-52] The SPA uses `Suspense` and lazy imports to reduce initial bundle size.
+- [OVERVIEW-53] Error boundaries in `ErrorBoundary` component capture runtime faults and display fallback UI.
+- [OVERVIEW-54] Clerk’s `routerPush` integration ensures programmatic navigation remains consistent within the SPA router.
+- [OVERVIEW-55] Home hero call-to-actions connect the marketing funnel to services explore and Turnitin tools.
+- [OVERVIEW-56] Domain pages (`/d/:domain`) display curated content via Strapi filtered queries when available.
+- [OVERVIEW-57] Legacy content accessible through `LearningHub` page ensures Microfeed-based experiences remain reachable.
+- [OVERVIEW-58] Admin login page persists for enterprise flows though Clerk handles mainstream authentication.
+- [OVERVIEW-59] Payment result pages remain for Stripe or other payment integrations, unaffected by CMS migration.
+- [OVERVIEW-60] Document upload history currently session-scoped; future plan to persist metadata via backend API.
+- [OVERVIEW-61] React Query’s default settings reduce redundant fetches when navigating between domain pages.
+- [OVERVIEW-62] `servicesRef` and `heroRef` in Homepage handle smooth scrolling to services grid.
+- [OVERVIEW-63] Service cards use dynamic gradient backgrounds to differentiate categories visually.
+- [OVERVIEW-64] Stakeholders include editors, admins, support agents, and end customers interacting via chat.
+- [OVERVIEW-65] Each persona relies on Clerk authentication to map roles and access levels consistently.
+- [OVERVIEW-66] Rate limiting to be added to workers ensures upload and presign endpoints resist abuse.
+- [OVERVIEW-67] Antivirus scanning pipeline ensures object metadata is tagged `x-scan=clean` before download.
+- [OVERVIEW-68] `docs/context.md` and `.github/copilot-instructions.md` instruct future contributors on migration nuance.
+- [OVERVIEW-69] The architecture ensures minimal downtime by layering new services alongside existing ones.
+- [OVERVIEW-70] This document catalogs end-to-end interactions to shorten onboarding time for engineers and operators.
+
+## 2. Component inventory and file map
+- [COMP-01] Strapi service root resides in `apps/strapi` with TypeScript support via `tsconfig.json`.
+- [COMP-02] Strapi entry point `apps/strapi/src/index.ts` initializes the server.
+- [COMP-03] Strapi content type definitions for Articles and Services exist under `apps/strapi/src/api/article` and `apps/strapi/src/api/service`.
+- [COMP-04] Strapi component definitions (e.g., SEO component) live under `apps/strapi/src/components/seo`.
+- [COMP-05] Strapi database configuration at `apps/strapi/config/database.ts` references Postgres env keys.
+- [COMP-06] Strapi plugin configuration `apps/strapi/config/plugins.ts` sets up AWS S3 provider pointing to R2.
+- [COMP-07] Strapi middleware configuration in `apps/strapi/config/middlewares.ts` governs request pipelines.
+- [COMP-08] Strapi server configuration `apps/strapi/config/server.ts` defines host, port, and admin settings.
+- [COMP-09] Strapi admin settings `apps/strapi/config/admin.ts` adjust UI branding and auth.
+- [COMP-10] Strapi package dependencies enumerated in `apps/strapi/package.json` include `@strapi/strapi` and S3 provider.
+- [COMP-11] Mattermost configuration folder `apps/mattermost/config` holds `mattermost.json` with S3 and auth settings.
+- [COMP-12] Mattermost Docker Compose `apps/mattermost/docker-compose.yml` orchestrates Mattermost, Postgres, and licensing toggles.
+- [COMP-13] Mattermost bootstrap SQL scripts under `apps/mattermost/scripts/bootstrap.sql` prepare initial data.
+- [COMP-14] Web SPA root `apps/web` contains Vite configuration for the front-end app.
+- [COMP-15] Web SPA entry `apps/web/src/main.tsx` sets up providers (Clerk, React Query, Helmet, Theme, Web3).
+- [COMP-16] Router definitions `apps/web/src/router.tsx` detail navigation structure for marketing, dashboard, admin, and legacy routes.
+- [COMP-17] Homepage component `apps/web/src/pages/Homepage.tsx` implements marketing hero and call-to-actions.
+- [COMP-18] Domain pages under `apps/web/src/pages/domains` present specialized content experiences.
+- [COMP-19] Services page `apps/web/src/pages/services/ServicesPage.tsx` fetches from Strapi via helper functions.
+- [COMP-20] Admin dashboard page `apps/web/src/pages/admin/AdminDashboard.tsx` drives management interface.
+- [COMP-21] Message center component `apps/web/src/components/Messaging/MessageCenter.tsx` manages Mattermost embed.
+- [COMP-22] Dashboard wrapper `apps/web/src/components/Dashboard/DashboardWrapper.tsx` enforces auth gating.
+- [COMP-23] Document upload page `apps/web/src/pages/dashboard/DocumentsUpload.tsx` handles R2 interactions.
+- [COMP-24] Document submission hook `apps/web/src/hooks/useDocumentSubmission.ts` abstracts presign logic.
+- [COMP-25] CMS helper `apps/web/src/lib/cms.ts` fetches service lists and details with Strapi REST endpoints.
+- [COMP-26] CMS GraphQL client `apps/web/src/lib/cms-client.ts` interfaces with Strapi GraphQL for admin analytics.
+- [COMP-27] Microfeed API wrapper `apps/web/src/lib/api.ts` supports legacy endpoints.
+- [COMP-28] Clerk auth hook `apps/web/src/hooks/useAuth.ts` exposes role metadata.
+- [COMP-29] Layout components `apps/web/src/components/layouts/RootLayout.tsx` and `DashboardLayout.tsx` define shell structure.
+- [COMP-30] Navbar component `apps/web/src/components/layouts/Navbar.tsx` integrates Clerk state into navigation.
+- [COMP-31] Footer component path `apps/web/src/components/layouts/Footer.tsx` finalizes marketing layout (existing file implied by import).
+- [COMP-32] UI components under `apps/web/src/components/ui` supply design system wrappers (Button, Card, Alert).
+- [COMP-33] Messaging-specific components under `apps/web/src/components/Messaging` extend chat experiences.
+- [COMP-34] MDX rendering components `apps/web/src/components/mdx` render Microfeed content blocks.
+- [COMP-35] Services-specific components `apps/web/src/components/Services` interpret Strapi structures.
+- [COMP-36] Payment components under `apps/web/src/components/Payments` keep commerce features intact.
+- [COMP-37] Theme provider `apps/web/src/theme/ThemeContext.tsx` toggles dark/light experiences.
+- [COMP-38] Providers folder includes Web3 provider `apps/web/src/providers/Web3Provider.tsx` for blockchain features.
+- [COMP-39] Hook `apps/web/src/hooks/useUploadsHistory.ts` (implied by folder) would manage upload data retrieval.
+- [COMP-40] Upload dropzone component `apps/web/src/components/UploadDropzone.tsx` handles marketing-level uploads.
+- [COMP-41] Worker `workers/upload-broker/src/index.ts` implements S3 compatible signature flows.
+- [COMP-42] Worker configuration `workers/upload-broker/wrangler.toml` binds environment variables and routes.
+- [COMP-43] Worker `workers/subpath-router/src/index.ts` orchestrates path-based routing for Cloudflare deployments.
+- [COMP-44] Worker config `workers/subpath-router/wrangler.toml` declares environment binding and triggers.
+- [COMP-45] Documentation folder `docs/` hosts architecture guides, context, and plan documents.
+- [COMP-46] Top-level `AGENTS.md` and `docs/AGENTS.md` synchronize high-level migration strategy.
+- [COMP-47] `.github/copilot-instructions.md` instructs AI assistants on repository conventions.
+- [COMP-48] `docs/dataflow.md` previously updated to include personas, flows, and fallback strategies.
+- [COMP-49] `docs/context.md` provides condensed architecture snapshot.
+- [COMP-50] `config/taxonomy.ts` and `config/taxonomy.json` define service domain taxonomy for UI mapping.
+- [COMP-51] `apps/web/functions/sitemap.xml.ts` generates dynamic sitemap for SEO.
+- [COMP-52] `apps/web/public/robots.txt` enumerates crawler rules.
+- [COMP-53] `apps/web/src/env.ts` defines Zod schema for environment variables consumed by the SPA.
+- [COMP-54] `apps/web/src/env.d.ts` ensures TypeScript knows about Vite env variables.
+- [COMP-55] `apps/web/vite.config.ts` configures aliasing and plugin usage.
+- [COMP-56] `apps/web/postcss.config.cjs` and `tailwind.config.cjs` configure CSS processing.
+- [COMP-57] `apps/web/src/polyfills.ts` ensures necessary browser polyfills load before main app.
+- [COMP-58] `apps/web/src/styles.css` includes global CSS beyond Tailwind.
+- [COMP-59] `apps/web/src/index.css` brings Tailwind base styles.
+- [COMP-60] `apps/web/src/types/cms.ts` (implied) defines TypeScript models for Strapi data shapes.
+- [COMP-61] `apps/web/src/types/microfeed.ts` retains Microfeed data contracts for fallback flows.
+- [COMP-62] `apps/web/src/components/Services/ServicePageRenderer.tsx` (referenced) handles service block rendering; if missing, the existing `RichContentRenderer` serves this role.
+- [COMP-63] `apps/web/src/components/MDXRenderer.tsx` renders Microfeed content with MDX.
+- [COMP-64] `apps/web/src/components/Services/ServicesHub.tsx` surfaces service cards across the site.
+- [COMP-65] `apps/web/src/components/common/ErrorBoundary.tsx` catches runtime errors in React tree.
+- [COMP-66] `apps/web/src/components/ui/toaster.tsx` manages toast notifications (imported in layouts).
+- [COMP-67] `apps/web/src/components/HandyWriterzLogo.tsx` is reused across navigation surfaces.
+- [COMP-68] `apps/web/src/components/Dashboard/SubscriptionStatus.tsx` informs users about subscription details.
+- [COMP-69] `apps/web/src/pages/dashboard/Messages.tsx` wraps Mattermost embed in error boundary.
+- [COMP-70] `apps/web/src/pages/payment/` folder hosts payment confirmation pages, maintaining the ecommerce flow.
+
+## 3. Strapi 5 content model and services
+- [STRAPI-01] Strapi’s primary collection types include `service` and `article`, each with slug, title, body, and metadata fields.
+- [STRAPI-02] `apps/strapi/src/api/service` houses service schema with fields aligning to Services page requirements.
+- [STRAPI-03] `apps/strapi/src/api/article` defines article schema supporting blog-style content.
+- [STRAPI-04] Service schema includes `title`, `slug`, `summary`, `body`, `domain`, `typeTags`, `heroImage`, and `seo` component.
+- [STRAPI-05] Article schema includes `title`, `slug`, `body`, `author`, `category`, `images`, and `publishedAt` metadata.
+- [STRAPI-06] Strapi uses components like `seo` stored under `apps/strapi/src/components/seo` for consistent SEO metadata.
+- [STRAPI-07] Upload plugin configured to use AWS S3 provider points to Cloudflare R2 via `forcePathStyle`.
+- [STRAPI-08] `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT`, `R2_REGION`, `R2_BUCKET_MEDIA` env vars enable Strapi uploads to R2.
+- [STRAPI-09] Strapi GraphQL plugin is implied by usage in `cms-client.ts`, enabling complex admin queries.
+- [STRAPI-10] `cms-client.ts` uses GraphQL queries to fetch articles with filters, pagination, and nested components.
+- [STRAPI-11] GraphQL query `GetArticles` fetches hero image, author details, SEO metadata, and engagement stats.
+- [STRAPI-12] GraphQL query `GetArticle` fetches slug, status, hero image, gallery, attachments, contributors, SEO, and metrics.
+- [STRAPI-13] GraphQL query `GetServices` returns hero block with CTA, sections, SEO metadata.
+- [STRAPI-14] GraphQL queries support `status` filter enabling preview/draft functionality.
+- [STRAPI-15] `cms-client.ts` includes mutations for creating, updating, publishing, and deleting articles.
+- [STRAPI-16] GraphQL mutation `CreateArticle` accepts data input with JSON content blocks.
+- [STRAPI-17] GraphQL mutation `UpdateArticle` allows partial updates and slug modifications.
+- [STRAPI-18] GraphQL mutation `publishArticle` (via update) sets `status` to `published` and updates `publishedAt`.
+- [STRAPI-19] GraphQL mutation `DeleteArticle` removes article by ID.
+- [STRAPI-20] Services fetch uses filter by `domain` for domain-specific pages.
+- [STRAPI-21] `fetchServicesList` in `cms.ts` hits `/api/services` with query parameters for pagination, filters, and population.
+- [STRAPI-22] `fetchServicesList` maps hero images to absolute URLs via `resolveMediaUrl`.
+- [STRAPI-23] `fetchServiceBySlug` fetches a single service with hero image, attachments, and SEO metadata.
+- [STRAPI-24] `mapServiceEntry` and `mapServiceDetail` convert Strapi REST responses into typed objects.
+- [STRAPI-25] `estimateReadingTime` calculates reading minutes from body content to populate UI badges.
+- [STRAPI-26] Strapi preview tokens will be stored per service for authenticated preview flows.
+- [STRAPI-27] Strapi admin roles to be mapped to Clerk metadata for SSO; currently local Strapi admin login used.
+- [STRAPI-28] `apps/strapi/src/api/service/content-types/service/schema.json` (implied) defines the service content type.
+- [STRAPI-29] `apps/strapi/src/api/article/content-types/article/schema.json` (implied) defines article content type.
+- [STRAPI-30] `apps/strapi/src/api/service/controllers/service.ts` (implied) handles REST operations, extends default controller.
+- [STRAPI-31] `apps/strapi/src/api/service/routes/service.ts` (implied) registers API routes.
+- [STRAPI-32] `apps/strapi/src/api/article/controllers/article.ts` (implied) handles article-specific logic.
+- [STRAPI-33] `apps/strapi/src/api/article/routes/article.ts` (implied) registers article endpoints.
+- [STRAPI-34] `apps/strapi/config/database.ts` uses `env('DATABASE_URL')` for Postgres connection string.
+- [STRAPI-35] Local development can use SQLite fallback if Postgres env absent (standard Strapi behavior, though not explicitly shown).
+- [STRAPI-36] `apps/strapi/config/server.ts` sets host `0.0.0.0` and port reading from env for container compatibility.
+- [STRAPI-37] `apps/strapi/config/middlewares.ts` includes default Strapi middlewares plus `strapi::security`.
+- [STRAPI-38] `apps/strapi/config/admin.ts` configures auto-open admin UI and API token expiration.
+- [STRAPI-39] Strapi store will track upload metadata linking objects to content entries.
+- [STRAPI-40] Strapi’s `upload_files` table records R2 object keys for attachments used across services and articles.
+- [STRAPI-41] Content localization optional via Strapi i18n plugin; to be enabled per roadmap.
+- [STRAPI-42] Strapi webhooks can notify the web SPA to trigger cache invalidation via Cloudflare.
+- [STRAPI-43] Strapi `populate` query parameter ensures relationships (heroImage, SEO) are included.
+- [STRAPI-44] Strapi `publicationState` query parameter toggles between live and preview content.
+- [STRAPI-45] Strapi admin UI accessible at `/admin` with Clerk OIDC integration planned.
+- [STRAPI-46] Strapi code generation ensures type safety for REST endpoints using default Strapi types.
+- [STRAPI-47] Strapi plugin configuration includes aggregator for custom providers if needed (e.g., image optimization).
+- [STRAPI-48] Strapi Cron tasks (if enabled) could trigger scheduled publish; not yet configured.
+- [STRAPI-49] Strapi lifecycle hooks can be added in `services` to sync data into Mattermost if needed.
+- [STRAPI-50] Strapi supports GraphQL introspection used by `graphql-request` in `cms-client.ts`.
+- [STRAPI-51] Auth tokens for Strapi API stored in env `VITE_CMS_TOKEN` to protect content editing operations.
+- [STRAPI-52] Strapi `extensions` folder can hold custom API logic; not currently used but available.
+- [STRAPI-53] Strapi `./scripts` folder can host seeding scripts; placeholder exists for future bootstrap tasks.
+- [STRAPI-54] Strapi environment `config/env` directories can override defaults per environment; currently relying on root configs.
+- [STRAPI-55] Strapi `./config/plugins.ts` also the place to toggle GraphQL, i18n, and email providers.
+- [STRAPI-56] Strapi `./config/server.ts` ensures admin panel only accessible with correct host/port configuration.
+- [STRAPI-57] Strapi CLI commands `pnpm --filter strapi develop` (implied) start local server for content editing.
+- [STRAPI-58] Strapi supports Draft & Publish workflow, enabling editorial review before content goes live.
+- [STRAPI-59] Content model continues to map type tags (e.g., `typeTags`) to UI filters and page sections.
+- [STRAPI-60] Strapi hero block images stored under `cms-media` prefix within R2 for easier CDN caching.
+- [STRAPI-61] Service attachments processed to detect file types and appropriate UI renderers.
+- [STRAPI-62] Article author relationships fetch first and last names used in admin analytics.
+- [STRAPI-63] `cms-client.ts` plan includes analytics data like viewCount, likeCount to feed dashboard metrics.
+- [STRAPI-64] Strapi environment to integrate with Postgres DB `CMS_DB_URL` (per docs `PLAN_FORWARD`).
+- [STRAPI-65] Strapi preview tokens integrated into front-end preview route `apps/web/src/pages/admin/ArticleEditor.tsx` (implied).
+- [STRAPI-66] Strapi aggregator ensures content from multiple domains accessible via domain field filtering.
+- [STRAPI-67] Strapi `filters` query parameters used extensively to refine queries by slug, domain, status.
+- [STRAPI-68] Strapi `pagination` arguments maintain consistent page sizes for UI infinite scroll.
+- [STRAPI-69] Strapi `sort` parameter ensures newest published content appears first on the web.
+- [STRAPI-70] Strapi multi-stage pipeline ensures content is authoritative source for services and articles in the new architecture.
+
+## 4. Content creation pipeline (editor journey)
+- [CREATION-01] Editor authenticates with Clerk via Strapi admin (future) or local Strapi credentials (current interim).
+- [CREATION-02] Editor navigates to Strapi admin interface `/admin` to create or update content.
+- [CREATION-03] Editor selects collection type `Service` for service pages mapping to `/services` routes.
+- [CREATION-04] Editor populates `title`, `slug`, `summary`, `body`, `domain`, and `typeTags` fields.
+- [CREATION-05] Editor uploads hero images via Strapi upload plugin, storing assets in R2 bucket `cms-media`.
+- [CREATION-06] Upload plugin uses `R2_ENDPOINT`, `R2_REGION`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` for authentication.
+- [CREATION-07] Editor attaches additional media (images, PDFs, videos) to service entries via Strapi association.
+- [CREATION-08] Editor configures SEO component (title, description, OpenGraph image) for search optimization.
+- [CREATION-09] Editor optionally sets `publishedAt` to schedule release or publishes immediately.
+- [CREATION-10] Editor saves entry, storing data in Postgres and linking media entries to attachments.
+- [CREATION-11] Strapi auto generates preview token unique per entry; front-end uses the token for preview mode.
+- [CREATION-12] Editor triggers preview by hitting front-end `/preview` route with token parameters.
+- [CREATION-13] Front-end uses `fetchServiceBySlug` with `publicationState=preview` to fetch draft content.
+- [CREATION-14] React Query caches preview response separately from live data for isolation.
+- [CREATION-15] Editor iterates on content until satisfied with preview appearance in SPA.
+- [CREATION-16] Editor publishes entry by toggling Strapi `Publish` action, setting `status` to `published`.
+- [CREATION-17] Strapi sets `publishedAt` timestamp, enabling live queries to include the entry.
+- [CREATION-18] Strapi may trigger webhook (future) to notify Cloudflare worker to purge caches.
+- [CREATION-19] Front-end `ServicesPage` automatically includes the new entry on next data fetch or React Query cache invalidation.
+- [CREATION-20] Domain page `EnterpriseDomainPage` (if referencing Strapi) pulls domain-specific entries.
+- [CREATION-21] Editor repeats process for Articles, populating blog-like content surfaces.
+- [CREATION-22] Article creation involves rich text content stored as JSON string in Strapi.
+- [CREATION-23] Editor adds hero gallery images and attachments for articles for deeper storytelling.
+- [CREATION-24] Editor saves drafts, enabling review by other roles before publication.
+- [CREATION-25] Editor uses Strapi roles to limit editing scope (e.g., Service editors vs Article editors).
+- [CREATION-26] Editor may include tags aligning to taxonomy defined in `config/taxonomy.ts` for consistent filtering.
+- [CREATION-27] Admin dashboard uses `fetchArticles` to review newly created drafts.
+- [CREATION-28] `fetchArticles` query in `cms-client.ts` supports `status` filter to separate drafts from published content.
+- [CREATION-29] Admin sees aggregated stats like total drafts, published articles for oversight.
+- [CREATION-30] Editor ensures attachments align with file size limits per Strapi and R2 capabilities.
+- [CREATION-31] Editor updates existing entries via Strapi, triggering React Query stale data handling.
+- [CREATION-32] Editor uses Strapi's built-in revision history to track changes (once plugin enabled).
+- [CREATION-33] Editor ensures hero images meet Web optimization standards to maintain site performance.
+- [CREATION-34] Editor sets `domain` field to map to `serviceLinks` navigation.
+- [CREATION-35] Editor ensures `slug` uniqueness to avoid collisions on `/services/:domain/:slug` routes.
+- [CREATION-36] Editor adds `typeTags` to enable filtering by service type on front-end.
+- [CREATION-37] Editor coordinates with admin to align newly created content with marketing campaigns.
+- [CREATION-38] Editor uses Strapi `draft` stage to collaborate with copywriters and legal before publishing.
+- [CREATION-39] Editor attaches videos hosted via R2 or external streaming provider, depending on requirement.
+- [CREATION-40] Editor ensures SEO metadata is complete to maintain search ranking.
+- [CREATION-41] Editor uses Strapi analytics (future) to review article performance and adjust content strategy.
+- [CREATION-42] Editor leverages Strapi role-based permissions to restrict editing to assigned collections.
+- [CREATION-43] Editor includes quick links or CTAs within body content to connect to messaging or file sharing.
+- [CREATION-44] Editor ensures `body` content does not rely on Microfeed-specific formatting by converting to Strapi components.
+- [CREATION-45] Editor coordinates attachments naming convention to align with R2 object keys for easier troubleshooting.
+- [CREATION-46] Editor uses Strapi guidelines documented in `docs/planbig.md` (implied) for content structure.
+- [CREATION-47] Editor runs QA on staging environment by verifying front-end displays using `pnpm --filter web dev`.
+- [CREATION-48] Editor requests admin to review content via admin dashboard quick actions.
+- [CREATION-49] Editor ensures content matches persona expectations (e.g., nursing programs, AI topics).
+- [CREATION-50] Editor uses preview link to share with stakeholders without making content live.
+- [CREATION-51] Editor attaches alt text to hero images for accessibility compliance.
+- [CREATION-52] Editor ensures attachments like policy PDFs stored in R2 accessible via presigned download.
+- [CREATION-53] Editor confirms `publishedAt` timezone aligns with marketing schedule.
+- [CREATION-54] Editor coordinates translation needs if i18n is enabled in future phases.
+- [CREATION-55] Editor cross-checks Microfeed fallback to ensure new content replaced old JSON equivalents.
+- [CREATION-56] Editor ensures domain-specific CTAs reference correct service slug.
+- [CREATION-57] Editor uses Strapi `components` to maintain consistent layout across entries.
+- [CREATION-58] Editor tracks attachments in Strapi library to reuse across services.
+- [CREATION-59] Editor leverages Strapi drafts to prepare campaigns ahead of events.
+- [CREATION-60] Editor coordinates with admin on content moderation guidelines documented in `docs/dashboardredesigntodo.md` (implied).
+- [CREATION-61] Editor ensures content metadata includes `typeTags` consistent with front-end filters.
+- [CREATION-62] Editor adds relevant hero videos referencing R2 object keys output by Strapi upload plugin.
+- [CREATION-63] Editor uses Strapi's WYSIWYG editor for body content with formatting preserved in React components.
+- [CREATION-64] Editor maintains canonical URLs for SEO to avoid duplicates during migration.
+- [CREATION-65] Editor ensures attachments align with compliance requirements (e.g., sanitized data).
+- [CREATION-66] Editor communicates with support team via Mattermost channels when launching new content.
+- [CREATION-67] Editor reviews preview on mobile and desktop to ensure responsive design.
+- [CREATION-68] Editor ensures `domain` field matches navigation slug to avoid 404s.
+- [CREATION-69] Editor coordinates with developer to create new components if content requires custom layout.
+- [CREATION-70] Editor logs content readiness in deployment checklist tracked in docs.
+
+## 5. Content publishing and delivery pipeline
+- [PUBLISH-01] Once content is published in Strapi, it becomes available through REST `/api/services` or `/api/articles` endpoints.
+- [PUBLISH-02] React Query caches live data for 5 minutes, ensuring efficient page transitions.
+- [PUBLISH-03] `ServicesPage` call to `fetchServicesList` retrieves a list with hero image URLs resolved.
+- [PUBLISH-04] List data populates service cards across marketing surfaces with `RichContentRenderer` for body sections.
+- [PUBLISH-05] `ServicesPage` handles both list view and detail view depending on route params.
+- [PUBLISH-06] When detail slug provided, `fetchServiceBySlug` fetches specific entry to display full content.
+- [PUBLISH-07] Detail page uses attachments to render download links or embedded multimedia.
+- [PUBLISH-08] If Strapi returns `null` (content missing), fallback to Microfeed occurs by hitting `/api/content` via `lib/api.ts`.
+- [PUBLISH-09] `ServicesPage` sets `detailError` when service missing, informing user gracefully.
+- [PUBLISH-10] `ServicesPage` displays skeleton components while loading to maintain UI responsiveness.
+- [PUBLISH-11] `RichContentRenderer` interprets Strapi JSON body into React components (text, headings, media).
+- [PUBLISH-12] Domain-specific metadata (title, summary) displayed above hero image for context.
+- [PUBLISH-13] Publication time displayed using `format` and `formatDistanceToNow` functions.
+- [PUBLISH-14] React Router ensures SEO-friendly URLs with `:domain` and `:slug` parameters.
+- [PUBLISH-15] Domain landing pages use Strapi data to create curated domain experiences.
+- [PUBLISH-16] `serviceLinks` in `RootLayout` ensures navigation stays consistent with Strapi-managed domain list.
+- [PUBLISH-17] `EnterpriseDomainPage` (React component) uses Strapi data to power enterprise-specific landing pages.
+- [PUBLISH-18] Marketing pages like `/about`, `/pricing` remain statically authored but can embed Strapi components.
+- [PUBLISH-19] `LearningHub` page continues to redirect to Microfeed until Strapi-based content ready.
+- [PUBLISH-20] `Apps/web/src/hooks/useDocumentSubmission.ts` integrates with Strapi or backend to tag uploads.
+- [PUBLISH-21] `Apps/web/src/components/MDXRenderer.tsx` ensures legacy content still renders with MDX pipeline.
+- [PUBLISH-22] React Query invalidates caches when mutated data requires fresh fetch, as seen in `useDocumentSubmission` (future integration).
+- [PUBLISH-23] React Query configuration disables refetch on window focus to avoid unnecessary load on Strapi.
+- [PUBLISH-24] Fetch functions include `cache: 'no-store'` to avoid stale HTTP caching while React Query handles memoization.
+- [PUBLISH-25] `resolveMediaUrl` ensures relative URLs from Strapi convert to absolute endpoints using `CMS_URL`.
+- [PUBLISH-26] `mapServiceDetail` transforms attachments into structured arrays for UI iteration.
+- [PUBLISH-27] Attachment MIME types determine UI rendering (image, video, audio, PDF, default link).
+- [PUBLISH-28] React components ensure accessible alt text and captions for media attachments.
+- [PUBLISH-29] `Products` or `services` listing includes read time badges derived from body word count.
+- [PUBLISH-30] Error boundaries capture fetch errors and render fallback messaging.
+- [PUBLISH-31] `Toaster` displays success/error messages for user interactions.
+- [PUBLISH-32] Domain-specific pages also highlight related services by filtering `typeTags`.
+- [PUBLISH-33] `ServicesPage` uses `useEffect` to refetch data when domain param changes.
+- [PUBLISH-34] `ServicesPage` uses `useMemo` to compute derived data like normalized tags.
+- [PUBLISH-35] `ServicesPage` features `ListSkeleton` and `DetailSkeleton` components for progressive loading.
+- [PUBLISH-36] `Dashboard` component surfaces highlight cards for user’s recent orders or service interactions.
+- [PUBLISH-37] `Dashboard` integrates service data into user experience by referencing Strapi-derived info.
+- [PUBLISH-38] Admin dashboard fetches article metrics for publication oversight.
+- [PUBLISH-39] Admin quick actions link to content creation, leveraging Strapi endpoints.
+- [PUBLISH-40] `ArticleEditor` (implied) uses Strapi API to load and update article drafts.
+- [PUBLISH-41] Web SPA uses `HelmetProvider` to update document head with Strapi-provided SEO metadata.
+- [PUBLISH-42] `apps/web/functions/sitemap.xml.ts` enumerates Strapi-managed routes for search engines.
+- [PUBLISH-43] `robots.txt` ensures published pages accessible to crawlers.
+- [PUBLISH-44] `sitemap.xml.ts` uses fetch to Strapi to build dynamic sitemap (future extension).
+- [PUBLISH-45] Content flows from Strapi to SPA to end user with fallback to Microfeed to ensure zero downtime.
+- [PUBLISH-46] Admin updates to services propagate to SPA after React Query TTL expires or manual refresh.
+- [PUBLISH-47] Cloudflare CDN caches static assets; Strapi data fetched at runtime to ensure latest content.
+- [PUBLISH-48] Potential `surrogate keys` using Strapi webhooks will enable targeted cache invalidation.
+- [PUBLISH-49] Services page includes `Link` components to encourage cross-navigation within domain.
+- [PUBLISH-50] Service detail includes metadata for shareable links, including call to action for messaging.
+- [PUBLISH-51] Front-end ensures accessible semantics (headings, paragraphs) to maintain UX quality.
+- [PUBLISH-52] `Docs/dataflow.md` outlines fallback scenario for Strapi 404 to Microfeed proxy.
+- [PUBLISH-53] `cms.ts` logging warns if Strapi request fails, aiding debugging.
+- [PUBLISH-54] `cms-client.ts` contains warnings to catch GraphQL errors and surface to admin UI.
+- [PUBLISH-55] Strapi-to-web handshake uses env `VITE_CMS_URL` and `VITE_CMS_TOKEN` for secure data fetch.
+- [PUBLISH-56] `env.ts` ensures required env variables validated at runtime with Zod.
+- [PUBLISH-57] `logEnvironmentStatus` outputs to console verifying environment readiness.
+- [PUBLISH-58] Service attachments include `sizeInBytes` for UI display and download management.
+- [PUBLISH-59] Front-end uses `sanitization` helpers in `lib/sanitize.ts` (implied) to clean content if necessary.
+- [PUBLISH-60] React components gracefully degrade when Strapi features not configured, e.g., fallback message.
+- [PUBLISH-61] Homepage `services` array may eventually migrate to Strapi-driven content for dynamic marketing sections.
+- [PUBLISH-62] Domain navigation ensures service data surfaces across marketing and dashboard experiences.
+- [PUBLISH-63] `Support` page may integrate Strapi-managed FAQs in future iterations.
+- [PUBLISH-64] `FAQ` page can fetch Strapi content type dedicated to frequently asked questions.
+- [PUBLISH-65] `Contact` page can submit forms to Strapi or worker for pipeline to support team.
+- [PUBLISH-66] Content pipeline ensures consistent storytelling across marketing, dashboard, and admin surfaces.
+- [PUBLISH-67] `ServicesPage` gracefully handles network errors by displaying message toast and fallback UI.
+- [PUBLISH-68] Admin dashboard’s view of article metrics ensures continuous improvement of published content.
+- [PUBLISH-69] API tokens for Strapi must be managed securely; front-end uses read-only tokens for public queries.
+- [PUBLISH-70] Content pipeline ensures unstoppable workflows by aligning Strapi, web SPA, and fallback systems.
+
+## 6. Front-end consumption surfaces
+- [FRONTEND-01] Homepage `Homepage.tsx` orchestrates hero, features, services, testimonials, and call-to-action sections.
+- [FRONTEND-02] Homepage uses `useAuth` to route authenticated users to `/dashboard` when clicking primary CTAs.
+- [FRONTEND-03] Homepage `services` array currently static but aligned with domain slugs; future data to be Strapi-driven.
+- [FRONTEND-04] Homepage uses `framer-motion` for animations and dynamic features display.
+- [FRONTEND-05] Navbar `Navbar.tsx` displays Sign In/Sign Up buttons for signed-out visitors using Clerk components.
+- [FRONTEND-06] Navbar reveals Dashboard link for signed-in users and user menu via `UserButton`.
+- [FRONTEND-07] Navbar includes service dropdown mapping to Strapi domains for quick navigation.
+- [FRONTEND-08] Footer component closes layout with contact and legal links (implied file `Footer.tsx`).
+- [FRONTEND-09] Router `router.tsx` defines marketing pages, dashboard routes, admin sections, and legacy learning hub.
+- [FRONTEND-10] React router uses lazy loading to improve initial load times for marketing pages.
+- [FRONTEND-11] `RootLayout` wraps marketing pages with Navbar and Footer to maintain brand consistency.
+- [FRONTEND-12] `DashboardLayout` provides an app shell for authed experiences, hosting nested routes.
+- [FRONTEND-13] `DashboardWrapper` ensures only signed-in users see dashboard, otherwise redirect to sign-in.
+- [FRONTEND-14] `Dashboard` component inside `components/Dashboard/Dashboard.tsx` renders multiple tabs and sections.
+- [FRONTEND-15] Dashboard includes order tracking, messaging, file management, pricing calculators, and support links.
+- [FRONTEND-16] Dashboard uses `SubscriptionStatus` to inform users of plan status.
+- [FRONTEND-17] Dashboard includes quick actions for contacting support (Skype, WhatsApp) using `window.open`.
+- [FRONTEND-18] Dashboard includes file upload forms integrated with `useDocumentSubmission` for R2 storage.
+- [FRONTEND-19] Dashboard includes pricing calculator to estimate cost based on word count and service type.
+- [FRONTEND-20] Dashboard includes payment navigation to `/payment` route with state for selected services.
+- [FRONTEND-21] Dashboard uses toasts to display success/failure messages for uploads and notifications.
+- [FRONTEND-22] Dashboard uses `useEffect` to redirect to sign-in if user session missing.
+- [FRONTEND-23] Dashboard calculates price using `calculatePrice` function based on service type, level, due date.
+- [FRONTEND-24] Dashboard includes file selection controls with validation for size and extension.
+- [FRONTEND-25] Dashboard uses `useDocumentSubmission` to orchestrate multi-file uploads and admin notifications.
+- [FRONTEND-26] Dashboard integrates Turnitin modal to check plagiarism (component included in dashboard).
+- [FRONTEND-27] Dashboard includes toggles for email submission and admin notifications.
+- [FRONTEND-28] Dashboard uses `toast` to inform user about invalid files, missing fields, or success states.
+- [FRONTEND-29] Dashboard supports tab navigation for orders, messages, profile, settings, documents.
+- [FRONTEND-30] Dashboard uses icons from `lucide-react` for consistent iconography.
+- [FRONTEND-31] Dashboard uses `useState` to manage numerous UI states (selected area, service, word count).
+- [FRONTEND-32] Dashboard supports removing selected files individually or clearing all selections.
+- [FRONTEND-33] Dashboard ensures admin-specific features exist but gated by `isAdmin` heuristics.
+- [FRONTEND-34] Documents page `DocumentsUpload.tsx` ensures Clerk authentication before rendering.
+- [FRONTEND-35] Documents page uses `MAX_FILES`, `MAX_SIZE_MB`, and `ACCEPTED_TYPES` to validate uploads.
+- [FRONTEND-36] Documents page uses drag-and-drop with CSS feedback (`isDragging` state) for dropzone.
+- [FRONTEND-37] Documents page obtains upload broker URL from env `VITE_UPLOAD_BROKER_URL`.
+- [FRONTEND-38] Documents page uses `sanitizeFileName` to prevent invalid characters in object keys.
+- [FRONTEND-39] Documents page uses `handleDownload` and `handleCopyLink` to generate presigned GET URLs.
+- [FRONTEND-40] Documents page stores upload history in local state `uploads` with key, name, size, timestamp.
+- [FRONTEND-41] Documents page uses `Helmet` to set page title.
+- [FRONTEND-42] Messages page `Messages.tsx` integrates `MessageCenter` within an error boundary.
+- [FRONTEND-43] Message center displays messaging instructions and embed for Mattermost.
+- [FRONTEND-44] Message center uses `VITE_MATTERMOST_URL` to embed the team chat; if missing, shows alert.
+- [FRONTEND-45] Message center ensures border and size consistent with dashboard layout.
+- [FRONTEND-46] Admin dashboard `AdminDashboard.tsx` provides stats, quick actions, content tables, and activity feed.
+- [FRONTEND-47] Admin dashboard loads Strapi data using `fetchArticles` (GraphQL) to compute metrics.
+- [FRONTEND-48] Admin dashboard displays counts for total articles, published, drafts, views, likes, comments.
+- [FRONTEND-49] Admin dashboard activity feed highlights recent article creation or publication events.
+- [FRONTEND-50] Admin dashboard quick actions link to content creation, media upload, user management, messages, analytics, settings.
+- [FRONTEND-51] Admin dashboard uses Clerk metadata to confirm admin/editor access, redirect unauthorized users.
+- [FRONTEND-52] Admin dashboard uses `Tabs` component to switch between content sections (implied by code snippet).
+- [FRONTEND-53] Admin dashboard uses `Badge` to display article tags and statuses.
+- [FRONTEND-54] Admin dashboard uses `Card` components to show metrics and charts placeholders.
+- [FRONTEND-55] Admin dashboard integrates `framer-motion` to animate metrics cards on load.
+- [FRONTEND-56] Admin dashboard includes search input to filter articles (functionality to be implemented).
+- [FRONTEND-57] Admin dashboard includes domain filters to slice articles by domain.
+- [FRONTEND-58] Admin dashboard uses `Link` to navigate to article editor for editing existing articles.
+- [FRONTEND-59] Admin dashboard includes `Plus` icon to create new content quickly.
+- [FRONTEND-60] Admin dashboard integrates with `cms-client.ts` for GraphQL operations requiring Admin token.
+- [FRONTEND-61] Admin dashboard ensures unauthorized users see Access Denied message with redirect button.
+- [FRONTEND-62] Domain pages such as `AI.tsx` highlight analytics and trending content.
+- [FRONTEND-63] Domain pages compute analytics like top tags, top authors using `useMemo`.
+- [FRONTEND-64] Domain pages include `Tabs` for overview, articles, services, analytics sections.
+- [FRONTEND-65] Domain pages use `Card` components to display metrics.
+- [FRONTEND-66] Domain pages highlight Strapi-driven data visualizations (e.g., `analytics` object).
+- [FRONTEND-67] Domain pages include static fallback content until Strapi data pipelines matured.
+- [FRONTEND-68] Front-end ensures marketing experiences remain consistent even while migrating backend.
+- [FRONTEND-69] Front-end ensures dashboards respond gracefully to missing env config with user-friendly alerts.
+- [FRONTEND-70] Front-end architecture ensures user journey from homepage to dashboard to file sharing remains smooth.
+
+## 7. Admin and role-based operations
+- [ADMIN-01] Clerk stores user metadata in `publicMetadata` to tag roles such as `admin` or `editor`.
+- [ADMIN-02] `useAuth` hook extracts `userRole`, `isAdmin`, and `isEditor` for gating UI.
+- [ADMIN-03] Dashboard wrapper ensures only signed-in users reach dashboard content.
+- [ADMIN-04] Admin dashboard checks `isAdmin` or `isEditor`; unauthorized users see Access Denied screen.
+- [ADMIN-05] Admin dashboard Access Denied screen offers redirect to `/dashboard` for standard users.
+- [ADMIN-06] Admin roles responsible for reviewing article statistics and content pipeline.
+- [ADMIN-07] Admin quick actions allow navigation to media upload page `/admin/media/upload`.
+- [ADMIN-08] Admin quick actions route to user management page `/admin/users` (component to be implemented).
+- [ADMIN-09] Admin quick actions provide direct link to messages `/admin/messages`, eventually integrating Mattermost admin channels.
+- [ADMIN-10] Admin quick actions include analytics `/admin/analytics` for aggregated insights.
+- [ADMIN-11] Admin quick actions include settings `/admin/settings` to adjust platform configuration.
+- [ADMIN-12] Admin dashboards display stats for articles, published count, drafts, views, and likes.
+- [ADMIN-13] Admin dashboards compute `recentActivity` by sorting articles by `updatedAt`.
+- [ADMIN-14] Admin dashboards show `recentArticles` list linking to article detail pages.
+- [ADMIN-15] Admin dashboards allow filtering by domain to focus on specific content verticals.
+- [ADMIN-16] Admin dashboards plan to include scheduling and moderation controls per article.
+- [ADMIN-17] Admin dashboards incorporate toggles for list/grid view (code includes references to icons `Grid`, `List`).
+- [ADMIN-18] Admin dashboards allow search across articles (search input present but integration pending).
+- [ADMIN-19] Admin dashboards integrate `Badge` components to show article tags and statuses (draft, published).
+- [ADMIN-20] Admin dashboards will trigger Strapi GraphQL mutations for publish/unpublish actions.
+- [ADMIN-21] Admin dashboards include `Tabs` for analytics vs content vs workflow (implied by `Tabs` usage).
+- [ADMIN-22] Admin dashboards rely on `cms-client.ts` to fetch data requiring admin token `VITE_CMS_TOKEN` with elevated permissions.
+- [ADMIN-23] Admin dashboards integrate with `fetchServices` to manage service entries.
+- [ADMIN-24] Admin dashboards coordinate with Strapi to manage attachments (images, documents).
+- [ADMIN-25] Admin dashboards rely on Clerk SSO to avoid maintaining separate Strapi accounts long-term.
+- [ADMIN-26] Admin dashboards coordinate with Mattermost for support messaging (link to admin channels).
+- [ADMIN-27] Admin dashboards maintain oversight of file uploads via future integration with R2 logs.
+- [ADMIN-28] Admin dashboards coordinate with security team to monitor antivirus results from upload broker.
+- [ADMIN-29] Admin dashboards track Turnitin submissions (once integrated with backend endpoints).
+- [ADMIN-30] Admin dashboards manage pricing updates via Strapi-managed configuration (future component).
+- [ADMIN-31] Admin dashboards handle domain-level analytics, mapping Strapi `domain` field to UI.
+- [ADMIN-32] Admin dashboards produce plan-specific views for enterprise vs consumer experiences.
+- [ADMIN-33] Admin dashboards integrate `Helmet` for SEO even for admin pages (ensuring consistent metadata for deep linking).
+- [ADMIN-34] Admin dashboards collaborate with support agents to moderate messages or escalate issues.
+- [ADMIN-35] Admin dashboards connect to analytics data stored in Strapi fields like `viewCount` and `likeCount`.
+- [ADMIN-36] Admin dashboards plan to integrate with external analytics (e.g., Plausible, GA) for advanced insights.
+- [ADMIN-37] Admin dashboards will eventually provide controls to trigger worker tasks (cache purge, presign resets).
+- [ADMIN-38] Admin dashboards coordinate user roles management via Clerk admin console.
+- [ADMIN-39] Admin dashboards must ensure compliance by auditing content before publication.
+- [ADMIN-40] Admin dashboards integrate with documentation checklists stored in `docs/` for governance.
+- [ADMIN-41] Admin dashboards should review file upload logs ensuring retention policies enforced.
+- [ADMIN-42] Admin dashboards align with `docs/AGENTS.md` migration phases to track progress.
+- [ADMIN-43] Admin dashboards need to manage microfeed fallback toggles until full migration complete.
+- [ADMIN-44] Admin dashboards coordinate with developer team to prioritize feature parity tasks.
+- [ADMIN-45] Admin dashboards ensure content mapping to front-end components remains consistent.
+- [ADMIN-46] Admin dashboards integrate with Strapi scheduling to plan content releases.
+- [ADMIN-47] Admin dashboards coordinate with marketing to update Homepage hero references when new campaigns go live.
+- [ADMIN-48] Admin dashboards ensure service cards maintain accurate domain assignments.
+- [ADMIN-49] Admin dashboards prepare data exports for compliance audits.
+- [ADMIN-50] Admin dashboards track collaborator contributions (authors, editors) via Strapi relationships.
+- [ADMIN-51] Admin dashboards coordinate with messaging team to escalate support issues via Mattermost.
+- [ADMIN-52] Admin dashboards track file upload statuses to ensure antivirus pipeline functioning.
+- [ADMIN-53] Admin dashboards maintain cross-check with R2 bucket metrics to monitor storage usage.
+- [ADMIN-54] Admin dashboards coordinate with devops to rotate Strapi API tokens regularly.
+- [ADMIN-55] Admin dashboards maintain content versioning oversight using Strapi’s versioning plugin (future).
+- [ADMIN-56] Admin dashboards coordinate with legal to ensure compliance with educational guidelines.
+- [ADMIN-57] Admin dashboards maintain checklists for new content types introduction (e.g., case studies).
+- [ADMIN-58] Admin dashboards coordinate with translation teams for localized content strategy.
+- [ADMIN-59] Admin dashboards provide insights to message center for referencing new content in support conversations.
+- [ADMIN-60] Admin dashboards plan to integrate with notifications to inform editors about required updates.
+- [ADMIN-61] Admin dashboards maintain bridging documentation for Strapi and Mattermost interplay.
+- [ADMIN-62] Admin dashboards coordinate with analytics to evaluate content performance post-publication.
+- [ADMIN-63] Admin dashboards align with file retention policies by referencing upload metadata from Strapi or R2.
+- [ADMIN-64] Admin dashboards maintain break-glass procedures documented in `docs/` for incident response.
+- [ADMIN-65] Admin dashboards ensure `ArticleEditor` and `Service` forms remain consistent with front-end expectations.
+- [ADMIN-66] Admin dashboards maintain release calendar for new content initiatives.
+- [ADMIN-67] Admin dashboards coordinate with support to update FAQs when new content goes live.
+- [ADMIN-68] Admin dashboards track time to publish metrics to improve editorial velocity.
+- [ADMIN-69] Admin dashboards review integration logs to ensure Strapi GraphQL queries succeed.
+- [ADMIN-70] Admin dashboards act as central hub tying content creation, publishing, messaging, and support operations together.
+
+## 8. Mattermost messaging ecosystem
+- [MM-01] Mattermost service located under `apps/mattermost` uses Docker Compose for local development.
+- [MM-02] `docker-compose.yml` defines services: `mattermost`, `db` (Postgres), and optional MinIO (if needed).
+- [MM-03] Mattermost configuration file `config/mattermost.json` sets S3 storage pointing to R2 endpoints.
+- [MM-04] S3 settings include `AmazonS3Endpoint`, `AmazonS3Bucket`, `AmazonS3AccessKeyId`, `AmazonS3SecretAccessKey`.
+- [MM-05] `AmazonS3SSL` set to true to ensure TLS when communicating with R2.
+- [MM-06] Mattermost OIDC integration placeholders exist for Clerk SSO, enabling unified authentication soon.
+- [MM-07] File attachments in Mattermost stored directly into R2 using S3 driver configuration.
+- [MM-08] Mattermost provides `/api/v4/files` endpoint for uploading attachments within conversations.
+- [MM-09] Mattermost provides `/api/v4/posts` endpoint for messages referencing file IDs.
+- [MM-10] Mattermost web UI accessible via `VITE_MATTERMOST_URL` embed within dashboard.
+- [MM-11] Web embed displayed via `iframe` within `MessageCenter` to deliver chat interface.
+- [MM-12] `MessageCenter` ensures environment variable presence; missing config yields user-friendly alert.
+- [MM-13] Message center fosters conversation between end users and support agents.
+- [MM-14] Future plan to integrate Mattermost WebSocket events into React components for native messaging.
+- [MM-15] Support agents use Mattermost channels to coordinate responses and share attachments.
+- [MM-16] End users sign in via Clerk, then SSO into Mattermost (planned) to ensure consistent identity.
+- [MM-17] Mattermost channels named per organization or ticket to maintain context.
+- [MM-18] Mattermost attachments benefit from R2 storage with lifecycle policies aligning to retention requirements.
+- [MM-19] Mattermost supports compliance exports; admin to configure for educational audit.
+- [MM-20] Mattermost posts feed into admin dashboard for message insights (future integration).
+- [MM-21] Mattermost plans include bridging to file upload pipeline for sharing Strapi-managed documents.
+- [MM-22] Worker bridging ensures attachments scanned for viruses before accessible to recipients.
+- [MM-23] Mattermost connectors may notify Strapi or the web app when new files uploaded to share in content.
+- [MM-24] Mattermost channel names can mirror Strapi domain taxonomy for consistent alignment.
+- [MM-25] Mattermost includes `MessageSquare` icon in dashboard to highlight messaging feature.
+- [MM-26] Message center includes instructions referencing Mattermost as underlying chat provider.
+- [MM-27] Mattermost fosters synchronous communication complementing asynchronous content consumption.
+- [MM-28] Admin roles within Mattermost manage team membership and channel configuration.
+- [MM-29] Support agents monitor Mattermost for new messages, attachments, or escalations.
+- [MM-30] End users exchange documents, screenshots, or videos through Mattermost for faster support.
+- [MM-31] Mattermost integration ensures conversation continuity even while migrating other subsystems.
+- [MM-32] Worker `upload-broker` ensures attachments uploaded via dashboard align with same R2 bucket used by Mattermost.
+- [MM-33] Mattermost plugin ecosystem allows additional features, e.g., analytics or ticketing, to integrate into support workflow.
+- [MM-34] Mattermost SSO ensures user identity consistent across dashboard and chat, critical for support context.
+- [MM-35] Mattermost message events may integrate with Strapi webhooks to update ticket status (future possibility).
+- [MM-36] Mattermost includes search and history capabilities for compliance retention.
+- [MM-37] Mattermost attachments accessible via presigned URLs to maintain security.
+- [MM-38] Mattermost fosters cross-team communication between content editors and support agents.
+- [MM-39] Mattermost supports slash commands, which may trigger worker functions to fetch content from Strapi.
+- [MM-40] Mattermost mobile apps provide on-the-go access for support agents responding to customers.
+- [MM-41] Mattermost analytics (post volume, response time) inform admin dashboards for support performance.
+- [MM-42] Mattermost retention settings configured to align with educational data policies.
+- [MM-43] Mattermost uses Postgres for message metadata storage ensuring reliability.
+- [MM-44] Mattermost health checks ensure service readiness before embedding into dashboard.
+- [MM-45] Mattermost notifications keep admins informed of new messages requiring action.
+- [MM-46] Mattermost integrates with R2 metrics to monitor storage usage due to attachments.
+- [MM-47] Mattermost bridging to Strapi ensures announcements appear on the marketing site when approved.
+- [MM-48] Mattermost subject to rate limiting via Cloudflare to prevent abuse.
+- [MM-49] Mattermost channels can include knowledge base references linking to Strapi entries.
+- [MM-50] Mattermost embed ensures minimal friction for users while more integrated client is under development.
+- [MM-51] Messaging page accessible from dashboard and admin contexts for both support and editors.
+- [MM-52] Mattermost fosters internal communication around content production schedules.
+- [MM-53] Mattermost integration ensures attachments shared in chat remain in same R2 bucket as file uploads.
+- [MM-54] Mattermost fosters cross-team collaboration for incident response (e.g., verifying antivirus results).
+- [MM-55] Mattermost plugin for webhook can inform web app when certain channel messages posted.
+- [MM-56] Mattermost supports thread conversations for organized support interactions.
+- [MM-57] Mattermost UI inherits theme styling to align with HandyWriterz branding once SSO applied.
+- [MM-58] Mattermost cross-posting to dashboards ensures editors kept in sync with support issues.
+- [MM-59] Mattermost fosters quick sharing of Strapi content links to answer customer questions.
+- [MM-60] Mattermost ensures support operations remain reliable even during CMS migration.
+- [MM-61] Mattermost integrates with file pipeline to ensure attachments scanned before accessible.
+- [MM-62] Mattermost adoption part of Phase 1 in migration roadmap, enabling chat-first modernization.
+- [MM-63] Mattermost ensures conversation continuity by storing history in Postgres.
+- [MM-64] Mattermost fosters bridging between marketing, support, and admin teams to coordinate content usage.
+- [MM-65] Mattermost configuration in `mattermost.json` to be templated for environment-specific values.
+- [MM-66] Mattermost ensures support team can escalate issues to engineering via dedicated channels.
+- [MM-67] Mattermost attachments accessible to admin for compliance review via restful APIs.
+- [MM-68] Mattermost fosters integration with file pipeline so user uploads appear in chat threads.
+- [MM-69] Mattermost ensures multi-device support to keep agents responsive 24/7.
+- [MM-70] Mattermost anchors messaging operations aligning with architecture blueprint documented in `AGENTS.md`.
+
+## 9. File sharing and R2 storage pipeline
+- [FILES-01] File uploads initiated from dashboard `DocumentsUpload.tsx` using drag-and-drop interface.
+- [FILES-02] Upload handler validates file types and size before uploading to R2.
+- [FILES-03] Upload handler requests presigned PUT URL from worker at `VITE_UPLOAD_BROKER_URL` `/s3/presign-put` endpoint.
+- [FILES-04] Upload broker worker `workers/upload-broker/src/index.ts` signs requests using AWS SigV4.
+- [FILES-05] Presign response includes `url`, `key`, `bucket`, `contentType` for direct upload to R2.
+- [FILES-06] Dashboard uses `fetch` to upload file to presigned URL with appropriate headers.
+- [FILES-07] On success, dashboard stores metadata in `uploads` state for session view.
+- [FILES-08] Worker exposes `/s3/create`, `/s3/sign`, `/s3/complete` for multipart uploads >5GB.
+- [FILES-09] Worker exposes `/s3/presign` for GET downloads with configurable TTL.
+- [FILES-10] Worker ensures all responses include CORS headers for browser compatibility.
+- [FILES-11] Worker ensures environment variables `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` set per environment.
+- [FILES-12] Worker uses `FORCE_PATH_STYLE` default `true` for R2 compatibility.
+- [FILES-13] Worker ensures TTL for downloads default 300 seconds unless `DOWNLOAD_TTL_SECONDS` override.
+- [FILES-14] `useDocumentSubmission` orchestrates multi-file upload, storing attachments array with `r2Key`, `filename`, `size`, `contentType`.
+- [FILES-15] `useDocumentSubmission` sends metadata to backend `/api/uploads` for persistence (endpoint to be implemented).
+- [FILES-16] `useDocumentSubmission` notifies admin via `/api/turnitin/notify`, enabling manual intervention.
+- [FILES-17] `useDocumentSubmission` handles optional user receipt via `/api/turnitin/receipt`.
+- [FILES-18] `useDocumentSubmission` exposes `cancelSubmission` to abort uploads.
+- [FILES-19] `useDocumentSubmission` uses `crypto.randomUUID()` to create submission ID for object prefixing.
+- [FILES-20] Document upload page uses sanitized filenames to avoid R2 path issues.
+- [FILES-21] Document upload page ensures `MAX_FILES` limit prevents too many simultaneous uploads.
+- [FILES-22] Document upload page displays upload progress and success messages via toasts.
+- [FILES-23] Document upload page allows clearing selected files before upload.
+- [FILES-24] Document upload page ensures signed-in user required, redirecting to sign-in when necessary.
+- [FILES-25] Document upload page uses `Info` icon to show instructions when no uploads yet.
+- [FILES-26] Document upload page uses `Download` and `Copy` buttons to retrieve or share files.
+- [FILES-27] Document upload page uses `handleDownload` to fetch presigned GET URL and open new tab.
+- [FILES-28] Document upload page uses `handleCopyLink` to copy presigned URL into clipboard.
+- [FILES-29] Document upload page uses `uploads` state to show list of uploaded files with key path.
+- [FILES-30] Document upload page ensures sanitized object key includes user ID for per-user isolation.
+- [FILES-31] Document upload page uses `setUploads` to prepend newest uploads to history.
+- [FILES-32] Document upload page ensures `toast` feedback for missing broker config or errors.
+- [FILES-33] Worker ensures `completeMultipartUpload` sorts parts and constructs XML payload for R2.
+- [FILES-34] Worker uses `signedFetch` to send signed POST requests to R2 for multipart operations.
+- [FILES-35] Worker `signRequest` constructs canonical request per AWS SigV4 spec.
+- [FILES-36] Worker `presignUrl` constructs query parameters for GET/PUT presigned URL.
+- [FILES-37] Worker uses `sha256Hex` and `hmac` helpers built atop Web Crypto API.
+- [FILES-38] Worker enforces positive integer validation for part numbers to avoid errors.
+- [FILES-39] Worker ensures error responses returned as JSON with message for debugging.
+- [FILES-40] Worker handles OPTIONS requests with CORS preflight response.
+- [FILES-41] Worker accessible via Cloudflare Workers with binding configuration in `wrangler.toml`.
+- [FILES-42] Worker environment may include `RATE_LIMIT_KV` (future) to throttle requests per user.
+- [FILES-43] Worker ensures errors bubble up to front-end for user-friendly messaging.
+- [FILES-44] File pipeline ensures antivirus scanning triggered via R2 event notifications (future integration).
+- [FILES-45] Worker ensures minimal dependencies by relying on Web Crypto built-in to Cloudflare Workers.
+- [FILES-46] Document upload page instructs user to share links only after verifying content.
+- [FILES-47] Document upload page ensures `MAX_SIZE_MB` prevents overly large uploads causing timeouts.
+- [FILES-48] Document upload page ensures `ACCEPTED_TYPES` list communicates allowed file extensions.
+- [FILES-49] Document upload page uses `Button` components for consistent styling.
+- [FILES-50] Document upload page ensures invites to configure broker URL when missing (Alert message).
+- [FILES-51] Document upload page `sanitizeFileName` ensures multi-byte characters replaced with underscores for R2 compatibility.
+- [FILES-52] Document upload page `formatBytes` displays file size in MB with two decimals.
+- [FILES-53] Document upload page ensures `Select files` button triggers hidden file input.
+- [FILES-54] Document upload page uses `window.open` for downloads to avoid interfering with SPA navigation.
+- [FILES-55] Document upload page ensures `navigator.clipboard` used for copying links (requires secure context).
+- [FILES-56] Document upload page ensures `uploads` list displays object key for support debugging.
+- [FILES-57] Document upload page ensures `uploads` entries include upload timestamp for auditing.
+- [FILES-58] Document upload page ensures `selectedFiles` cleared after successful upload.
+- [FILES-59] Document upload page ensures user is signed-in before allowing uploads, aligning with Clerk session.
+- [FILES-60] File pipeline ensures same R2 bucket services both uploads and Mattermost attachments, enabling unified lifecycle.
+- [FILES-61] File pipeline ensures worker centralization reduces need to expose R2 credentials to clients.
+- [FILES-62] File pipeline ensures admin can generate download links for compliance or review.
+- [FILES-63] File pipeline ensures attachments accessible to Strapi via upcoming backend endpoint linking metadata.
+- [FILES-64] File pipeline ensures objects scanned before available for download using worker gating (future `x-scan=clean`).
+- [FILES-65] File pipeline ensures knowledge of object keys per user enabling targeted deletion.
+- [FILES-66] File pipeline ensures eventual integration with Mattermost for attachments cross-posting.
+- [FILES-67] File pipeline ensures user uploads tracked for order completion flows, triggered by admin review.
+- [FILES-68] File pipeline ensures robust error handling via toasts and console warnings for debugging.
+- [FILES-69] File pipeline ensures fallback to manual submission via email when worker unavailable (instructions in UI).
+- [FILES-70] File pipeline ensures consistent architecture aligning with blueprint from `docs/dataflow.md`.
+
+## 10. Security, authentication, and governance
+- [SECURITY-01] Clerk handles primary authentication for SPA, embedding session tokens via `ClerkProvider`.
+- [SECURITY-02] `ClerkProvider` configured with `routerPush` and `routerReplace` to integrate with React Router.
+- [SECURITY-03] `useAuth` hook exposes `logout` method calling `clerk.signOut()` with try/catch for resilience.
+- [SECURITY-04] `useAuth` hook identifies admin/editor via `user.publicMetadata.role`.
+- [SECURITY-05] `DashboardWrapper` redirects unauthenticated users to `/sign-in` with redirect state.
+- [SECURITY-06] `DocumentsUpload.tsx` ensures `useUser` indicates signed-in user; otherwise redirect to sign-in.
+- [SECURITY-07] `Navbar` uses `SignedIn`/`SignedOut` to toggle CTA vs dashboard link.
+- [SECURITY-08] `MessageCenter` displays alert when `VITE_MATTERMOST_URL` not set, preventing embed of unknown origin.
+- [SECURITY-09] Worker ensures secrets never exposed to front-end by performing server-side signing only.
+- [SECURITY-10] Worker ensures all responses include `access-control-allow-origin` `*` for allowed cross-origin but may restrict in future.
+- [SECURITY-11] Worker ensures only POST requests allowed for presign and multipart endpoints; GET disallowed.
+- [SECURITY-12] Worker ensures invalid inputs result in error with message `field is required`.
+- [SECURITY-13] Worker ensures canonical request includes `x-amz-content-sha256` header to prevent tampering.
+- [SECURITY-14] Worker ensures `expires` parameter bounded between 60 and 3600 seconds for GET, 60-900 for PUT.
+- [SECURITY-15] Worker ensures we compute signature at request time using secret key stored server-side.
+- [SECURITY-16] Strapi uses tokens stored in env to authorize front-end read access.
+- [SECURITY-17] Strapi admin uses local credentials until OIDC integration with Clerk implemented.
+- [SECURITY-18] Strapi data fetched via front-end uses `Authorization: Bearer ${CMS_TOKEN}` when token exists.
+- [SECURITY-19] Strapi environment intends to enforce RBAC, ensuring only editors can modify content.
+- [SECURITY-20] Mattermost SSO ensures consistent identity across chat and dashboard (future integration).
+- [SECURITY-21] Mattermost attachments stored in R2 accessible via presigned URLs requiring valid signature.
+- [SECURITY-22] Cloudflare worker ensures downloads only allowed after antivirus pipeline marks object clean (future enforcement).
+- [SECURITY-23] React Query ensures caching but does not store sensitive data beyond what's rendered publicly.
+- [SECURITY-24] `env.ts` uses Zod to parse Vite env variables, throwing at build time if required env missing.
+- [SECURITY-25] `logEnvironmentStatus` warns when env missing; helpful for debugging but must avoid leaking secrets.
+- [SECURITY-26] Clerk ensures tokens stored in HttpOnly cookies or local storage per configuration.
+- [SECURITY-27] `DocumentsUpload.tsx` ensures sanitized filenames to avoid path traversal.
+- [SECURITY-28] `useDocumentSubmission` keeps attachments metadata in local state but ensures server receives sanitized keys.
+- [SECURITY-29] `useDocumentSubmission` uses abort controllers to allow cancellation for security concerns.
+- [SECURITY-30] `Dashboard` ensures unsanitized inputs sanitized before sending to backend.
+- [SECURITY-31] `Dashboard` ensures email addresses validated with regex before sending email notifications.
+- [SECURITY-32] `Dashboard` ensures attachments require admin notification before payment steps.
+- [SECURITY-33] `Navbar` ensures external links sanitized before navigation by using `Link` component.
+- [SECURITY-34] `MessageCenter` uses `iframe` to embed; must ensure `mattermostUrl` trusted to avoid clickjacking.
+- [SECURITY-35] `MessageCenter` sets `allow="fullscreen"` only; other features like microphone not auto enabled.
+- [SECURITY-36] Worker uses `TextEncoder` for consistent hashing regardless of platform.
+- [SECURITY-37] Worker ensures canonical query built with encoded key/value pairs to avoid injection.
+- [SECURITY-38] Worker ensures only recognized endpoints respond, others return 404 to avoid misuse.
+- [SECURITY-39] Worker ensures `createMultipartUpload` returns UploadId extracted from XML response; invalid responses raise error.
+- [SECURITY-40] Worker ensures we log minimal data (via thrown errors) to avoid leaking secrets.
+- [SECURITY-41] Strapi connectors ensure file metadata includes owner metadata for access control.
+- [SECURITY-42] Strapi roles differentiate between authors, editors, publishers to enforce review process.
+- [SECURITY-43] Admin dashboard ensures only admin/editor sees content stats to avoid exposing to end users.
+- [SECURITY-44] Admin dashboard ensures unauthorized access prevented via UI gating and soon backend gating.
+- [SECURITY-45] Clerk invites can be restricted to company domain to control admin access.
+- [SECURITY-46] Mattermost includes compliance export to handle data subject requests.
+- [SECURITY-47] Mattermost retention policies align with educational retention guidelines.
+- [SECURITY-48] Upload worker to integrate with antivirus scanning pipeline; until then manual oversight required.
+- [SECURITY-49] `docs/AGENTS.md` instructs to maintain short-lived presigned URLs for downloads.
+- [SECURITY-50] `docs/context.md` highlights security posture: AV gate, Clerk role checks, retention policies.
+- [SECURITY-51] All secrets stored in environment variables, never hardcoded in repo.
+- [SECURITY-52] Deployments to Cloudflare should use environment bindings for worker secrets.
+- [SECURITY-53] Strapi `.env.example` (to be added) should contain keys `CMS_URL`, `CMS_TOKEN`, etc.
+- [SECURITY-54] Mattermost `.env` should define `MM_URL`, `MM_DB_URL`, `R2_SECRET_ACCESS_KEY` etc for container startup.
+- [SECURITY-55] Strapi GraphQL introspection should be restricted to avoid exposing schema to public (requires auth).
+- [SECURITY-56] Clerk ensures access tokens short lived; front-end uses session token for GraphQL writes only via server.
+- [SECURITY-57] Admin operations require double-check of environment roles before performing destructive actions.
+- [SECURITY-58] Payment pages should sanitize query parameters before display (existing code to verify).
+- [SECURITY-59] Web3 provider ensures blockchain interactions limited to secure endpoints.
+- [SECURITY-60] Observability plan includes audit logs for file operations (when integrated with R2 events).
+- [SECURITY-61] Worker potential to enforce request signatures using HMAC to ensure only authorized front-ends call presign endpoints.
+- [SECURITY-62] Microfeed fallback ensures legacy endpoints remain secure until decommissioned.
+- [SECURITY-63] Strapi admin login should be behind network restrictions until OIDC ready.
+- [SECURITY-64] Worker should limit upload keys to `users/<id>` prefix to prevent cross-user access.
+- [SECURITY-65] Document upload page ensures `presign` error surfaces to user to avoid silent failures.
+- [SECURITY-66] Clerk `UserButton` ensures secure logout and account management.
+- [SECURITY-67] React Router ensures unauthorized route load triggers fallback components returning 403 UI.
+- [SECURITY-68] Cloudflare SSL ensures assets and APIs served over HTTPS.
+- [SECURITY-69] `docs/PLAN_FORWARD.md` instructs to avoid storing secrets in repo and maintain env documentation.
+- [SECURITY-70] Security posture continues to evolve with future tasks for AV integration, rate limiting, and audit logging.
+
+## 11. Observability, reliability, and support readiness
+- [OBS-01] Current front-end logs warnings for Strapi fetch failures (`console.warn('[cms] request failed', status)`).
+- [OBS-02] `useDocumentSubmission` logs warnings when upload fails, returning error to UI.
+- [OBS-03] Worker returns JSON error messages for easier debugging via network tab.
+- [OBS-04] `logEnvironmentStatus` prints environment readiness to console during initialization.
+- [OBS-05] Admin dashboard metrics derived from Strapi viewCount/likeCount to monitor engagement.
+- [OBS-06] Domain analytics components compute local metrics for demonstration until real telemetry integrated.
+- [OBS-07] Observability plan includes integrating Cloudflare Logpush for worker analytics.
+- [OBS-08] Observability plan includes Mattermost logs for message delivery status.
+- [OBS-09] Observability plan includes Strapi logs for content API usage and errors.
+- [OBS-10] Observability plan includes R2 metrics for storage usage and object lifecycle events.
+- [OBS-11] Observability plan includes health checks for Mattermost service (Docker and production).
+- [OBS-12] Observability plan includes Cloudflare Workers analytics to monitor presign usage patterns.
+- [OBS-13] Observability plan includes error boundaries to catch React runtime errors.
+- [OBS-14] Observability plan includes toasts to surface user-facing errors for immediate feedback.
+- [OBS-15] Observability plan includes instrumentation for upload success/failure counts.
+- [OBS-16] Observability plan includes verifying React Query caching to avoid thundering herd on Strapi.
+- [OBS-17] Observability plan includes capturing preview success/failure logs when hitting Strapi preview endpoints.
+- [OBS-18] Observability plan includes dashboards (Grafana or SignalFx) to track worker request counts.
+- [OBS-19] Observability plan includes Slack/Mattermost alerts for worker error thresholds.
+- [OBS-20] Observability plan includes Sentry integration for front-end error tracking (future addition).
+- [OBS-21] Observability plan includes Strapi webhook logs to track publish events.
+- [OBS-22] Observability plan includes verifying TTL of presigned URLs generating to avoid misuse.
+- [OBS-23] Observability plan includes verifying antivirus pipeline events to guarantee scanning coverage.
+- [OBS-24] Observability plan includes verifying R2 object metadata for scan status.
+- [OBS-25] Observability plan includes verifying Mattermost WebSocket connection stability.
+- [OBS-26] Observability plan includes verifying file upload concurrency to detect hotspots.
+- [OBS-27] Observability plan includes verifying Microfeed fallback usage frequency to gauge migration progress.
+- [OBS-28] Observability plan includes verifying Strapi GraphQL query latency to ensure admin performance.
+- [OBS-29] Observability plan includes verifying Strapi REST latency for services pages.
+- [OBS-30] Observability plan includes verifying Cloudflare caching effectiveness for static assets.
+- [OBS-31] Observability plan includes verifying `pnpm --filter web type-check` to maintain TypeScript health (last run exit code 1 indicates outstanding issues to fix).
+- [OBS-32] Observability plan includes verifying `pnpm lint` to maintain code quality.
+- [OBS-33] Observability plan includes verifying `pnpm --filter strapi develop` and `pnpm --filter mattermost` to ensure backend availability.
+- [OBS-34] Observability plan includes verifying dependency updates to maintain security patches.
+- [OBS-35] Observability plan includes verifying Clerk status to avoid login downtime.
+- [OBS-36] Observability plan includes verifying Postgres health for Strapi and Mattermost.
+- [OBS-37] Observability plan includes verifying R2 object lifecycle transitions for storage optimization.
+- [OBS-38] Observability plan includes verifying worker logs for suspicious activity or high error rate.
+- [OBS-39] Observability plan includes verifying user feedback via support forms to detect issues.
+- [OBS-40] Observability plan includes verifying autop-run smoke tests: create content, send message, upload file.
+- [OBS-41] Observability plan includes verifying Cron jobs (if any) to ensure scheduled tasks run.
+- [OBS-42] Observability plan includes verifying admin quick actions functioning through manual QA.
+- [OBS-43] Observability plan includes verifying fallback to Microfeed to confirm legacy content accessible.
+- [OBS-44] Observability plan includes verifying chart placeholders replaced with real data soon.
+- [OBS-45] Observability plan includes verifying Worker error messages include correlation ID (future improvement).
+- [OBS-46] Observability plan includes verifying Strapi logs shipping to centralized log system.
+- [OBS-47] Observability plan includes verifying Mattermost plugin logs for file upload events.
+- [OBS-48] Observability plan includes verifying Cloudflare Worker route coverage to avoid unhandled paths.
+- [OBS-49] Observability plan includes verifying availability of `docs/` to onboard new team members quickly.
+- [OBS-50] Observability plan includes verifying README instructions remain up to date.
+- [OBS-51] Observability plan includes verifying environment variable documentation in `.env.example`.
+- [OBS-52] Observability plan includes verifying staging environment replicates production flows.
+- [OBS-53] Observability plan includes verifying backup processes for Strapi and Mattermost Postgres DB.
+- [OBS-54] Observability plan includes verifying R2 bucket versioning and retention policies.
+- [OBS-55] Observability plan includes verifying manual runbooks documented in `docs/` for incident response.
+- [OBS-56] Observability plan includes verifying `MessageCenter` user instructions match actual behavior.
+- [OBS-57] Observability plan includes verifying `DocumentsUpload` instructions align with S3 restrictions.
+- [OBS-58] Observability plan includes verifying `Dashboard` toasts provide helpful messages for support.
+- [OBS-59] Observability plan includes verifying `Home` page CTAs route to functioning flows.
+- [OBS-60] Observability plan includes verifying domain pages replicate analytics once data integrated.
+- [OBS-61] Observability plan includes verifying file download TTL ensures security vs user convenience.
+- [OBS-62] Observability plan includes verifying `useDocumentSubmission` handles network errors gracefully.
+- [OBS-63] Observability plan includes verifying `useDocumentSubmission` resets state after cancel.
+- [OBS-64] Observability plan includes verifying `useDocumentSubmission` handles partial success states.
+- [OBS-65] Observability plan includes verifying logistic of bridging Strapi content to messaging notifications.
+- [OBS-66] Observability plan includes verifying `MessageCenter` embed handles slow network gracefully.
+- [OBS-67] Observability plan includes verifying `Dashboard` modules degrade gracefully if backend offline.
+- [OBS-68] Observability plan includes verifying `Navbar` updates CTAs after login/logout.
+- [OBS-69] Observability plan includes verifying `Footer` references accurate support contact info.
+- [OBS-70] Observability plan ensures reliability across Strapi, Mattermost, and R2 by layering monitoring and runbooks.
+
+## 12. Progressive migration roadmap and open actions
+- [ROADMAP-01] Phase 1 Chat-first: finalize Mattermost deployment, integrate Clerk OIDC, embed in dashboard.
+- [ROADMAP-02] Phase 1 action: configure `apps/mattermost/docker-compose.yml` with Postgres credentials and R2 secrets.
+- [ROADMAP-03] Phase 1 action: update `apps/mattermost/config/mattermost.json` with OIDC settings for Clerk.
+- [ROADMAP-04] Phase 1 action: embed Mattermost attachments in dashboard summary (MessageCenter upgrade).
+- [ROADMAP-05] Phase 1 action: integrate Mattermost REST API for message lists within dashboard.
+- [ROADMAP-06] Phase 1 action: create automated tests for messaging flows to ensure reliability.
+- [ROADMAP-07] Phase 1 action: document support playbooks in `docs/` referencing messaging flows.
+- [ROADMAP-08] Phase 2 Files pipeline: finalize worker deployment, configure antivirus scanning pipeline.
+- [ROADMAP-09] Phase 2 action: connect R2 ObjectCreated events to antivirus scanning service (ClamAV pipeline).
+- [ROADMAP-10] Phase 2 action: update worker to check `x-scan=clean` metadata before issuing presigned GET.
+- [ROADMAP-11] Phase 2 action: integrate R2 lifecycle rules for retention policies per bucket.
+- [ROADMAP-12] Phase 2 action: implement backend API `/api/uploads` to persist upload metadata.
+- [ROADMAP-13] Phase 2 action: integrate admin dashboard view for uploaded files awaiting review.
+- [ROADMAP-14] Phase 2 action: implement notifications to Mattermost when new uploads complete.
+- [ROADMAP-15] Phase 2 action: update documentation to reflect new file pipeline architecture.
+- [ROADMAP-16] Phase 3 CMS swap: complete Strapi content migration, ensure fallback seldom used.
+- [ROADMAP-17] Phase 3 action: import Microfeed content into Strapi using scripts under `apps/strapi/scripts`.
+- [ROADMAP-18] Phase 3 action: update `/services` navigation to fetch categories from Strapi dynamically.
+- [ROADMAP-19] Phase 3 action: integrate Strapi preview tokens into admin editor UI.
+- [ROADMAP-20] Phase 3 action: retire Microfeed proxies once traffic fully migrated to Strapi.
+- [ROADMAP-21] Phase 3 action: update `docs/dataflow.md` and this `intel.md` to note Microfeed retirement.
+- [ROADMAP-22] Phase 3 action: integrate Strapi webhooks with Cloudflare worker to purge caches on publish.
+- [ROADMAP-23] Phase 3 action: integrate Strapi analytics into admin dashboards (views, likes, conversions).
+- [ROADMAP-24] Phase 3 action: implement Strapi GraphQL mutations for service management from admin dashboard.
+- [ROADMAP-25] Phase 3 action: integrate Strapi with search to power global search in SPA.
+- [ROADMAP-26] Phase 4 Harden & observe: implement logging, alerting, backup verification.
+- [ROADMAP-27] Phase 4 action: integrate Sentry for front-end error tracking.
+- [ROADMAP-28] Phase 4 action: integrate Cloudflare analytics APIs for worker monitoring.
+- [ROADMAP-29] Phase 4 action: integrate Postgres backups for Strapi and Mattermost with retention policies.
+- [ROADMAP-30] Phase 4 action: implement DR runbooks tested quarterly.
+- [ROADMAP-31] Phase 4 action: finalize removal of dead legacy paths documented in `docs/`.
+- [ROADMAP-32] Additional action: finalize `.env.example` with all new environment variables (CMS, Mattermost, R2, Worker, Clerk).
+- [ROADMAP-33] Additional action: create staging environment instructions in `docs/PLAN_FORWARD.md`.
+- [ROADMAP-34] Additional action: implement integration tests verifying full user journeys (content creation → publish → consume).
+- [ROADMAP-35] Additional action: implement integration tests verifying file upload to download to admin review pipeline.
+- [ROADMAP-36] Additional action: implement integration tests verifying messaging attachments.
+- [ROADMAP-37] Additional action: update `README.md` with instructions for running Strapi, Mattermost, worker, and web app together.
+- [ROADMAP-38] Additional action: align design system components with new content models.
+- [ROADMAP-39] Additional action: build CLI scripts to assist with content migration from Microfeed JSON.
+- [ROADMAP-40] Additional action: update domain pages to rely fully on Strapi data.
+- [ROADMAP-41] Additional action: implement analytics pipeline capturing conversions from content to orders.
+- [ROADMAP-42] Additional action: integrate SEO audits verifying robots, sitemap, metadata align with Strapi inputs.
+- [ROADMAP-43] Additional action: integrate front-end tests using Playwright or Cypress to cover key journeys.
+- [ROADMAP-44] Additional action: integrate unit tests for `useDocumentSubmission` to ensure reliability.
+- [ROADMAP-45] Additional action: integrate end-to-end tests for worker to ensure presign operations succeed.
+- [ROADMAP-46] Additional action: integrate metrics for worker to track presign usage per user for rate limiting.
+- [ROADMAP-47] Additional action: integrate admin notifications when file uploads exceed size thresholds.
+- [ROADMAP-48] Additional action: integrate Strapi plugin for advanced SEO fields (canonical URL, schema markup).
+- [ROADMAP-49] Additional action: integrate Strapi plugin for content scheduling notifications.
+- [ROADMAP-50] Additional action: integrate admin dashboard chart components referencing real analytics.
+- [ROADMAP-51] Additional action: integrate support knowledge base linking Mattermost to Strapi content.
+- [ROADMAP-52] Additional action: integrate file retention cleanup job removing expired uploads from R2.
+- [ROADMAP-53] Additional action: integrate `useUploadsHistory` hook to fetch persisted upload metadata for UI.
+- [ROADMAP-54] Additional action: integrate offline queue for uploads to handle flaky networks.
+- [ROADMAP-55] Additional action: integrate `pnpm` scripts to run all services concurrently for local dev.
+- [ROADMAP-56] Additional action: integrate `type-check` fix (resolve exit code 1) to maintain TypeScript health.
+- [ROADMAP-57] Additional action: integrate `lint` tasks into CI to enforce code quality.
+- [ROADMAP-58] Additional action: integrate GitHub Actions or Cloudflare CI for automated deployments.
+- [ROADMAP-59] Additional action: integrate infrastructure-as-code templates documenting service provisioning.
+- [ROADMAP-60] Additional action: integrate legal compliance checks for file uploads within admin workflow.
+- [ROADMAP-61] Additional action: integrate training materials referencing this `intel.md` for new hires.
+- [ROADMAP-62] Additional action: integrate service availability dashboards referencing Strapi, Mattermost, worker health.
+- [ROADMAP-63] Additional action: integrate Slack/Mattermost bot summarizing published content daily.
+- [ROADMAP-64] Additional action: integrate cross-linking between content pages and messaging threads for quick navigation.
+- [ROADMAP-65] Additional action: integrate ephemeral preview environments for content review using Cloudflare Pages.
+- [ROADMAP-66] Additional action: integrate gating to ensure only sanitized files accessible to customers.
+- [ROADMAP-67] Additional action: integrate conversion funnel tracking from content to messaging to file upload to order.
+- [ROADMAP-68] Additional action: integrate `docs/` index summarizing documentation structure for quick reference.
+- [ROADMAP-69] Additional action: integrate knowledge base article mapping to Strapi categories for support usage.
+- [ROADMAP-70] Progressive roadmap ensures Strapi, Mattermost, and R2 deliver cohesive, reliable experiences while decommissioning Microfeed responsibly.

@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_blocks_callouts",
+  "info": {
+    "displayName": "Callout",
+    "description": "Important notice or alert box"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "content": {
+      "type": "text",
+      "required": true
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": ["info", "warning", "success", "error", "note"],
+      "default": "info"
+    },
+    "icon": {
+      "type": "string"
+    },
+    "dismissible": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

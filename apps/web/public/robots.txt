@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Point crawlers at the unified sitemap mounted at the root via the Worker
+Sitemap: /sitemap.xml

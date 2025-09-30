@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_blocks_rich_texts",
+  "info": {
+    "displayName": "Rich Text",
+    "description": "A flexible rich text block with formatting options"
+  },
+  "options": {},
+  "attributes": {
+    "content": {
+      "type": "richtext",
+      "required": true
+    },
+    "alignment": {
+      "type": "enumeration",
+      "enum": ["left", "center", "right", "justify"],
+      "default": "left"
+    }
+  }
+}

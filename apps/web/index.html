@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" sizes="32x32" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" sizes="16x16" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HandyWriterz</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Look for any development mode text elements
+        const devModeTexts = document.querySelectorAll('[data-dev-mode]');
+        if (devModeTexts.length) {
+          devModeTexts.forEach(function(element) {
+            element.style.display = 'none';
+          });
+        }
+        
+        // Additional method to remove the specific development mode message if exists
+        const devModeFooter = document.querySelector('.development-mode-footer');
+        if (devModeFooter) {
+          devModeFooter.remove();
+        }
+      });
+    </script>
+  </body>
+</html>

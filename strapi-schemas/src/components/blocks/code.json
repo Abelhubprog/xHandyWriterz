@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_blocks_codes",
+  "info": {
+    "displayName": "Code Block",
+    "description": "Syntax highlighted code"
+  },
+  "options": {},
+  "attributes": {
+    "language": {
+      "type": "string",
+      "default": "javascript"
+    },
+    "code": {
+      "type": "text",
+      "required": true
+    },
+    "showLineNumbers": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

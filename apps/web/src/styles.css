@@ -1,0 +1,26 @@
+:root {
+  --bg:#0b0d10; --panel:#111418; --card:#151a21; --muted:#a9b3c0; --text:#e6edf3;
+  --brand:#64b5ff; --ok:#1ec28b; --warn:#ffb86b; --err:#ff6b6b;
+}
+body{margin:0;background:#0a0c10;color:var(--text);font:15px/1.7 Inter, system-ui}
+.container{max-width:1200px;margin:0 auto;padding:28px 20px}
+.top{display:flex;gap:18px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:saturate(120%) blur(10px);position:sticky;top:0;z-index:40}
+.brand{font-weight:800;color:#eaf2fb;text-decoration:none}
+.hero{padding:24px;border:1px solid rgba(255,255,255,.06);border-radius:18px;background:linear-gradient(180deg,#0f1318,#0e1217)}
+.badge{display:inline-block;font-size:12px;padding:4px 8px;border:1px solid rgba(255,255,255,.1);border-radius:999px;color:#cfe1f5}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:linear-gradient(180deg,#12171e,#0f1318);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px}
+.title{font-weight:700;color:#eaf2fb;text-decoration:none}
+.post-meta{font-size:12px;color:var(--muted);display:flex;gap:8px;margin-top:6px}
+.article{border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:24px;background:linear-gradient(180deg,#121820,#11161d)}
+.content pre{background:#0f1217;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;overflow:auto}
+.btn{display:inline-flex;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#151b23;color:#eaf2fb}
+.btn.primary{background:linear-gradient(180deg,#2e74ff,#1e57d4)}
+.muted{color:#a9b3c0}
+.admin-container{display:grid;grid-template-columns:260px 1fr;gap:16px;padding:20px}
+.admin-container aside{position:sticky;top:64px;height:calc(100vh - 80px);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:12px;background:linear-gradient(180deg,#11161d,#0f141a)}
+.admin-container aside nav a{display:block;padding:10px;border-radius:10px;color:#cfe1f5;text-decoration:none}
+.admin-container aside nav a:hover{background:rgba(255,255,255,.06)}
+.editor .field{display:grid;gap:6px}
+.editor .field input,.editor .field textarea,.editor .field select{background:#0f1217;border:1px solid rgba(255,255,255,.08);color:#eaf2fb;padding:10px;border-radius:12px}
+.two{display:grid;gap:12px;grid-template-columns:1fr 1fr}

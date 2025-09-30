@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" sizes="32x32" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" sizes="16x16" href="/favicon.svg" />
+  <title>HandyWriterz | Professional Academic Writing Services</title>
+  <meta name="description" content="HandyWriterz provides professional academic writing services for students and researchers worldwide." />
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --background: #f8fafc;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --white: #ffffff;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background-color: var(--background);
+    }
+    
+    header {
+      background-color: var(--white);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    
+    main {
+      margin-top: 5rem;
+      min-height: calc(100vh - 5rem - 4rem); /* accounting for header and footer */
+    }
+    
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: var(--white);
+      padding: 4rem 1.5rem;
+      text-align: center;
+    }
+    
+    .hero-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+    
+    .hero p {
+      font-size: 1.25rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+    
+    .cta-button {
+      display: inline-block;
+      background-color: var(--white);
+      color: var(--primary);
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .features {
+      padding: 4rem 1.5rem;
+    }
+    
+    .features-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .features h2 {
+      text-align: center;
+      margin-bottom: 3rem;
+      font-size: 2rem;
+      color: var(--text);
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    
+    .feature-card {
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-card h3 {
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    
+    .status-section {
+      background-color: var(--gray-100);
+      padding: 4rem 1.5rem;
+      text-align: center;
+    }
+    
+    .status-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .status-card {
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    .status-card h2 {
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    
+    footer {
+      background-color: var(--white);
+      padding: 1.5rem;
+      text-align: center;
+      color: var(--text-light);
+      border-top: 1px solid var(--gray-200);
+    }
+    
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+      
+      .hero p {
+        font-size: 1rem;
+      }
+      
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <a href="/" class="logo">HandyWriterz</a>
+    </div>
+  </header>
+  
+  <main>
+    <section class="hero">
+      <div class="hero-container">
+        <h1>Professional Academic Writing Services</h1>
+        <p>Expert assistance for students and researchers worldwide. Quality content tailored to your academic needs.</p>
+        <a href="javascript:void(0)" class="cta-button">Learn More</a>
+      </div>
+    </section>
+    
+    <section class="features">
+      <div class="features-container">
+        <h2>Our Services</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <h3>Research Papers</h3>
+            <p>Comprehensive research papers tailored to your specific academic requirements with proper citations and references.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Essay Writing</h3>
+            <p>Well-structured essays that present arguments clearly and effectively, backed by solid evidence and analysis.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Dissertation Support</h3>
+            <p>Assistance with all aspects of your dissertation, from proposal to final submission, ensuring academic excellence.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section class="status-section">
+      <div class="status-container">
+        <div class="status-card">
+          <h2>Website Status</h2>
+          <p>Our full application is currently being updated to serve you better.</p>
+          <p>Please check back soon for the complete HandyWriterz experience.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <footer>
+    <p>&copy; 2024 HandyWriterz. All rights reserved.</p>
+  </footer>
+</body>
+</html> 

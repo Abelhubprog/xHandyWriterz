@@ -1,0 +1,90 @@
+﻿version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${MM_DB_NAME}
+      POSTGRES_USER: ${MM_DB_USER}
+      POSTGRES_PASSWORD: ${MM_DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+  mattermost:
+    image: mattermost/mattermost-team-edition:9.10
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    env_file: .env
+    environment:
+      MM_SERVICESETTINGS_SITEURL: http://localhost:8065
+      MM_SQLSETTINGS_DRIVERNAME: postgres
+      MM_SQLSETTINGS_DATASOURCE: postgres://${MM_DB_USER}:${MM_DB_PASSWORD}@postgres:5432/${MM_DB_NAME}?sslmode=${MM_DB_SSL_MODE}
+      MM_FILESETTINGS_DRIVERNAME: amazons3
+      MM_FILESETTINGS_AMAZONS3ENDPOINT: ${MM_R2_ENDPOINT}
+      MM_FILESETTINGS_AMAZONS3ACCESSKEYID: ${MM_R2_ACCESS_KEY_ID}
+      MM_FILESETTINGS_AMAZONS3SECRETACCESSKEY: ${MM_R2_SECRET_ACCESS_KEY}
+      MM_FILESETTINGS_AMAZONS3BUCKET: ${MM_R2_BUCKET}
+      MM_FILESETTINGS_AMAZONS3REGION: ${MM_R2_REGION}
+      MM_FILESETTINGS_AMAZONS3SSL: "true"
+      MM_FILESETTINGS_AMAZONS3SIGNV2: "false"
+      MM_SERVICESETTINGS_ENABLELOCALMODE: "false"
+      MM_SERVICESETTINGS_ENABLECOMMANDS: "true"
+      MM_AUTHSETTINGS_ENABLESIGNUPWITHEMAIL: "false"
+      MM_AUTHSETTINGS_ENABLESIGNUPWITHEMAIL: "false"
+      MM_EMAILSETTINGS_ENABLESIGNUPWITHEMAIL: "false"
+      MM_OAUTHSETTINGS_ENABLE: "true"
+      MM_OAUTHSETTINGS_SERVICENAME: Clerk
+      MM_OAUTHSETTINGS_AUTHORITY: ${MM_OIDC_SERVICE_PROVIDER_IDENTIFIER}
+      MM_OAUTHSETTINGS_DISCOVERYENDPOINT: ${MM_OIDC_DISCOVERY_ENDPOINT}
+      MM_OAUTHSETTINGS_CLIENTID: ${MM_OIDC_CLIENT_ID}
+      MM_OAUTHSETTINGS_CLIENTSECRET: ${MM_OIDC_CLIENT_SECRET}
+      MM_OAUTHSETTINGS_ENABLESIGNUPWITHOIDC: "true"
+      MM_OAUTHSETTINGS_ENABLESIGNINWITHOIDC: "true"
+      MM_OAUTHSETTINGS_EMAILATTRIBUTE: email
+      MM_OAUTHSETTINGS_USERNAMEATTRIBUTE: preferred_username
+      MM_OAUTHSETTINGS_LOGINBUTTONTEXT: "Sign in with Clerk"
+      MM_CLUSTERSETTINGS_ENABLE: "false"
+    volumes:
+      - mattermost-data:/mattermost/data
+      - type: bind
+        source: ./config/mattermost.json
+        target: /mattermost/config/config.json
+    ports:
+      - "8065:8065"
+
+  minio:
+    image: minio/minio:RELEASE.2025-01-10T00-00-00Z
+    restart: unless-stopped
+    env_file: .env
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  create-bucket:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: ["/bin/sh", "-c"]
+    env_file: .env
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: |
+      "/usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} && \
+       /usr/bin/mc mb -p local/${MINIO_BUCKET_NAME} || true"
+
+volumes:
+  postgres-data:
+  mattermost-data:
+  minio-data:

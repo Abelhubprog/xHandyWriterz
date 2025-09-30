@@ -1,0 +1,68 @@
+import React, { useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { SignIn as ClerkSignIn, useClerk, useUser } from '@clerk/clerk-react';
+import HandyWriterzLogo from '@/components/HandyWriterzLogo';
+
+const Login: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { session } = useClerk();
+  const { isLoaded } = useUser();
+
+  const from = (location.state as any)?.from?.pathname || '/dashboard';
+
+  useEffect(() => {
+    if (isLoaded && session) {
+      navigate(from, { replace: true });
+    }
+  }, [isLoaded, session, navigate, from]);
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-sm bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-3">
+            <HandyWriterzLogo className="text-white" />
+          </div>
+          <h1 className="text-lg font-semibold text-slate-800">Sign in to HandyWriterz</h1>
+          <p className="text-sm text-slate-500 mt-1 text-center">Manage your writing projects and orders</p>
+        </div>
+
+        <ClerkSignIn
+          appearance={{
+            variables: {
+              colorPrimary: '#4f46e5',
+              colorText: '#0f172a',
+              fontFamily: 'Inter, ui-sans-serif, system-ui',
+            },
+            elements: {
+              card: 'p-0 bg-transparent shadow-none',
+              header: 'hidden',
+              footer: 'hidden',
+              dividerLine: 'bg-slate-200',
+              dividerText: 'text-slate-400 px-2',
+              formButtonPrimary: 'bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md w-full',
+              formFieldInput: 'border border-slate-200 rounded-md px-3 py-2 w-full',
+            },
+          }}
+          routing="path"
+          path="/sign-in"
+          signUpUrl="/sign-up"
+          redirectUrl="/dashboard"
+        />
+
+        <div className="mt-4 text-center text-sm text-slate-500">
+          Don't have an account?{' '}
+          <Link to="/sign-up" className="text-indigo-600 hover:text-indigo-700 font-medium">Sign up</Link>
+        </div>
+
+        <div className="mt-6 text-center text-xs text-slate-400">
+          <Link to="/terms" className="hover:text-slate-500 mr-4">Terms</Link>
+          <Link to="/privacy" className="hover:text-slate-500">Privacy</Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Login;

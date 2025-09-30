@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment variables
+.env
+.env.*
+
+# Build outputs
+apps/web/dist/
+apps/strapi/build/
+apps/strapi/.cache/
+apps/web/.next/
+apps/web/out/
+workers/**/dist/
+
+.wrangler/
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Shell/OS artifacts
+$PROFILE
+~$*
+
+# Misc
+coverage/
+*.local
+temp/
