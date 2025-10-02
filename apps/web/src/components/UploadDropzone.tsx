@@ -76,7 +76,7 @@ export function UploadDropzone({ onUpload }: UploadDropzoneProps) {
         ) : (
           <>
             <p className="text-gray-600">Drag & drop files here, or click to select</p>
-            <p className="text-sm text-gray-500">Supports images, video (<=200MB), audio (<=20MB), documents (<=20MB)</p>
+            <p className="text-sm text-gray-500">Supports images, video (max 200MB), audio (max 20MB), documents (max 20MB)</p>
           </>
         )}
       </CardContent>

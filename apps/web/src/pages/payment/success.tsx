@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import emailService from '@/services/emailService';
+import { toast } from 'sonner';
 
 const PaymentSuccess: React.FC = () => {
   const [params] = useSearchParams();
@@ -29,24 +31,46 @@ const PaymentSuccess: React.FC = () => {
     const key = `turnitin:${orderId}`;
     const raw = localStorage.getItem(key);
     if (!raw) return;
+    
     const submission = JSON.parse(raw);
-    const payload = { orderId, email: submission.email, attachments: submission.attachments || [] };
-    // Notify admin via serverless email
-    fetch('/api/turnitin/notify', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(() => {}).finally(() => {
-      // best-effort cleanup to avoid dupes on refreshes
-      try { localStorage.removeItem(key); } catch { /* noop */ }
-      setEmailed(true);
-    });
-    // Send a receipt to the user
-    fetch('/api/turnitin/receipt', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(() => {});
+    
+    // Send payment confirmation emails using emailService
+    (async () => {
+      try {
+        const paymentMethod = provider === 'paypal' ? 'PayPal' : 'StableLink Credit Card';
+        
+        // Send emails to both user and admin
+        await Promise.all([
+          emailService.sendUserPaymentConfirmation({
+            userEmail: submission.email,
+            orderId,
+            amount: 9.99,
+            currency: 'USD',
+            paymentMethod,
+            transactionId: token || 'N/A',
+            serviceType: 'Turnitin Check'
+          }),
+          emailService.notifyAdminPaymentReceived({
+            userEmail: submission.email,
+            orderId,
+            amount: 9.99,
+            currency: 'USD',
+            paymentMethod,
+            transactionId: token || 'N/A',
+            serviceType: 'Turnitin Check'
+          })
+        ]);
+        
+        toast.success('Payment confirmation emails sent!');
+      } catch (error) {
+        console.error('Failed to send payment emails:', error);
+        toast.error('Payment confirmed but email notification failed');
+      } finally {
+        // Cleanup to avoid dupes on refreshes
+        try { localStorage.removeItem(key); } catch { /* noop */ }
+        setEmailed(true);
+      }
+    })();
   }, [orderId, provider, token, captured, emailed]);
 
   return (

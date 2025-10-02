@@ -3,7 +3,7 @@ const encoder = new TextEncoder();
 async function sha256Hex(data: string | ArrayBuffer): Promise<string> {
   let buffer: ArrayBuffer;
   if (typeof data === 'string') {
-    buffer = encoder.encode(data);
+    buffer = encoder.encode(data).buffer;
   } else {
     buffer = data;
   }
@@ -14,11 +14,11 @@ async function sha256Hex(data: string | ArrayBuffer): Promise<string> {
 
 async function hmac(key: ArrayBuffer, data: string): Promise<ArrayBuffer> {
   const cryptoKey = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  return crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(data));
+  return crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(data).buffer);
 }
 
 async function getSigningKey(secret: string, date: string, region: string, service: string): Promise<ArrayBuffer> {
-  const kDate = await hmac(encoder.encode(`AWS4${secret}`), date);
+  const kDate = await hmac(encoder.encode(`AWS4${secret}`).buffer, date);
   const kRegion = await hmac(kDate, region);
   const kService = await hmac(kRegion, service);
   return hmac(kService, 'aws4_request');
@@ -65,6 +65,10 @@ export interface Env {
   S3_SECRET_ACCESS_KEY: string;
   FORCE_PATH_STYLE?: string;
   DOWNLOAD_TTL_SECONDS?: string;
+  RATE_LIMIT_KV?: KVNamespace;
+  RATE_LIMIT_REQUESTS_PER_MINUTE?: string;
+  SENTRY_DSN?: string;
+  MATTERMOST_WEBHOOK_URL?: string;
 }
 
 interface SignedRequestInput {
@@ -118,6 +122,23 @@ export default {
         const data = await safeJson(request);
         const key = validateString(data.key, 'key');
         const expires = typeof data.expires === 'number' ? data.expires : Number(env.DOWNLOAD_TTL_SECONDS ?? 300);
+        
+        // Check rate limiting
+        const clientId = request.headers.get('x-client-id') || request.headers.get('cf-connecting-ip') || 'unknown';
+        const allowed = await checkRateLimit(env, clientId);
+        if (!allowed) {
+          return jsonResponse({ error: 'Rate limit exceeded' }, { status: 429 });
+        }
+        
+        // Check AV scan status before allowing download
+        const scanStatus = await checkAVStatus(env, key);
+        if (scanStatus === 'infected') {
+          return jsonResponse({ error: 'File failed security scan' }, { status: 403 });
+        }
+        if (scanStatus === 'pending') {
+          return jsonResponse({ error: 'File scan in progress, please try again shortly' }, { status: 202 });
+        }
+        
         const presigned = await presignGet(env, { key, expires });
         return jsonResponse({ url: presigned });
       }
@@ -361,4 +382,98 @@ async function presignUrl(
     : `X-Amz-Signature=${signature}`;
 
   return `${endpoint}${resourcePath}?${queryWithSignature}`;
+}
+
+/**
+ * Rate limiting check using KV
+ */
+async function checkRateLimit(env: Env, clientId: string): Promise<boolean> {
+  if (!env.RATE_LIMIT_KV) {
+    return true; // No rate limiting configured
+  }
+
+  const limit = Number(env.RATE_LIMIT_REQUESTS_PER_MINUTE ?? 60);
+  const key = `ratelimit:${clientId}`;
+  const now = Date.now();
+  const windowMs = 60000; // 1 minute
+
+  try {
+    const existing = await env.RATE_LIMIT_KV.get(key, 'json');
+    if (existing && typeof existing === 'object' && 'count' in existing && 'reset' in existing) {
+      const record = existing as { count: number; reset: number };
+      if (now < record.reset) {
+        if (record.count >= limit) {
+          return false;
+        }
+        await env.RATE_LIMIT_KV.put(key, JSON.stringify({ count: record.count + 1, reset: record.reset }), {
+          expirationTtl: 120,
+        });
+        return true;
+      }
+    }
+
+    // Create new window
+    await env.RATE_LIMIT_KV.put(key, JSON.stringify({ count: 1, reset: now + windowMs }), {
+      expirationTtl: 120,
+    });
+    return true;
+  } catch (error) {
+    console.error('Rate limit check failed', error);
+    return true; // Allow on error
+  }
+}
+
+/**
+ * Check AV scan status from R2 object metadata
+ */
+async function checkAVStatus(env: Env, key: string): Promise<'clean' | 'infected' | 'pending'> {
+  try {
+    // HEAD request to get metadata without downloading
+    const response = await signedFetch(env, {
+      method: 'HEAD',
+      key,
+    });
+
+    if (!response.ok) {
+      // Object doesn't exist or error
+      return 'pending';
+    }
+
+    const scanMeta = response.headers.get('x-amz-meta-scan-status') || response.headers.get('x-scan');
+    if (scanMeta === 'clean') {
+      return 'clean';
+    }
+    if (scanMeta === 'infected' || scanMeta === 'quarantine') {
+      return 'infected';
+    }
+
+    // No metadata or unknown status
+    return 'pending';
+  } catch (error) {
+    console.error('AV status check failed', error);
+    return 'pending'; // Default to pending on error
+  }
+}
+
+/**
+ * Notify Mattermost when scan completes
+ */
+async function notifyMattermostScanComplete(env: Env, key: string, status: 'clean' | 'infected'): Promise<void> {
+  if (!env.MATTERMOST_WEBHOOK_URL) {
+    return;
+  }
+
+  try {
+    const message = status === 'clean' 
+      ? `✅ File scan complete: \`${key}\` is clean and ready for download.`
+      : `⚠️ File scan complete: \`${key}\` failed security check and has been quarantined.`;
+
+    await fetch(env.MATTERMOST_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: message }),
+    });
+  } catch (error) {
+    console.error('Mattermost notification failed', error);
+  }
 }

@@ -21,10 +21,14 @@ import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from './theme/ThemeContext';
 import Web3Provider from './providers/Web3Provider';
 import { logEnvironmentStatus } from './utils/checkEnv';
+import { initSentry } from './lib/sentry';
 import './index.css';
 import './styles.css';
 import { router } from './router';
 import ErrorBoundary from './components/common/ErrorBoundary';
+
+// Initialize observability
+initSentry();
 
 // Check environment on startup
 logEnvironmentStatus();

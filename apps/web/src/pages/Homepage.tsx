@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -26,7 +26,8 @@ import {
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'react-hot-toast';
+import { useQuery } from '@tanstack/react-query';
+import { fetchLandingSections } from '@/lib/cms';
 
 type IconComponent = LucideIcon;
 
@@ -97,6 +98,115 @@ const wisdomMessages = [
   "The pen is mightier than the sword, especially during exams."
 ];
 
+type FeatureCard = {
+  icon: IconComponent;
+  title: string;
+  description: string;
+};
+
+type ServiceCard = {
+  icon: IconComponent;
+  title: string;
+  description: string;
+  color: string;
+  bgColor: string;
+  link: string;
+  badge?: string | null;
+};
+
+const ICON_MAP: Record<string, IconComponent> = {
+  shield: Shield,
+  users: Users,
+  clock: Clock,
+  book: Book,
+  bookopen: BookOpen,
+  support: MessageCircle,
+  zap: Zap,
+  award: Award,
+  message: MessageSquare,
+  heart: Heart,
+  brain: Brain,
+  graduate: GraduationCap,
+  file: FileText,
+  sparkles: Sparkles,
+  star: Star,
+};
+
+const FALLBACK_FEATURES: FeatureCard[] = [
+  {
+    icon: Shield,
+    title: '100% Plagiarism Free',
+    description: 'Every submission is thoroughly checked through Turnitin',
+  },
+  {
+    icon: Users,
+    title: 'Expert Writers',
+    description: 'Qualified professionals in nursing and healthcare',
+  },
+  {
+    icon: Clock,
+    title: '24/7 Support',
+    description: 'Round-the-clock assistance for your academic needs',
+  },
+];
+
+const FALLBACK_SERVICES: ServiceCard[] = [
+  {
+    icon: GraduationCap,
+    title: 'Adult Health Nursing',
+    description: 'Expert support for adult nursing students',
+    color: 'from-emerald-500 to-emerald-600',
+    bgColor: 'from-emerald-100/40 to-emerald-200/20',
+    link: '/d/adult-health',
+  },
+  {
+    icon: Brain,
+    title: 'Mental Health Nursing',
+    description: 'Specialized mental health nursing assistance',
+    color: 'from-violet-500 to-violet-600',
+    bgColor: 'from-violet-100/40 to-violet-200/20',
+    link: '/d/mental-health',
+  },
+  {
+    icon: Heart,
+    title: 'Child Nursing',
+    description: 'Dedicated pediatric nursing support',
+    color: 'from-sky-500 to-sky-600',
+    bgColor: 'from-sky-100/40 to-sky-200/20',
+    link: '/d/child-nursing',
+  },
+  {
+    icon: BookOpen,
+    title: 'Social Work',
+    description: 'Professional social work writing assistance',
+    color: 'from-amber-500 to-amber-600',
+    bgColor: 'from-amber-100/40 to-amber-200/20',
+    link: '/d/social-work',
+  },
+  {
+    icon: Sparkles,
+    title: 'Artificial Intelligence',
+    description: 'Support for specialized AI and machine learning topics',
+    color: 'from-indigo-500 to-indigo-600',
+    bgColor: 'from-indigo-100/40 to-indigo-200/20',
+    link: '/d/ai',
+  },
+  {
+    icon: Star,
+    title: 'Crypto',
+    description: 'Blockchain, cryptocurrency, and fintech research',
+    color: 'from-amber-500 to-amber-600',
+    bgColor: 'from-amber-100/40 to-amber-200/20',
+    link: '/d/crypto',
+  },
+];
+
+function resolveIconComponent(key: string | null | undefined, fallback: IconComponent): IconComponent {
+  if (!key) return fallback;
+  const normalized = key.toLowerCase().replace(/[^a-z]/g, '');
+  return ICON_MAP[normalized] ?? fallback;
+}
+
 function Homepage() {
   const { user, logout } = useAuth();
   const [activeFeature, setActiveFeature] = useState(0);
@@ -109,81 +219,103 @@ function Homepage() {
   const ctaRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
 
-  const features = [
-    {
-      icon: Shield as IconComponent,
-      title: "100% Plagiarism Free",
-      description: "Every submission is thoroughly checked through Turnitin"
-    },
-    {
-      icon: Users as IconComponent,
-      title: "Expert Writers",
-      description: "Qualified professionals in nursing and healthcare"
-    },
-    {
-      icon: Clock as IconComponent,
-      title: "24/7 Support",
-      description: "Round-the-clock assistance for your academic needs"
-    }
-  ];
+  const { data: landingSectionsData } = useQuery({
+    queryKey: ['landing-sections', 'homepage'],
+    queryFn: () => fetchLandingSections('homepage'),
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const services = [
-    {
-      icon: GraduationCap as IconComponent,
-      title: "Adult Health Nursing",
-      description: "Expert support for adult nursing students",
-      color: "from-emerald-500 to-emerald-600",
-      bgColor: "from-emerald-100/40 to-emerald-200/20",
-      link: "/d/adult-health"
-    },
-    {
-      icon: Brain as IconComponent,
-      title: "Mental Health Nursing",
-      description: "Specialized mental health nursing assistance",
-      color: "from-violet-500 to-violet-600",
-      bgColor: "from-violet-100/40 to-violet-200/20",
-      link: "/d/mental-health"
-    },
-    {
-      icon: Heart as IconComponent,
-      title: "Child Nursing",
-      description: "Dedicated pediatric nursing support",
-      color: "from-sky-500 to-sky-600",
-      bgColor: "from-sky-100/40 to-sky-200/20",
-      link: "/d/child-nursing"
-    },
-    {
-      icon: BookOpen as IconComponent,
-      title: "Social Work",
-      description: "Professional social work writing assistance",
-      color: "from-amber-500 to-amber-600",
-      bgColor: "from-amber-100/40 to-amber-200/20",
-      link: "/d/social-work"
-    },
-    {
-      icon: Sparkles as IconComponent,
-      title: "Artificial Intelligence",
-      description: "Support for specialized AI and machine learning topics",
-      color: "from-indigo-500 to-indigo-600",
-      bgColor: "from-indigo-100/40 to-indigo-200/20",
-      link: "/d/ai"
-    },
-    {
-      icon: Star as IconComponent,
-      title: "Crypto",
-      description: "Blockchain, cryptocurrency, and fintech research",
-      color: "from-amber-500 to-amber-600",
-      bgColor: "from-amber-100/40 to-amber-200/20",
-      link: "/d/crypto"
-    },
-  ];
+  const landingSections = landingSectionsData ?? [];
+
+  console.log('📊 CMS Data loaded:', {
+    landingSectionsCount: landingSections.length,
+    landingSections: landingSections.map(s => ({ sectionKey: s.sectionKey, heading: s.heading }))
+  });
+
+  const heroSection = useMemo(
+    () => landingSections.find((section) => section.sectionKey === 'hero'),
+    [landingSections],
+  );
+
+  const featuresSection = useMemo(
+    () => landingSections.find((section) => section.sectionKey === 'features'),
+    [landingSections],
+  );
+
+  const servicesSection = useMemo(
+    () => landingSections.find((section) => section.sectionKey === 'services'),
+    [landingSections],
+  );
+
+  const testimonialsSection = useMemo(
+    () => landingSections.find((section) => section.sectionKey === 'testimonials'),
+    [landingSections],
+  );
+
+  const heroEyebrow = heroSection?.eyebrow ?? 'Professional Academic Support';
+  const heroHeading = heroSection?.heading ?? 'Your Academic Success Partner';
+  const heroBody = heroSection?.subheading ??
+    'Expert assistance for nursing, social work, and special education students. Get professional support for your academic journey.';
+
+  const primaryCtaLabel = heroSection?.ctaLabel ?? 'Check Turnitin Now';
+  const primaryCtaUrl = heroSection?.ctaUrl ?? null;
+  const secondaryCtaLabel = heroSection?.secondaryCtaLabel ?? 'Explore Services';
+  const secondaryCtaUrl = heroSection?.secondaryCtaUrl ?? null;
+
+  const servicesEyebrow = servicesSection?.eyebrow ?? 'Our Expertise';
+  const servicesHeading = servicesSection?.heading ?? 'Comprehensive Academic Support';
+  const servicesBody = servicesSection?.subheading ?? 'Expert assistance across multiple disciplines, tailored to your needs';
+  const servicesCtaLabel = servicesSection?.ctaLabel ?? null;
+  const servicesCtaUrl = servicesSection?.ctaUrl ?? null;
+
+  const featureCards = useMemo<FeatureCard[]>(() => {
+    if (!featuresSection) return FALLBACK_FEATURES;
+    const mapped = featuresSection.items.reduce<FeatureCard[]>((acc, item) => {
+      const title = item.title?.trim();
+      const description = (item.description ?? item.subtitle ?? '').trim();
+      if (!title || !description) {
+        return acc;
+      }
+      acc.push({
+        icon: resolveIconComponent(item.iconKey, Shield),
+        title,
+        description,
+      });
+      return acc;
+    }, []);
+    return mapped.length ? mapped : FALLBACK_FEATURES;
+  }, [featuresSection]);
+
+  const serviceCards = useMemo<ServiceCard[]>(() => {
+    if (!servicesSection) return FALLBACK_SERVICES;
+    const mapped = servicesSection.items.reduce<ServiceCard[]>((acc, item) => {
+      const title = item.title?.trim();
+      const description = (item.description ?? item.subtitle ?? '').trim();
+      const link = item.linkUrl?.trim();
+      if (!title || !description || !link) {
+        return acc;
+      }
+      acc.push({
+        icon: resolveIconComponent(item.iconKey, BookOpen),
+        title,
+        description,
+        color: item.accentGradient ?? 'from-blue-500 to-blue-600',
+        bgColor: item.backgroundGradient ?? 'from-blue-100/40 to-blue-200/20',
+        link,
+        badge: item.badge ?? null,
+      });
+      return acc;
+    }, []);
+    return mapped.length ? mapped : FALLBACK_SERVICES;
+  }, [servicesSection]);
 
   useEffect(() => {
+    if (!featureCards.length) return;
     const interval = setInterval(() => {
-      setActiveFeature((prev) => (prev + 1) % features.length);
+      setActiveFeature((prev) => (prev + 1) % featureCards.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [features.length]);
+  }, [featureCards.length]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -197,15 +329,63 @@ function Homepage() {
   }, []);
 
   const handleGetStarted = () => {
+    console.log('🚀 handleGetStarted called!', { user: !!user });
     if (user) {
+      console.log('🚀 User exists, navigating to /dashboard');
       navigate('/dashboard');
     } else {
+      console.log('🚀 No user, navigating to /sign-in');
       navigate('/sign-in');
     }
   };
 
+  const openCtaUrl = (url: string) => {
+    console.log('🔗 openCtaUrl called:', url);
+    if (/^https?:/i.test(url)) {
+      console.log('🔗 External URL detected, opening in new tab');
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    console.log('🔗 Internal URL, navigating via React Router');
+    navigate(url);
+  };
+
   const handleCheckTurnitin = () => {
-    navigate('/check-turnitin');
+    console.log('✅ handleCheckTurnitin called, navigating to /turnitin/submit');
+    navigate('/turnitin/submit');
+  };
+
+  const handlePrimaryCta = () => {
+    console.log('🔵 Primary CTA clicked!', { primaryCtaUrl });
+    if (primaryCtaUrl) {
+      console.log('🔵 Opening CTA URL:', primaryCtaUrl);
+      openCtaUrl(primaryCtaUrl);
+      return;
+    }
+    console.log('🔵 Fallback: navigating to /check-turnitin');
+    handleCheckTurnitin();
+  };
+
+  const handleSecondaryCta = () => {
+    console.log('🟢 Secondary CTA clicked!', { secondaryCtaUrl });
+    if (secondaryCtaUrl) {
+      console.log('🟢 Opening CTA URL:', secondaryCtaUrl);
+      openCtaUrl(secondaryCtaUrl);
+      return;
+    }
+    console.log('🟢 Fallback: scrolling to services');
+    scrollToSection(servicesRef);
+  };
+
+  const handleServicesCta = () => {
+    console.log('🟡 Services CTA clicked!', { servicesCtaUrl });
+    if (servicesCtaUrl) {
+      console.log('🟡 Opening CTA URL:', servicesCtaUrl);
+      openCtaUrl(servicesCtaUrl);
+      return;
+    }
+    console.log('🟡 Fallback: calling handleGetStarted');
+    handleGetStarted();
   };
 
   const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
@@ -235,15 +415,17 @@ function Homepage() {
 
         <div className="relative max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 bg-white/90 text-blue-600 px-4 py-2 rounded-full text-sm font-medium mb-6 shadow-md backdrop-blur-sm border border-blue-100"
-            >
-              <IconWrapper icon={Sparkles} className="h-4 w-4" />
-              Professional Academic Support
-            </motion.div>
+            {heroEyebrow && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 bg-white/90 text-blue-600 px-4 py-2 rounded-full text-sm font-medium mb-6 shadow-md backdrop-blur-sm border border-blue-100"
+              >
+                <IconWrapper icon={Sparkles} className="h-4 w-4" />
+                {heroEyebrow}
+              </motion.div>
+            )}
 
             <motion.h1
               initial={{ opacity: 0, y: -20 }}
@@ -251,18 +433,19 @@ function Homepage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"
             >
-              Your Academic Success Partner
+              {heroHeading}
             </motion.h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto"
-            >
-              Expert assistance for nursing, social work, and special education students.
-              Get professional support for your academic journey.
-            </motion.p>
+            {heroBody && (
+              <motion.p
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto"
+              >
+                {heroBody}
+              </motion.p>
+            )}
 
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -275,34 +458,33 @@ function Homepage() {
                 initial="initial"
                 whileHover="hover"
                 whileTap="tap"
-                onClick={handleCheckTurnitin}
+                onClick={handlePrimaryCta}
                 className="group relative overflow-hidden inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:opacity-90 transition-all shadow-lg shadow-blue-600/20 font-medium"
               >
                 <motion.span
-                  className="sign-in-btn-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+                  className="sign-in-btn-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 pointer-events-none"
                   variants={shimmerVariants}
                   animate="animate"
                 />
                 <span className="relative z-10 flex items-center gap-2">
-                  Check Turnitin Now
+                  {primaryCtaLabel}
                   <IconWrapper icon={ArrowRight} className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               </motion.button>
 
-              <motion.button
-                variants={buttonVariants}
-                initial="initial"
-                whileHover="hover"
-                whileTap="tap"
-                onClick={() => navigate('/services')}
-                className="group relative overflow-hidden inline-flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-lg shadow-lg shadow-indigo-600/20 font-medium"
-              >
-                <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-                <span className="relative z-10 flex items-center gap-2">
-                  Explore Services
-                  <IconWrapper icon={ArrowRight} className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </motion.button>
+              {secondaryCtaLabel && (
+                <motion.button
+                  variants={buttonVariants}
+                  initial="initial"
+                  whileHover="hover"
+                  whileTap="tap"
+                  onClick={handleSecondaryCta}
+                  className="inline-flex items-center gap-2 px-6 py-4 bg-white text-blue-600 rounded-xl border border-blue-200 hover:border-blue-300 transition-all shadow-sm font-medium"
+                >
+                  {secondaryCtaLabel}
+                  <IconWrapper icon={ChevronRight} className="h-5 w-5" />
+                </motion.button>
+              )}
             </motion.div>
 
             <motion.div
@@ -311,7 +493,7 @@ function Homepage() {
               transition={{ duration: 0.5, delay: 0.8 }}
               className="relative h-24"
             >
-              {features.map((feature, index) => (
+              {featureCards.map((feature, index) => (
                 <AnimatePresence key={feature.title} initial={false} mode="wait">
                   {index === activeFeature && (
                     <motion.div
@@ -325,8 +507,8 @@ function Homepage() {
                       <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-xl shadow-xl border border-gray-100">
                         <IconWrapper icon={feature.icon} className="h-6 w-6 text-blue-600" />
                         <div className="text-left">
-                          <div className="font-semibold text-gray-800">{feature.title}</div>
-                          <div className="text-sm text-gray-600">{feature.description}</div>
+                          <h3 className="font-semibold text-gray-900">{feature.title}</h3>
+                          <p className="text-sm text-gray-600">{feature.description}</p>
                         </div>
                       </div>
                     </motion.div>
@@ -337,17 +519,47 @@ function Homepage() {
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 1 }}
-              className="mt-12"
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              viewport={{ once: true }}
+              className="mt-12 grid gap-6 md:grid-cols-3"
             >
-              <button
-                onClick={() => scrollToSection(servicesRef)}
-                className="flex flex-col items-center justify-center gap-2 text-blue-600 mx-auto animate-bounce"
-              >
-                <span className="text-sm font-medium">Discover Our Services</span>
-                <MousePointer className="h-5 w-5" />
-              </button>
+              {featureCards.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 mb-4">
+                    <IconWrapper icon={feature.icon} className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                  <p className="text-gray-600">{feature.description}</p>
+                  <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10" />
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="mt-16 flex flex-wrap items-center justify-center gap-8 text-sm text-gray-500"
+            >
+              <div className="flex items-center gap-2">
+                <IconWrapper icon={Shield} className="h-4 w-4 text-blue-500" />
+                <span>Turnitin Checked</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <IconWrapper icon={FileText} className="h-4 w-4 text-purple-500" />
+                <span>APA, MLA, Chicago Formatting</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <IconWrapper icon={Clock} className="h-4 w-4 text-emerald-500" />
+                <span>Fast Turnaround</span>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -358,55 +570,117 @@ function Homepage() {
         {/* Background elements */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white"></div>
         <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0 bg-[radial-gradient(circle,#80808012_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle,#80808012_1px,transparent_1px)] bg-[size:20px_20px]" />
         </div>
 
         <div className="relative max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.5 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-medium mb-4 border border-blue-100">
-              <IconWrapper icon={Award} className="h-4 w-4" />
-              Our Expertise
-            </div>
-            <h2 className="text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600">Comprehensive Academic Support</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Expert assistance across multiple disciplines, tailored to your needs
-            </p>
+            {servicesEyebrow && (
+              <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-medium mb-4 border border-blue-100">
+                <IconWrapper icon={Award} className="h-4 w-4" />
+                {servicesEyebrow}
+              </div>
+            )}
+            <h2 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600">
+              {servicesHeading}
+            </h2>
+            {servicesBody && (
+              <p className="text-gray-600 text-lg mb-8 max-w-3xl mx-auto">{servicesBody}</p>
+            )}
+            {servicesCtaLabel && (
+              <motion.button
+                variants={buttonVariants}
+                initial="initial"
+                whileHover="hover"
+                whileTap="tap"
+                onClick={handleServicesCta}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-xl border border-blue-200 hover:border-blue-300 transition-all shadow-sm font-medium"
+              >
+                {servicesCtaLabel}
+                <IconWrapper icon={ChevronRight} className="h-5 w-5" />
+              </motion.button>
+            )}
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {services.map((service, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
-                className="group relative bg-white border border-gray-100 p-8 rounded-2xl hover:border-transparent transition-all duration-300"
-              >
-                <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${service.color} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-b-2xl`}></div>
-                <div className="relative">
-                  <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${service.bgColor} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <IconWrapper icon={service.icon} className={`h-7 w-7 bg-gradient-to-r ${service.color} bg-clip-text text-transparent`} />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3 group-hover:text-blue-600 transition-colors duration-300">{service.title}</h3>
-                  <p className="text-gray-600 mb-6">{service.description}</p>
-                  <Link
-                    to={service.link}
-                    className={`inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r ${service.color} text-white rounded-lg shadow-md group-hover:shadow-lg transition-all duration-300`}
-                  >
-                    Learn more
-                    <IconWrapper icon={ChevronRight} className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {serviceCards.map((service) => {
+              const isExternal = /^https?:/i.test(service.link);
+
+              return (
+                <motion.div
+                  key={service.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-50px' }}
+                  transition={{ duration: 0.4 }}
+                  className="group relative overflow-hidden rounded-3xl bg-white shadow-lg border border-gray-100 hover:shadow-xl transition-all"
+                >
+                  {isExternal ? (
+                    <a
+                      href={service.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-8 cursor-pointer"
+                      onClick={() => console.log('🎯 External card clicked:', service.link)}
+                    >
+                      <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${service.bgColor} pointer-events-none`} />
+                      <div className="relative">
+                        {service.badge && (
+                          <span className="absolute -top-3 left-0 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-3 py-1 text-xs font-semibold text-white shadow-md">
+                            <IconWrapper icon={Sparkles} className="h-3 w-3" />
+                            {service.badge}
+                          </span>
+                        )}
+                        <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${service.bgColor} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                          <IconWrapper icon={service.icon} className="h-7 w-7 text-gray-700" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300">
+                          {service.title}
+                        </h3>
+                        <p className="text-gray-700 mb-6 leading-relaxed">{service.description}</p>
+                        <span className={`inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r ${service.color} text-white rounded-lg shadow-md group-hover:shadow-lg transition-all duration-300`}>
+                          Learn more
+                          <IconWrapper icon={ChevronRight} className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                      </div>
+                    </a>
+                  ) : (
+                    <Link
+                      to={service.link}
+                      className="block p-8 cursor-pointer"
+                      onClick={() => console.log('🎯 Card clicked:', service.link)}
+                    >
+                      <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${service.bgColor} pointer-events-none`} />
+                      <div className="relative">
+                        {service.badge && (
+                          <span className="absolute -top-3 left-0 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-3 py-1 text-xs font-semibold text-white shadow-md">
+                            <IconWrapper icon={Sparkles} className="h-3 w-3" />
+                            {service.badge}
+                          </span>
+                        )}
+                        <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${service.bgColor} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                          <IconWrapper icon={service.icon} className="h-7 w-7 text-gray-700" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300">
+                          {service.title}
+                        </h3>
+                        <p className="text-gray-700 mb-6 leading-relaxed">{service.description}</p>
+                        <span className={`inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r ${service.color} text-white rounded-lg shadow-md group-hover:shadow-lg transition-all duration-300`}>
+                          Learn more
+                          <IconWrapper icon={ChevronRight} className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                      </div>
+                    </Link>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -450,7 +724,7 @@ function Homepage() {
             disabled={isLoading}
           >
             <motion.span
-              className="cta-btn-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+              className="cta-btn-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 pointer-events-none"
               variants={shimmerVariants}
               animate="animate"
             />
@@ -658,7 +932,7 @@ function Homepage() {
                 <p className="text-gray-600 mb-4">
                   Verify your work's originality with our advanced plagiarism detection tool
                 </p>
-                <Link to="/check-turnitin" className="inline-flex items-center text-purple-600 font-medium hover:text-purple-800">
+                <Link to="/turnitin/submit" className="inline-flex items-center text-purple-600 font-medium hover:text-purple-800">
                   Check Turnitin <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </div>

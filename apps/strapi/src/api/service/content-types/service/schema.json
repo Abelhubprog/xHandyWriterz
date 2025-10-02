@@ -1,4 +1,4 @@
-﻿{
+{
   "kind": "collectionType",
   "collectionName": "services",
   "info": {
@@ -10,66 +10,101 @@
     "draftAndPublish": true
   },
   "pluginOptions": {
-    "graphql": {
-      "description": "Catalogued services surfaced in the HandyWriterz front-end"
+    "i18n": {
+      "localized": true
     }
   },
   "attributes": {
     "title": {
       "type": "string",
-      "required": true
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "maxLength": 255,
+      "required": true,
+      "unique": true
     },
     "slug": {
       "type": "uid",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
       "targetField": "title",
       "required": true
     },
-    "summary": {
-      "type": "text"
-    },
-    "body": {
-      "type": "richtext"
-    },
     "domain": {
       "type": "enumeration",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true,
       "enum": [
-        "adult-health",
-        "mental-health",
-        "child-nursing",
-        "social-work",
+        "nursing",
         "ai",
         "crypto",
-        "general"
-      ],
-      "default": "general"
+        "marketing",
+        "enterprise",
+        "education",
+        "research"
+      ]
     },
-    "typeTags": {
-      "type": "json",
-      "default": []
+    "Summary": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true
+    },
+    "body": {
+      "type": "blocks",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true
     },
     "heroImage": {
       "type": "media",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
       "multiple": false,
-      "allowedTypes": ["images"]
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
     },
-    "attachments": {
-      "type": "media",
-      "multiple": true,
-      "allowedTypes": ["images", "files", "videos", "audios"]
+    "featured": {
+      "type": "boolean",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "default": false
     },
-    "seo": {
-      "type": "component",
-      "repeatable": false,
-      "component": "seo.meta"
-    },
-    "author": {
-      "type": "string"
-    },
-    "readingMinutes": {
-      "type": "integer"
-    },
-    "publishedAt": {
-      "type": "datetime"
+    "order": {
+      "type": "integer",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "default": 0
     }
   }
 }

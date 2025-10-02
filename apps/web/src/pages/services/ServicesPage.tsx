@@ -2,27 +2,31 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Calendar, Clock, Tag, User } from 'lucide-react';
-import RichContentRenderer from '@/components/Services/RichContentRenderer';
+import { ArrowLeft, Calendar, Clock, Tag, User, Share2, Bookmark, Eye } from 'lucide-react';
+import ModernContentRenderer, { type ContentBlock } from '@/components/Content/ModernContentRenderer';
+import SEOHead from '@/components/SEO/SEOHead';
 import type { ServiceDetail, ServiceListItem } from '@/types/cms';
 import { fetchServiceBySlug, fetchServicesList } from '@/lib/cms';
 
 const ListSkeleton: React.FC = () => (
-  <div className="mx-auto max-w-6xl px-4 py-12">
-    <div className="mb-8 space-y-3 animate-pulse">
-      <div className="h-10 w-2/5 rounded bg-gray-200" />
-      <div className="h-4 w-3/5 rounded bg-gray-200" />
+  <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="mb-12 space-y-4 animate-pulse">
+      <div className="h-12 w-3/5 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300" />
+      <div className="h-6 w-4/5 rounded bg-gray-200" />
     </div>
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, idx) => (
-        <div key={idx} className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-          <div className="mb-4 h-40 w-full rounded bg-gray-200" />
-          <div className="mb-2 h-4 w-3/4 rounded bg-gray-200" />
-          <div className="mb-2 h-4 w-full rounded bg-gray-200" />
-          <div className="mb-2 h-4 w-5/6 rounded bg-gray-200" />
-          <div className="mt-4 flex items-center justify-between text-xs text-gray-400">
-            <div className="h-3 w-20 rounded bg-gray-200" />
-            <div className="h-3 w-12 rounded bg-gray-200" />
+        <div key={idx} className="group rounded-3xl border border-gray-100 bg-white shadow-sm hover:shadow-xl transition-all duration-300">
+          <div className="mb-4 h-56 w-full rounded-t-3xl bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
+          <div className="p-6 space-y-3">
+            <div className="h-4 w-1/4 rounded-full bg-gray-200" />
+            <div className="h-6 w-3/4 rounded bg-gray-200" />
+            <div className="h-4 w-full rounded bg-gray-200" />
+            <div className="h-4 w-5/6 rounded bg-gray-200" />
+            <div className="mt-4 flex items-center justify-between text-xs">
+              <div className="h-3 w-24 rounded bg-gray-200" />
+              <div className="h-3 w-16 rounded bg-gray-200" />
+            </div>
           </div>
         </div>
       ))}
@@ -31,21 +35,40 @@ const ListSkeleton: React.FC = () => (
 );
 
 const DetailSkeleton: React.FC = () => (
-  <div className="mx-auto max-w-5xl space-y-6 px-4 py-12">
-    <div className="space-y-3 animate-pulse">
-      <div className="h-3 w-1/3 rounded bg-gray-200" />
-      <div className="h-8 w-3/4 rounded bg-gray-200" />
-      <div className="h-4 w-2/5 rounded bg-gray-200" />
-    </div>
-    <div className="h-64 w-full rounded-2xl bg-gray-200" />
-    <div className="space-y-4">
-      {Array.from({ length: 4 }).map((_, idx) => (
-        <div key={idx} className="h-4 w-full rounded bg-gray-200" />
-      ))}
-    </div>
-    <div className="space-y-3">
-      <div className="h-3 w-1/5 rounded bg-gray-200" />
-      <div className="h-3 w-2/5 rounded bg-gray-200" />
+  <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="space-y-8 animate-pulse">
+        {/* Breadcrumb */}
+        <div className="h-4 w-32 rounded bg-gray-200" />
+        
+        {/* Header */}
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <div className="h-6 w-20 rounded-full bg-gray-200" />
+            <div className="h-6 w-24 rounded-full bg-gray-200" />
+          </div>
+          <div className="h-12 w-4/5 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300" />
+          <div className="flex gap-4">
+            <div className="h-5 w-28 rounded bg-gray-200" />
+            <div className="h-5 w-24 rounded bg-gray-200" />
+            <div className="h-5 w-32 rounded bg-gray-200" />
+          </div>
+        </div>
+
+        {/* Hero Image */}
+        <div className="h-96 w-full rounded-3xl bg-gradient-to-br from-gray-200 via-gray-300 to-gray-200" />
+
+        {/* Content */}
+        <div className="space-y-6 pt-6">
+          {Array.from({ length: 8 }).map((_, idx) => (
+            <div key={idx} className="space-y-2">
+              <div className="h-4 w-full rounded bg-gray-200" />
+              <div className="h-4 w-11/12 rounded bg-gray-200" />
+              <div className="h-4 w-10/12 rounded bg-gray-200" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   </div>
 );
@@ -136,6 +159,64 @@ const buildMediaBlocks = (attachments: ServiceDetail['attachments']): MediaBlock
       blocks.push({ type: 'pdf', url });
     }
   });
+  return blocks;
+};
+
+// Convert service content to modern content blocks
+const parseContentToBlocks = (content: string, mediaBlocks: MediaBlock[]): ContentBlock[] => {
+  const blocks: ContentBlock[] = [];
+  
+  // Split content into paragraphs
+  const paragraphs = content.split('\n\n').filter(p => p.trim());
+  
+  paragraphs.forEach((paragraph) => {
+    const trimmed = paragraph.trim();
+    
+    // Handle headings
+    if (trimmed.startsWith('# ')) {
+      blocks.push({ type: 'heading', level: 1, text: trimmed.substring(2) });
+    } else if (trimmed.startsWith('## ')) {
+      blocks.push({ type: 'heading', level: 2, text: trimmed.substring(3) });
+    } else if (trimmed.startsWith('### ')) {
+      blocks.push({ type: 'heading', level: 3, text: trimmed.substring(4) });
+    } else {
+      blocks.push({ type: 'paragraph', text: trimmed });
+    }
+  });
+  
+  // Add media blocks at the end
+  mediaBlocks.forEach((media) => {
+    if (media.type === 'image' && media.url) {
+      blocks.push({ 
+        type: 'image', 
+        url: media.url, 
+        alt: media.alt, 
+        caption: media.caption,
+        width: media.width,
+        height: media.height
+      });
+    } else if (media.type === 'video' && media.url) {
+      blocks.push({ 
+        type: 'video', 
+        url: media.url, 
+        caption: media.caption 
+      });
+    } else if (media.type === 'audio' && media.url) {
+      blocks.push({ 
+        type: 'audio', 
+        url: media.url, 
+        caption: media.caption 
+      });
+    } else if (media.type === 'code' && media.code) {
+      blocks.push({ 
+        type: 'code', 
+        language: media.language || 'text', 
+        code: media.code,
+        filename: media.caption 
+      });
+    }
+  });
+  
   return blocks;
 };
 
@@ -244,7 +325,7 @@ const ServicesPage: React.FC = () => {
   const renderCard = (item: ServiceListItem) => (
     <article
       key={item.id}
-      className="rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+      className="group cursor-pointer rounded-3xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-200"
       role="button"
       tabIndex={0}
       onClick={() => navigate(`/services/${(item.domain ?? 'general')}/${item.slug}`)}
@@ -255,28 +336,53 @@ const ServicesPage: React.FC = () => {
       }}
     >
       {item.heroImageUrl && (
-        <div className="h-40 w-full overflow-hidden rounded-t-2xl">
-          <img src={item.heroImageUrl} alt={item.title} className="h-full w-full object-cover" />
+        <div className="relative h-56 w-full overflow-hidden rounded-t-3xl bg-gradient-to-br from-indigo-100 to-purple-100">
+          <img 
+            src={item.heroImageUrl} 
+            alt={item.title} 
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
         </div>
       )}
-      <div className="space-y-3 p-6">
-        <div className="flex items-center justify-between text-xs uppercase tracking-wide text-gray-500">
-          <span className="inline-flex items-center gap-2 text-blue-600">
+      <div className="space-y-4 p-6">
+        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider">
+          <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-indigo-600">
             {domainInfo?.name ?? item.domain ?? 'Services'}
           </span>
           {item.publishedAt && (
-            <time dateTime={item.publishedAt}>{formatRelative(item.publishedAt)}</time>
+            <time dateTime={item.publishedAt} className="text-gray-500">
+              {formatRelative(item.publishedAt)}
+            </time>
           )}
         </div>
-        <h3 className="text-xl font-semibold text-gray-900">{item.title}</h3>
-        {item.summary && <p className="text-sm text-gray-600">{item.summary}</p>}
-        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-          {item.typeTags.map((tag) => (
-            <span key={tag} className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">
+        
+        <h3 className="text-xl font-bold text-gray-900 transition-colors group-hover:text-indigo-600 line-clamp-2">
+          {item.title}
+        </h3>
+        
+        {item.summary && (
+          <p className="text-sm leading-relaxed text-gray-600 line-clamp-3">
+            {item.summary}
+          </p>
+        )}
+        
+        <div className="flex flex-wrap items-center gap-2 pt-2">
+          {item.typeTags.slice(0, 3).map((tag) => (
+            <span 
+              key={tag} 
+              className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100"
+            >
               {normalizeTag(tag)}
             </span>
           ))}
-          {item.readingMinutes && item.readingMinutes > 0 && <span>~{item.readingMinutes} min read</span>}
+          {item.readingMinutes && item.readingMinutes > 0 && (
+            <span className="flex items-center gap-1 text-xs text-gray-500">
+              <Clock className="h-3 w-3" />
+              {item.readingMinutes} min
+            </span>
+          )}
         </div>
       </div>
     </article>
@@ -313,75 +419,147 @@ const ServicesPage: React.FC = () => {
       );
     }
 
+    const contentBlocks = parseContentToBlocks(detail.content, detail.mediaBlocks);
+    
     return (
-      <div className="mx-auto max-w-5xl space-y-8 px-4 py-12">
-        <button
-          type="button"
-          onClick={() => navigate(domainSlug ? `/services/${domainSlug}` : '/services')}
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to {domainInfo?.name ?? 'Services'}
-        </button>
-
-        <article className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-blue-600">
-              {detail.item.typeTags.map((tag) => (
-                <span key={tag} className="rounded-full bg-blue-50 px-3 py-1">{normalizeTag(tag)}</span>
-              ))}
-            </div>
-            <h1 className="text-3xl font-semibold text-gray-900 md:text-4xl">{detail.item.title}</h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-              {detail.item.publishedAt && (
-                <span className="inline-flex items-center gap-2">
-                  <Calendar className="h-4 w-4" /> {formatDate(detail.item.publishedAt)}
-                </span>
-              )}
-              {detail.item.readingMinutes && detail.item.readingMinutes > 0 && (
-                <span className="inline-flex items-center gap-2">
-                  <Clock className="h-4 w-4" /> {detail.item.readingMinutes} min read
-                </span>
-              )}
-              {detail.item.authorName && (
-                <span className="inline-flex items-center gap-2">
-                  <User className="h-4 w-4" /> {detail.item.authorName}
-                </span>
-              )}
+      <>
+        <SEOHead
+          title={detail.item.title}
+          description={detail.item.summary || detail.content.substring(0, 160)}
+          type="article"
+          image={detail.heroImage || undefined}
+          url={`/services/${domainSlug}/${slug}`}
+          publishedTime={detail.item.publishedAt || undefined}
+          author={detail.item.authorName || undefined}
+          section={domainInfo?.name}
+          tags={detail.item.typeTags.map(normalizeTag)}
+        />
+        
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+          {/* Header Bar */}
+          <div className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+            <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 lg:px-8">
+              <button
+                type="button"
+                onClick={() => navigate(domainSlug ? `/services/${domainSlug}` : '/services')}
+                className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-indigo-600"
+              >
+                <ArrowLeft className="h-4 w-4" /> Back to {domainInfo?.name ?? 'Services'}
+              </button>
             </div>
           </div>
 
-          {detail.heroImage && (
-            <div className="overflow-hidden rounded-2xl border border-gray-100">
-              <img src={detail.heroImage} alt={detail.item.title} className="h-auto w-full" />
-            </div>
+          {/* Article Content */}
+          <article className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+            {/* Article Header */}
+            <header className="mb-12 space-y-6">
+              <div className="flex flex-wrap items-center gap-2">
+                {detail.item.typeTags.map((tag) => (
+                  <span 
+                    key={tag} 
+                    className="rounded-full bg-indigo-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-indigo-700"
+                  >
+                    {normalizeTag(tag)}
+                  </span>
+                ))}
+              </div>
+              
+              <h1 className="text-4xl font-bold leading-tight tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
+                {detail.item.title}
+              </h1>
+              
+              {detail.item.summary && (
+                <p className="text-xl leading-relaxed text-gray-600">
+                  {detail.item.summary}
+                </p>
+              )}
+              
+              <div className="flex flex-wrap items-center gap-6 border-t border-b border-gray-200 py-4 text-sm text-gray-600">
+                {detail.item.authorName && (
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-semibold">
+                      {detail.item.authorName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-900">{detail.item.authorName}</div>
+                      {detail.item.publishedAt && (
+                        <div className="text-xs text-gray-500">{formatDate(detail.item.publishedAt)}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {detail.item.readingMinutes && detail.item.readingMinutes > 0 && (
+                  <span className="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1">
+                    <Clock className="h-4 w-4" /> {detail.item.readingMinutes} min read
+                  </span>
+                )}
+                
+                <div className="ml-auto flex items-center gap-3">
+                  <button className="flex items-center gap-2 rounded-lg px-3 py-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-indigo-600">
+                    <Share2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Share</span>
+                  </button>
+                  <button className="flex items-center gap-2 rounded-lg px-3 py-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-indigo-600">
+                    <Bookmark className="h-4 w-4" />
+                    <span className="hidden sm:inline">Save</span>
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            {/* Hero Image */}
+            {detail.heroImage && (
+              <figure className="mb-12">
+                <div className="overflow-hidden rounded-3xl shadow-2xl">
+                  <img 
+                    src={detail.heroImage} 
+                    alt={detail.item.title} 
+                    className="h-auto w-full"
+                    loading="eager"
+                  />
+                </div>
+              </figure>
+            )}
+
+            {/* Article Content */}
+            <ModernContentRenderer 
+              blocks={contentBlocks}
+              className="mb-12"
+            />
+
+            {/* Tags Footer */}
+            {detail.item.typeTags.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 border-t border-gray-200 pt-8">
+                <Tag className="h-4 w-4 text-gray-400" />
+                {detail.item.typeTags.map((tag) => (
+                  <a
+                    key={tag}
+                    href={`/services/${domainSlug}?tag=${encodeURIComponent(tag)}`}
+                    className="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-indigo-100 hover:text-indigo-700"
+                  >
+                    {normalizeTag(tag)}
+                  </a>
+                ))}
+              </div>
+            )}
+          </article>
+
+          {/* Related Articles */}
+          {related.length > 0 && (
+            <section className="border-t border-gray-200 bg-white">
+              <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+                <h2 className="mb-8 text-3xl font-bold text-gray-900">
+                  More from {domainInfo?.name ?? 'this domain'}
+                </h2>
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                  {related.map(renderCard)}
+                </div>
+              </div>
+            </section>
           )}
-
-          <RichContentRenderer
-            content={detail.content}
-            mediaBlocks={detail.mediaBlocks}
-            className="prose prose-lg max-w-none"
-          />
-
-          {detail.item.typeTags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 pt-4">
-              {detail.item.typeTags.map((tag) => (
-                <span key={tag} className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
-                  <Tag className="h-3 w-3" /> {normalizeTag(tag)}
-                </span>
-              ))}
-            </div>
-          )}
-        </article>
-
-        {related.length > 0 && (
-          <section>
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">More from {domainInfo?.name ?? 'this domain'}</h2>
-            <div className="grid gap-6 md:grid-cols-2">
-              {related.map(renderCard)}
-            </div>
-          </section>
-        )}
-      </div>
+        </div>
+      </>
     );
   }
 
@@ -412,21 +590,67 @@ const ServicesPage: React.FC = () => {
     'Explore our structured services catalogue powered by Strapi CMS and curated domains.';
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
-      <div className="mb-8 space-y-3">
-        <h1 className="text-4xl font-bold text-gray-900">{heading}</h1>
-        <p className="text-lg text-gray-600">{description}</p>
+    <>
+      <SEOHead
+        title={heading}
+        description={description}
+        type="website"
+        url={domainSlug ? `/services/${domainSlug}` : '/services'}
+      />
+      
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-gray-50">
+        {/* Hero Section */}
+        <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+            <div className="space-y-6 text-center">
+              <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
+                {heading}
+              </h1>
+              <p className="mx-auto max-w-3xl text-xl leading-relaxed text-indigo-100 sm:text-2xl">
+                {description}
+              </p>
+              {items.length > 0 && (
+                <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-sm font-medium">
+                  <div className="flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
+                    <Eye className="h-4 w-4" />
+                    <span>{items.length} Articles</span>
+                  </div>
+                  {domainInfo && (
+                    <div className="flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
+                      <Tag className="h-4 w-4" />
+                      <span>{domainInfo.name}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Content Grid */}
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          {items.length === 0 ? (
+            <div className="rounded-3xl border-2 border-dashed border-gray-300 bg-white p-16 text-center shadow-sm">
+              <div className="mx-auto max-w-md space-y-4">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                  <Calendar className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Content is on the way
+                </h3>
+                <p className="text-gray-600">
+                  We're working on bringing you amazing content. Check back shortly!
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {items.map(renderCard)}
+            </div>
+          )}
+        </div>
       </div>
-      {items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 py-16 text-center text-gray-500">
-          Content is on the way. Check back shortly.
-        </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {items.map(renderCard)}
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 

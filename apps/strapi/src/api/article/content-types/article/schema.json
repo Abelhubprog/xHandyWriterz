@@ -1,4 +1,4 @@
-﻿{
+{
   "kind": "collectionType",
   "collectionName": "articles",
   "info": {
@@ -9,43 +9,39 @@
   "options": {
     "draftAndPublish": true
   },
-  "pluginOptions": {
-    "graphql": {
-      "description": "Editorial articles"
-    }
-  },
+  "pluginOptions": {},
   "attributes": {
     "title": {
       "type": "string",
-      "required": true
+      "maxLength": 255,
+      "required": true,
+      "unique": true
     },
     "slug": {
       "type": "uid",
       "targetField": "title",
       "required": true
     },
-    "excerpt": {
-      "type": "text"
-    },
-    "body": {
-      "type": "richtext"
+    "content": {
+      "type": "blocks",
+      "required": true
     },
     "author": {
-      "type": "string"
+      "type": "string",
+      "required": false
     },
     "category": {
       "type": "string"
     },
-    "images": {
+    "heroImage": {
       "type": "media",
-      "multiple": true,
-      "allowedTypes": ["images"]
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files"
+      ]
     },
-    "seo": {
-      "type": "component",
-      "component": "seo.meta"
-    },
-    "publishedAt": {
+    "datePublished": {
       "type": "datetime"
     }
   }

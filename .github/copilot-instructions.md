@@ -236,3 +236,115 @@ Copilot, generate PROD-READY code for:
 - Tests: add unit/integration tests in __tests__ matching edge cases.
 */
 
+# Data Flows: Content · Files · Messaging (Strapi 5 + Mattermost + R2)
+
+## Legend & shared concepts
+- **IdP** = Clerk (OIDC)
+- **CMS** = Strapi 5 (PostgreSQL)
+- **Chat** = Mattermost (PostgreSQL)
+- **OBJ** = Cloudflare R2 (S3‑compatible)
+- **WK** = Cloudflare Worker (presign + AV + small glue)
+- **FE** = Front‑end (Next.js on Pages/Workers)
+- **AV** = ClamAV (scanner engine)
+
+Shared identifiers
+- `user_id` from Clerk `sub`
+- `org_id` / `team_id` mapping to MM team
+- Object keys: `cms-media/...` and `chat-uploads/...`
+
+---
+
+## Personas & primary journeys
+
+1. **Editor / Content Author**
+  - Authenticates with Clerk → Strapi Admin.
+  - Creates or updates drafts, uploads assets to R2, requests editorial reviews.
+  - Publishes content, triggering cache invalidation and front-end refresh flows.
+
+2. **Reader / Customer**
+  - Browses the public SPA or authenticated dashboard.
+  - Requests domain pages → FE queries Strapi (GraphQL/REST). If content is still in the legacy Microfeed runtime, the FE transparently proxies to `/api/mf/*` until the Strapi migration is complete.
+  - Receives optimized assets from R2/CDN with access checks enforced by Workers when required.
+
+3. **Support Agent / Admin**
+  - Uses the dashboard messaging shell embedded with Mattermost for conversations and approvals.
+  - Shares and retrieves attachments (native Mattermost `/files` for chat, Worker-presigned URLs for CMS documents).
+
+4. **End-user / Customer Support Requester**
+  - Signs in with Clerk, joins assigned Mattermost channels, uploads screenshots or documents.
+  - Receives responses, download links, and status updates through WebSocket events.
+
+## 0) Access & authentication (Homepage → Clerk)
+
+1. Visitor lands on the public homepage (`/`).
+2. `Navbar` CTAs expose Clerk-hosted **Sign in** (`/sign-in`) and **Sign up** (`/sign-up`) flows alongside marketing content.
+3. Successful authentication hands the session to the SPA via `ClerkProvider`, enabling `useAuth` and route guards to hydrate user metadata immediately.
+4. Authenticated visitors are routed into the dashboard shell (`/dashboard`) while unauthenticated users may continue browsing public pages.
+5. Downstream flows (Strapi content editing, Mattermost messaging, file uploads) all derive authorization from Clerk-issued claims (`sub`, roles, org/team IDs).
+
+## User journey flow diagram (features · files · status)
+
+```mermaid
+flowchart TD
+  VisitorHome["Homepage & global nav<br/>Features: marketing hero, CTA routing, live service menu, Clerk prompts<br/>Files: `apps/web/src/pages/Homepage.tsx`, `apps/web/src/components/layouts/Navbar.tsx`, `apps/web/src/components/layouts/RootLayout.tsx`<br/>Status: Implemented"]
+  ClerkAuth["Clerk sign-in & provider bootstrap<br/>Features: hosted `/sign-in` & `/sign-up`, session wiring, router helpers<br/>Files: `apps/web/src/router.tsx`, `apps/web/src/providers/ClerkProvider.tsx`, `apps/web/src/main.tsx`<br/>Status: Implemented"]
+  DashboardShell["Dashboard shell & role guard<br/>Features: redirects guests, hydrates dashboard, loading UX<br/>Files: `apps/web/src/components/Dashboard/DashboardWrapper.tsx`, `apps/web/src/components/Dashboard/Dashboard.tsx`, `apps/web/src/hooks/useAuth.ts`<br/>Status: Implemented"]
+  ContentSurfacing["Content browsing & service detail<br/>Features: Strapi list/detail, hero media, React Query cache
+Files: `apps/web/src/pages/services/ServicesPage.tsx`, `apps/web/src/lib/cms.ts`, `apps/web/src/components/Services/RichContentRenderer.tsx`
+Status: Implemented"]
+  LegacyFallback["Legacy Microfeed fallback
+Features: `/api/content` proxy, MDX rendering until migration complete
+Files: `apps/web/src/lib/api.ts`, `apps/web/src/components/MDXRenderer.tsx`
+Status: Active fallback (pending removal once Strapi parity reached)"]
+  FileUploads["Secure file sharing
+Features: presigned PUT/GET, drag-drop, session history
+Files: `apps/web/src/pages/dashboard/DocumentsUpload.tsx`, `apps/web/src/hooks/useDocumentSubmission.ts`
+Status: Implemented (requires `VITE_UPLOAD_BROKER_URL`)"]
+  UploadWorker["Upload broker worker
+Features: multipart create/sign/complete, GET presign, AWS4 signatures
+Files: `workers/upload-broker/src/index.ts`, `workers/upload-broker/wrangler.toml`
+Status: Implemented (deploy & bind R2 secrets)"]
+  Messaging["Messaging centre
+Features: Mattermost iframe, env guard alert
+Files: `apps/web/src/components/Messaging/MessageCenter.tsx`, `apps/web/src/pages/dashboard/Messages.tsx`
+Status: Pending environment `VITE_MATTERMOST_URL`"]
+  MattermostSvc["Mattermost service
+Features: docker compose, S3 (R2) config, OIDC placeholders
+Files: `apps/mattermost/docker-compose.yml`, `apps/mattermost/config/mattermost.json`
+Status: Provisioned (needs Postgres + Clerk OIDC wiring)"]
+  AdminOps["Admin content & approvals
+Features: GraphQL fetch, stats, quick actions, editor gating
+Files: `apps/web/src/pages/admin/AdminDashboard.tsx`, `apps/web/src/lib/cms-client.ts`
+Status: Implemented (requires `VITE_CMS_URL` & `VITE_CMS_TOKEN`)"]
+  StrapiAPI["Strapi CMS
+Features: Service/Article schemas, S3 upload provider, preview tokens
+Files: `apps/strapi/src/api/service`, `apps/strapi/src/api/article`, `apps/strapi/config/plugins.ts`
+Status: Implemented (configure Postgres & R2 env vars)"]
+  AnalyticsSEO["Analytics & SEO surfaces
+Features: dashboard metrics placeholders, sitemap/robots, Helmet metadata
+Files: `apps/web/src/components/Dashboard/Dashboard.tsx` (analytics sections), `apps/web/functions/sitemap.xml.ts`, `apps/web/public/robots.txt`
+Status: Partially implemented (needs real telemetry & Strapi metrics)"]
+  R2Storage["Cloudflare R2 buckets
+Features: unified object storage for CMS + messaging + uploads
+Files: configured via worker env (`S3_*` vars), documented in `.env.example`
+Status: Infrastructure (provision & lifecycle rules pending)"]
+
+  VisitorHome --> ClerkAuth
+  VisitorHome --> ContentSurfacing
+  ClerkAuth --> DashboardShell
+  DashboardShell --> ContentSurfacing
+  DashboardShell --> FileUploads
+  DashboardShell --> Messaging
+  DashboardShell --> AdminOps
+  DashboardShell --> AnalyticsSEO
+  ContentSurfacing --> StrapiAPI
+  ContentSurfacing --> LegacyFallback
+  FileUploads --> UploadWorker --> R2Storage
+  Messaging --> MattermostSvc
+  AdminOps --> StrapiAPI
+  MattermostSvc --> R2Storage
+  StrapiAPI --> R2Storage
+```
+
+
+

@@ -40,6 +40,9 @@ const envSchema = z.object({
   VITE_STABLELINK_WEBHOOK_SECRET: z.string().optional().default(''),
   VITE_STABLELINK_ENVIRONMENT: z.enum(['sandbox', 'production']).default('sandbox'),
 
+  // Email Service (Resend)
+  VITE_RESEND_API_KEY: z.string().optional().default(''),
+
   // Public Features
   VITE_ENABLE_PUBLIC_ACCESS: z.coerce.boolean().default(true),
   VITE_ENABLE_PUBLIC_ROUTES: z.coerce.boolean().default(true),
@@ -97,6 +100,9 @@ function getEnvVars() {
     VITE_STABLELINK_API_KEY: import.meta.env.VITE_STABLELINK_API_KEY || '',
     VITE_STABLELINK_WEBHOOK_SECRET: import.meta.env.VITE_STABLELINK_WEBHOOK_SECRET || '',
     VITE_STABLELINK_ENVIRONMENT: import.meta.env.VITE_STABLELINK_ENVIRONMENT || 'sandbox',
+
+    // Email Service (Resend)
+    VITE_RESEND_API_KEY: import.meta.env.VITE_RESEND_API_KEY || '',
 
     // Mattermost integration
     VITE_MATTERMOST_URL: import.meta.env.VITE_MATTERMOST_URL,

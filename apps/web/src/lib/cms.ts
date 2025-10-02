@@ -1,5 +1,14 @@
 ﻿import { env } from '@/env';
-import type { ServiceDetail, ServiceListItem, ServiceListResponse } from '@/types/cms';
+import type {
+  ArticleSummary,
+  DomainHighlight,
+  DomainPage,
+  LandingSection,
+  LandingSectionItem,
+  ServiceDetail,
+  ServiceListItem,
+  ServiceListResponse,
+} from '@/types/cms';
 
 type FetchParams = Record<string, string | number | boolean | undefined | null>;
 
@@ -100,12 +109,132 @@ function mapServiceDetail(entry: any): ServiceDetail | null {
   };
 }
 
+function mapLandingSectionItem(entry: any): LandingSectionItem | null {
+  if (!entry) return null;
+  const id = entry.id ?? safeRandomId();
+  return {
+    id: String(id),
+    title: entry.title ?? 'Untitled',
+    subtitle: entry.subtitle ?? null,
+    description: entry.description ?? null,
+    iconKey: entry.iconKey ?? null,
+    linkLabel: entry.linkLabel ?? null,
+    linkUrl: entry.linkUrl ?? null,
+    accentGradient: entry.accentGradient ?? null,
+    backgroundGradient: entry.backgroundGradient ?? null,
+    badge: entry.badge ?? null,
+  };
+}
+
+function mapLandingSection(entry: any): LandingSection | null {
+  if (!entry) return null;
+  const { id, attributes } = entry;
+  if (!attributes) return null;
+  const mediaUrl = resolveMediaUrl(attributes.media?.data?.attributes?.url ?? null);
+  const rawItems = Array.isArray(attributes.items) ? attributes.items : [];
+  const items = rawItems
+    .map((raw) => mapLandingSectionItem(raw))
+    .filter((item): item is LandingSectionItem => Boolean(item));
+
+  return {
+    id: String(id ?? attributes.pageSlug ?? safeRandomId()),
+    sectionKey: attributes.sectionKey ?? 'hero',
+    pageSlug: attributes.pageSlug ?? 'homepage',
+    eyebrow: attributes.eyebrow ?? null,
+    heading: attributes.heading ?? null,
+    subheading: attributes.subheading ?? null,
+    body: attributes.body ?? null,
+    ctaLabel: attributes.ctaLabel ?? null,
+    ctaUrl: attributes.ctaUrl ?? null,
+    secondaryCtaLabel: attributes.secondaryCtaLabel ?? null,
+    secondaryCtaUrl: attributes.secondaryCtaUrl ?? null,
+    mediaUrl,
+    order: attributes.order ?? 0,
+    items,
+  };
+}
+
+function mapDomainHighlight(entry: any): DomainHighlight | null {
+  if (!entry) return null;
+  const id = entry.id ?? safeRandomId();
+  return {
+    id: String(id),
+    label: entry.label ?? 'Highlight',
+    value: entry.value ?? '',
+    description: entry.description ?? null,
+    iconKey: entry.iconKey ?? null,
+  };
+}
+
+function mapDomainPage(entry: any): DomainPage | null {
+  if (!entry) return null;
+  const { id, attributes } = entry;
+  if (!attributes) return null;
+  const highlights = Array.isArray(attributes.highlights)
+    ? attributes.highlights
+        .map((item: any) => mapDomainHighlight(item))
+        .filter((item): item is DomainHighlight => Boolean(item))
+    : [];
+  const spotlight = Array.isArray(attributes.spotlight)
+    ? attributes.spotlight
+        .map((item: any) => mapLandingSectionItem(item))
+        .filter((item): item is LandingSectionItem => Boolean(item))
+    : [];
+  const heroImageUrl = resolveMediaUrl(attributes.heroImage?.data?.attributes?.url ?? null);
+  const serviceSlugs = Array.isArray(attributes.serviceSlugs) ? attributes.serviceSlugs : [];
+  const articleSlugs = Array.isArray(attributes.articleSlugs) ? attributes.articleSlugs : [];
+
+  return {
+    id: String(id ?? attributes.domain ?? safeRandomId()),
+    domain: attributes.domain ?? 'general',
+    title: attributes.title ?? 'Domain',
+    heroEyebrow: attributes.heroEyebrow ?? null,
+    heroTitle: attributes.heroTitle ?? null,
+    heroDescription: attributes.heroDescription ?? null,
+    heroImageUrl,
+    ctaLabel: attributes.ctaLabel ?? null,
+    ctaUrl: attributes.ctaUrl ?? null,
+    highlights,
+    spotlight,
+    serviceSlugs,
+    articleSlugs,
+    metaDescription: attributes.metaDescription ?? null,
+  };
+}
+
+function mapArticleSummary(entry: any): ArticleSummary | null {
+  if (!entry) return null;
+  const { id, attributes } = entry;
+  if (!attributes) return null;
+
+  const imageData = attributes.images?.data;
+  let heroImageUrl: string | null = null;
+  if (Array.isArray(imageData) && imageData.length > 0) {
+    heroImageUrl = resolveMediaUrl(imageData[0]?.attributes?.url ?? null);
+  } else if (Array.isArray(attributes.images) && attributes.images.length > 0) {
+    heroImageUrl = resolveMediaUrl(attributes.images[0]?.url ?? null);
+  }
+
+  return {
+    id: String(id ?? attributes.slug ?? safeRandomId()),
+    slug: attributes.slug ?? String(id ?? safeRandomId()),
+    title: attributes.title ?? 'Untitled article',
+    excerpt: attributes.excerpt ?? null,
+    publishedAt: attributes.publishedAt ?? null,
+    heroImageUrl,
+    authorName: attributes.author ?? null,
+    category: attributes.category ?? null,
+    readingMinutes: attributes.body ? estimateReadingTime(attributes.body) : null,
+  };
+}
+
 export async function fetchServicesList(options: {
   domain?: string | null;
   type?: string | null;
   page?: number;
   pageSize?: number;
   includeDraft?: boolean;
+  locale?: string | null;
 } = {}): Promise<ServiceListResponse> {
   const {
     domain = null,
@@ -113,6 +242,7 @@ export async function fetchServicesList(options: {
     page = 1,
     pageSize = 12,
     includeDraft = false,
+    locale = null,
   } = options;
 
   const filters: FetchParams = {
@@ -120,6 +250,7 @@ export async function fetchServicesList(options: {
     'pagination[pageSize]': pageSize,
     'sort[0]': 'publishedAt:desc',
     publicationState: includeDraft ? 'preview' : 'live',
+    ...(locale ? { locale } : {}),
     populate: 'heroImage,seo',
   };
 
@@ -163,7 +294,7 @@ export async function fetchServicesList(options: {
 
 export async function fetchServiceBySlug(
   slug: string,
-  options: { previewToken?: string } = {},
+  options: { previewToken?: string; locale?: string } = {},
 ): Promise<ServiceDetail | null> {
   if (!slug) return null;
   const params: FetchParams = {
@@ -174,11 +305,121 @@ export async function fetchServiceBySlug(
   if (options.previewToken) {
     params['filters[previewToken][$eq]'] = options.previewToken;
   }
+  if (options.locale) {
+    params.locale = options.locale;
+  }
 
   const data = await request<any>('/api/services', params);
   if (!data) return null;
   const entry = Array.isArray(data.data) ? data.data[0] : null;
   return entry ? mapServiceDetail(entry) : null;
+}
+
+export async function fetchLandingSections(
+  pageSlug: string,
+  options: { includeDraft?: boolean } = {},
+): Promise<LandingSection[]> {
+  const { includeDraft = false } = options;
+  const params: FetchParams = {
+    'filters[pageSlug][$eq]': pageSlug,
+    'pagination[pageSize]': 100,
+    'sort[0]': 'order:asc',
+    publicationState: includeDraft ? 'preview' : 'live',
+    populate: 'items,media',
+  };
+
+  const data = await request<any>('/api/landing-sections', params);
+  if (!data) return [];
+  const entries = Array.isArray(data.data) ? data.data : [];
+  return entries
+    .map(mapLandingSection)
+    .filter((section): section is LandingSection => Boolean(section));
+}
+
+export async function fetchDomainPage(
+  domain: string,
+  options: { includeDraft?: boolean } = {},
+): Promise<DomainPage | null> {
+  if (!domain) return null;
+  const { includeDraft = false } = options;
+  const params: FetchParams = {
+    'filters[domain][$eq]': domain,
+    publicationState: includeDraft ? 'preview' : 'live',
+    populate: 'highlights,spotlight,heroImage',
+  };
+  const data = await request<any>('/api/domain-pages', params);
+  if (!data) return null;
+  const entry = Array.isArray(data.data) ? data.data[0] : null;
+  return mapDomainPage(entry);
+}
+
+export async function fetchServicesBySlugs(
+  slugs: string[],
+  options: { includeDraft?: boolean } = {},
+): Promise<ServiceListItem[]> {
+  if (!Array.isArray(slugs) || slugs.length === 0) return [];
+  const { includeDraft = false } = options;
+  const params: FetchParams = {
+    'pagination[pageSize]': Math.max(slugs.length, 1),
+    'sort[0]': 'publishedAt:desc',
+    populate: 'heroImage,seo',
+    publicationState: includeDraft ? 'preview' : 'live',
+  };
+
+  slugs.forEach((slug, index) => {
+    params[`filters[slug][$in][${index}]`] = slug;
+  });
+
+  const data = await request<any>('/api/services', params);
+  if (!data) return [];
+  const entries = Array.isArray(data.data) ? data.data : [];
+  return entries
+    .map(mapServiceEntry)
+    .filter((item): item is ServiceListItem => Boolean(item));
+}
+
+export async function fetchArticlesBySlugs(
+  slugs: string[],
+  options: { includeDraft?: boolean } = {},
+): Promise<ArticleSummary[]> {
+  if (!Array.isArray(slugs) || slugs.length === 0) return [];
+  const { includeDraft = false } = options;
+  const params: FetchParams = {
+    'pagination[pageSize]': Math.max(slugs.length, 1),
+    'sort[0]': 'publishedAt:desc',
+    populate: 'images',
+    publicationState: includeDraft ? 'preview' : 'live',
+  };
+
+  slugs.forEach((slug, index) => {
+    params[`filters[slug][$in][${index}]`] = slug;
+  });
+
+  const data = await request<any>('/api/articles', params);
+  if (!data) return [];
+  const entries = Array.isArray(data.data) ? data.data : [];
+  return entries
+    .map(mapArticleSummary)
+    .filter((item): item is ArticleSummary => Boolean(item));
+}
+
+export async function fetchArticlesList(
+  options: { limit?: number; includeDraft?: boolean } = {},
+): Promise<ArticleSummary[]> {
+  const { limit = 6, includeDraft = false } = options;
+  const params: FetchParams = {
+    'pagination[pageSize]': limit,
+    'sort[0]': 'publishedAt:desc',
+    populate: 'images',
+    publicationState: includeDraft ? 'preview' : 'live',
+  };
+
+  const data = await request<any>('/api/articles', params);
+  if (!data) return [];
+  const entries = Array.isArray(data.data) ? data.data : [];
+  return entries
+    .map(mapArticleSummary)
+    .filter((item): item is ArticleSummary => Boolean(item));
 }
 
 function estimateReadingTime(content: string): number {

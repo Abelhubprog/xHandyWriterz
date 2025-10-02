@@ -1,0 +1,42 @@
+{
+  "collectionName": "components_sections_section_items",
+  "info": {
+    "displayName": "Section item",
+    "icon": "grid",
+    "description": "Reusable card or feature for landing sections"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "iconKey": {
+      "type": "string",
+      "required": false
+    },
+    "linkLabel": {
+      "type": "string"
+    },
+    "linkUrl": {
+      "type": "string"
+    },
+    "accentGradient": {
+      "type": "string",
+      "default": "from-blue-500 to-purple-600"
+    },
+    "backgroundGradient": {
+      "type": "string",
+      "default": "from-blue-100/40 to-blue-200/20"
+    },
+    "badge": {
+      "type": "string"
+    }
+  }
+}

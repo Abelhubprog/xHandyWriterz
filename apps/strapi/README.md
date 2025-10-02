@@ -1,64 +1,61 @@
-﻿# HandyWriterz Strapi 5 Service
+# 🚀 Getting started with Strapi
 
-This Strapi 5 application replaces the legacy Microfeed content system. It ships with PostgreSQL + Cloudflare R2 integration, GraphQL enabled, and starter content types for **Service** and **Article**.
+Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
 
-## Requirements
-- Node.js >= 20.10 (matches monorepo requirement)
-- pnpm 10.x (corepack enabled)
-- PostgreSQL 14+
+### `develop`
 
-Optional but recommended:
-- Docker (for running postgres locally)
-- Cloudflare R2 account for uploads
+Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
 
-## Getting Started
+```
+npm run develop
+# or
+yarn develop
+```
 
-``````bash
-pnpm install
-pnpm --filter @handywriterz/strapi install
-cd apps/strapi
-cp .env.example .env
-# fill in secrets, DB URL, and R2 credentials
-pnpm develop
-``````
+### `start`
 
-The first run will bootstrap admin and database tables. Use the UI to create the root admin user, then head to **Content-Type Builder** to review the pre-defined schemas.
+Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
 
-## Environment
-Key variables live in `.env` (mirroring `.env.example`). By default the app reads `DATABASE_URL` for a single connection string. R2 uploads use the S3 provider and expect the Cloudflare endpoint with `forcePathStyle`.
+```
+npm run start
+# or
+yarn start
+```
 
-## Scripts
-- `pnpm develop`: start Strapi in watch mode
-- `pnpm build`: build admin panel assets
-- `pnpm start`: run production build
+### `build`
 
-## Content Types
-The repo ships two starter types under `src/api`:
-- `service`: hero image, summary, structured SEO, type tags, `publishedAt`
-- `article`: author reference, rich body, gallery, SEO metadata
+Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
 
-Adjust or extend under `src/api/*` and regenerate types with `pnpm strapi generate` commands as needed.
+```
+npm run build
+# or
+yarn build
+```
 
-## Database
-Set `DATABASE_URL` to your Postgres instance. For local dev you can use Docker:
+## ⚙️ Deployment
 
-``````bash
-docker run -d --name hwz-strapi-db -p 5432:5432 \
-  -e POSTGRES_DB=handywriterz_cms \
-  -e POSTGRES_USER=strapi \
-  -e POSTGRES_PASSWORD=strapi \
-  postgres:14
-``````
+Strapi gives you many possible deployment options for your project including [Strapi Cloud](https://cloud.strapi.io). Browse the [deployment section of the documentation](https://docs.strapi.io/dev-docs/deployment) to find the best solution for your use case.
 
-## Cloudflare R2 Uploads
-The `config/plugins.ts` file enables the aws-s3 provider pointing to Cloudflare R2. Ensure the bucket exists and the access keys have write permissions. Public assets can be fronted by a Cloudflare R2 custom domain via `R2_PUBLIC_BASE`.
+```
+yarn strapi deploy
+```
 
-## Clerk Integration
-For now Strapi still uses local admin auth. `CLERK_*` envs are placeholders for future SSO mapping.
+## 📚 Learn more
 
-## GraphQL
-GraphQL plugin is enabled by default. Access the playground at `/graphql` when running locally.
+- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
+- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
+- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
+- [Strapi blog](https://strapi.io/blog) - Official Strapi blog containing articles made by the Strapi team and the community.
+- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
+
+Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
+
+## ✨ Community
+
+- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
+- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
+- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
 
 ---
 
-See `docs/CHANGESET_PHASE_A.md` for the migration plan tying Strapi back into the front-end.
+<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>

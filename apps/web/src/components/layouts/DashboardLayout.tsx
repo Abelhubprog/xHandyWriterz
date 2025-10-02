@@ -10,7 +10,9 @@ import {
   ChevronRight,
   ChevronLeft,
   Menu,
-  X
+  X,
+  Plus,
+  Mail
 } from 'lucide-react';
 import HandyWriterzLogo from '@/components/HandyWriterzLogo';
 import { toast } from 'react-hot-toast';
@@ -29,7 +31,9 @@ const DashboardLayout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Orders', href: '/dashboard/orders', icon: FileText },
+    { name: 'New Order', href: '/dashboard/new-order', icon: Plus },
     { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
+    { name: 'Email Admin', href: '/dashboard/email-admin', icon: Mail },
     { name: 'Profile', href: '/dashboard/profile', icon: User },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];

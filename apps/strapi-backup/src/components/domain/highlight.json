@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_domain_highlights",
+  "info": {
+    "displayName": "Highlight",
+    "icon": "star",
+    "description": "Key metric or tag to surface on domain pages"
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "value": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "string"
+    },
+    "iconKey": {
+      "type": "string"
+    }
+  }
+}

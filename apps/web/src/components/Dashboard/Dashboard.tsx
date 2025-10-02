@@ -121,7 +121,8 @@ const Dashboard = () => {
     { id: 'essays', title: 'Essays', icon: '✍️', desc: 'Professional essay writing' },
     { id: 'reflection', title: 'Placement Reflections', icon: '📝', desc: 'Clinical reflection writing' },
     { id: 'reports', title: 'Reports', icon: '📊', desc: 'Detailed academic reports' },
-    { id: 'portfolio', title: 'E-Portfolio', icon: '💼', desc: 'Portfolio development' }
+    { id: 'portfolio', title: 'E-Portfolio', icon: '💼', desc: 'Portfolio development' },
+    { id: 'turnitin', title: 'Turnitin Check', icon: '🔍', desc: 'Plagiarism detection & originality report' }
   ];
 
   const mockOrders = [
@@ -244,12 +245,8 @@ const Dashboard = () => {
       return;
     }
 
-    // If files are uploaded but admin not notified, send to admin first
-    if (uploadedFiles.length > 0 && !adminNotified) {
-      toast('Notifying admin about your submission...');
-      handleSendToAdminAutomatic();
-      return;
-    }
+    // Note: For new orders, use /dashboard/new-order (Mattermost-integrated)
+    // This legacy flow is kept for backward compatibility only
 
     // If files are uploaded and admin is notified, proceed to payment page
     if (uploadedFiles.length > 0 && adminNotified) {
@@ -426,49 +423,9 @@ const Dashboard = () => {
     }
   };
 
-  // Function to automatically send documents to admin after upload
-  const handleSendToAdminAutomatic = async () => {
-    // Backward-compat: just call the unified submit flow if files are present
-    if (!user) return;
-    if (files.length === 0 && uploadedFiles.length === 0) {
-      toast.error('No files to send.');
-      return;
-    }
-    // Prefer using the freshly selected files
-    if (files.length > 0) {
-      await handleUploadSubmit();
-    } else {
-      toast('Files already submitted. Proceed to payment when ready.', { icon: 'ℹ️' });
-      setAdminNotified(true);
-      setShowPaymentOptions(true);
-    }
-  };
-
-  // Function to send documents to admin (manual)
-  const handleSendToAdmin = async () => {
-    if (!user) {
-      toast.error('You must be signed in to send documents to admin');
-      return;
-    }
-    if (files.length === 0 && uploadedFiles.length === 0) {
-      toast.error('Please upload files before sending to admin');
-      return;
-    }
-    // If there are new files selected, submit them now; otherwise they are already sent
-    if (files.length > 0) {
-      await handleUploadSubmit();
-    } else {
-      setAdminNotified(true);
-      setShowPaymentOptions(true);
-      toast('Files already submitted. Proceed to payment when ready.', { icon: 'ℹ️' });
-    }
-  };
-
-  // Function to notify admin when an order is placed
-  const notifyAdminOfOrder = async () => {
-    // Unified flow already notifies admin during submitDocuments
-    await handleUploadSubmit();
-  };
+  // Note: Legacy "send to admin" functions removed. 
+  // Use /dashboard/new-order for Mattermost-integrated orders
+  // Use /dashboard/email-admin for direct admin communication
 
   const handleTurnitinFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -847,9 +804,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white border-b fixed w-full top-0 z-40">
+      <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 fixed w-full top-0 z-40">
         <div className="max-w-7xl mx-auto px-4">
           <div className="h-16 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -862,10 +819,10 @@ const Dashboard = () => {
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
-                  <User className="h-5 w-5 text-gray-600" />
+                <div className="h-8 w-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <User className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                 </div>
-                <span className="font-medium hidden sm:inline">
+                <span className="font-medium text-gray-900 dark:text-gray-100 hidden sm:inline">
                   {userName}
                 </span>
               </div>
@@ -874,8 +831,8 @@ const Dashboard = () => {
                 disabled={isLoggingOut}
                 className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors ${
                   isLoggingOut
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'text-red-600 hover:bg-red-50'
+                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed'
+                    : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
                 }`}
               >
                 <LogOut className="h-4 w-4" />
@@ -887,18 +844,18 @@ const Dashboard = () => {
       </header>
 
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 bg-white w-64 border-r z-30">
-        <div className="h-16 border-b flex items-center justify-center">
-          <span className="font-medium">Dashboard</span>
+      <aside className="fixed inset-y-0 left-0 bg-white dark:bg-gray-800 w-64 border-r dark:border-gray-700 z-30">
+        <div className="h-16 border-b dark:border-gray-700 flex items-center justify-center">
+          <span className="font-medium text-gray-900 dark:text-gray-100">Dashboard</span>
         </div>
 
         <nav className="p-4 space-y-2">
           <button
             onClick={() => setActiveTab('orders')}
-            className={`w-full flex items-center gap-3 p-2 rounded-lg ${
+            className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${
               activeTab === 'orders'
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-gray-600 hover:bg-gray-50'
+                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
             <FileText className="h-5 w-5" />
@@ -906,10 +863,10 @@ const Dashboard = () => {
           </button>
           <button
             onClick={() => setActiveTab('completed')}
-            className={`w-full flex items-center gap-3 p-2 rounded-lg ${
+            className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${
               activeTab === 'completed'
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-gray-600 hover:bg-gray-50'
+                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
             <FileCheck className="h-5 w-5" />
@@ -917,10 +874,10 @@ const Dashboard = () => {
           </button>
           <button
             onClick={() => setActiveTab('messages')}
-            className={`w-full flex items-center gap-3 p-2 rounded-lg ${
+            className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${
               activeTab === 'messages'
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-gray-600 hover:bg-gray-50'
+                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
             <MessageSquare className="h-5 w-5" />
@@ -928,10 +885,10 @@ const Dashboard = () => {
           </button>
           <button
             onClick={() => setActiveTab('subscription')}
-            className={`w-full flex items-center gap-3 p-2 rounded-lg ${
+            className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${
               activeTab === 'subscription'
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-gray-600 hover:bg-gray-50'
+                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
             <CreditCard className="h-5 w-5" />
@@ -939,10 +896,10 @@ const Dashboard = () => {
           </button>
           <button
             onClick={() => setActiveTab('settings')}
-            className={`w-full flex items-center gap-3 p-2 rounded-lg ${
+            className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${
               activeTab === 'settings'
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-gray-600 hover:bg-gray-50'
+                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
             <Settings className="h-5 w-5" />
@@ -951,10 +908,10 @@ const Dashboard = () => {
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className={`w-full flex items-center gap-3 p-2 rounded-lg mt-4 ${
+            className={`w-full flex items-center gap-3 p-2 rounded-lg mt-4 transition-colors ${
               isLoggingOut
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'text-red-600 hover:bg-red-50'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed'
+                : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
             }`}
           >
             <LogOut className="h-5 w-5" />
@@ -967,11 +924,11 @@ const Dashboard = () => {
       <div className="pt-6">
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Welcome Section */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8 shadow-sm">
-            <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6 sm:mb-8 shadow-sm">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1 sm:mb-2">
               Welcome back{user ? `, ${userName}` : ''}! 👋
             </h1>
-            <p className="text-gray-600 text-sm sm:text-base">
+            <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">
               Get expert help with your coursework. Choose a subject area to get started.
             </p>
           </div>
@@ -1049,10 +1006,10 @@ const Dashboard = () => {
                   </div>
                 ))
               ) : (
-                <div className="bg-white rounded-2xl border border-gray-200 p-8 sm:p-10 shadow-sm text-center">
-                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-base sm:text-lg font-semibold mb-1">No active orders</h3>
-                  <p className="text-gray-500 mb-5">You don't have any active orders yet.</p>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 sm:p-10 shadow-sm text-center">
+                  <FileText className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">No active orders</h3>
+                  <p className="text-gray-700 dark:text-gray-300 mb-5">You don't have any active orders yet.</p>
                   <div className="flex items-center justify-center gap-3">
                     <button
                       onClick={() => setSelectedArea('adult')}
@@ -1060,7 +1017,7 @@ const Dashboard = () => {
                     >
                       Create Your First Order
                     </button>
-                    <a href="/how-it-works" className="text-sm text-gray-600 hover:text-gray-800">How it works</a>
+                    <a href="/how-it-works" className="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200">How it works</a>
                   </div>
                 </div>
               )}
@@ -1073,25 +1030,32 @@ const Dashboard = () => {
               <div className="flex items-center gap-2 mb-6">
                 <button
                   onClick={() => setSelectedArea(null)}
-                  className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                  className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                 >
                   <ChevronLeft className="h-5 w-5" />
                   Back
                 </button>
-                <h2 className="text-xl font-bold">Select Service Type</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Select Service Type</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {services.map((service) => (
                   <button
                     key={service.id}
-                    onClick={() => setSelectedService(service)}
-                    className="p-6 rounded-xl border hover:border-blue-600 hover:shadow-md transition-all text-left"
+                    onClick={() => {
+                      // Navigate directly to Turnitin submission page
+                      if (service.id === 'turnitin') {
+                        window.location.href = '/turnitin/submit';
+                      } else {
+                        setSelectedService(service);
+                      }
+                    }}
+                    className="p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-600 dark:hover:border-blue-500 hover:shadow-md transition-all text-left"
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-2xl">{service.icon}</span>
                       <div>
-                        <h3 className="font-medium">{service.title}</h3>
-                        <p className="text-sm text-gray-600">{service.desc}</p>
+                        <h3 className="font-medium text-gray-900 dark:text-gray-100">{service.title}</h3>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">{service.desc}</p>
                       </div>
                     </div>
                   </button>
@@ -1102,21 +1066,21 @@ const Dashboard = () => {
 
           {/* Order Form */}
           {activeTab === 'orders' && selectedService && (
-            <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-6">
                 <button
                   onClick={() => setSelectedService(null)}
-                  className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                  className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                 >
                   <ChevronLeft className="h-5 w-5" />
                   Back
                 </button>
-                <h2 className="text-xl font-bold">Order Details</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Order Details</h2>
               </div>
 
               <form onSubmit={handleFormSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Word Count</label>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Word Count</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -1143,14 +1107,14 @@ const Dashboard = () => {
                           setWordCount(0);
                         }
                       }}
-                      className="w-full p-3 border rounded-lg pr-12"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 pr-12"
                       placeholder="Enter word count"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPriceBreakdown(!showPriceBreakdown)}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-blue-600 hover:text-blue-700"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                       title="Show price calculation"
                     >
                       <Calculator className="h-5 w-5" />
@@ -1159,14 +1123,14 @@ const Dashboard = () => {
                 </div>
                 {calculatedPrice !== null && (
                   <div className="mt-2 text-sm">
-                    <span className="font-medium">Estimated Price: </span>
-                    <span className="text-blue-600">£{calculatedPrice.toFixed(2)}</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">Estimated Price: </span>
+                    <span className="text-blue-600 dark:text-blue-400">£{calculatedPrice.toFixed(2)}</span>
                   </div>
                 )}
                 {showPriceBreakdown && (
-                  <div className="mt-2 p-4 bg-gray-50 rounded-lg text-sm">
-                    <h4 className="font-medium mb-2">Price Calculation</h4>
-                    <ul className="space-y-1 text-gray-600">
+                  <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Price Calculation</h4>
+                    <ul className="space-y-1 text-gray-700 dark:text-gray-300">
                       <li>• £18/275 words for dissertations</li>
                       <li>• £18/275 words for Level 7 work</li>
                       <li>• £18/275 words for urgent orders (&lt; 2 days)</li>
@@ -1175,22 +1139,22 @@ const Dashboard = () => {
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Module</label>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Module</label>
                   <input
                     type="text"
                     value={module}
                     onChange={(e) => setModule(e.target.value)}
-                    className="w-full p-3 border rounded-lg"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     placeholder="Enter module name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Study Level</label>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Study Level</label>
                   <select
                     value={studyLevel}
                     onChange={(e) => setStudyLevel(e.target.value)}
                     required
-                    className="w-full p-3 border rounded-lg"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     title="Choose your study level"
                   >
                     <option value="">Select level</option>
@@ -1201,29 +1165,29 @@ const Dashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Due Date</label>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Due Date</label>
                   <input
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
                     required
-                    className="w-full p-3 border rounded-lg"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     title="Select your assignment due date"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Instructions</label>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Instructions</label>
                   <textarea
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
                     rows={4}
-                    className="w-full p-3 border rounded-lg resize-none"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
                     placeholder="Enter your specific requirements..."
                   ></textarea>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Upload Files</label>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Upload Files</label>
                   <div className="mt-1 flex items-center gap-4">
                       <input
                       type="file"
@@ -1318,6 +1282,9 @@ const Dashboard = () => {
                   )}
 
                   <div className="mt-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      For new orders with file sharing, use <strong>New Order</strong> in the sidebar.
+                    </p>
                     <button
                       type="button"
                       onClick={() => setShowEmailOption(!showEmailOption)}
@@ -1325,16 +1292,6 @@ const Dashboard = () => {
                     >
                       <MessageSquare className="h-4 w-4 mr-1" />
                       {showEmailOption ? 'Hide email option' : 'Send files via email'}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleSendToAdmin}
-                      className="text-green-600 hover:text-green-700 text-sm flex items-center mt-2"
-                      disabled={!uploadedFiles.length}
-                    >
-                      <User className="h-4 w-4 mr-1" />
-                      Send to admin
                     </button>
                   </div>
 
@@ -1490,10 +1447,10 @@ const Dashboard = () => {
                   </div>
                 ))
               ) : (
-                <div className="bg-white rounded-xl p-6 shadow-sm text-center">
-                  <FileCheck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-1">No completed orders</h3>
-                  <p className="text-gray-500">You don't have any completed orders yet.</p>
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm text-center border border-gray-200 dark:border-gray-700">
+                  <FileCheck className="h-12 w-12 text-gray-500 dark:text-gray-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">No completed orders</h3>
+                  <p className="text-gray-600 dark:text-gray-400">You don't have any completed orders yet.</p>
                 </div>
               )}
             </div>
@@ -1548,8 +1505,8 @@ const Dashboard = () => {
                   </form>
                 </div>
               ) : (
-              <div className="p-6 text-center text-gray-500">
-                <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <div className="p-6 text-center text-gray-600 dark:text-gray-400">
+                <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-500 dark:text-gray-500" />
                   <p className="mb-4">No messages yet</p>
 
                   <form onSubmit={handleSendMessage} className="flex gap-2 max-w-md mx-auto">
@@ -1776,7 +1733,7 @@ const Dashboard = () => {
                       {user?.imageUrl ? (
                         <img src={user.imageUrl} alt={`${userName}'s profile`} className="h-full w-full object-cover" />
                       ) : (
-                      <User className="h-10 w-10 text-gray-400" />
+                      <User className="h-10 w-10 text-gray-500 dark:text-gray-500" />
                       )}
                     </div>
                     <button
@@ -1967,8 +1924,8 @@ const Dashboard = () => {
                           }
                         }}
                       >
-                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="mt-2 text-sm text-gray-600">
+                        <Upload className="mx-auto h-12 w-12 text-gray-500 dark:text-gray-500" />
+                        <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
                           Click to select a file
                         </p>
                         <p className="mt-1 text-xs text-gray-500">
@@ -1989,7 +1946,7 @@ const Dashboard = () => {
                             </div>
                             <button
                               onClick={() => setTurnitinFile(null)}
-                              className="text-gray-400 hover:text-gray-500"
+                              className="text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                               title="Remove file"
                             >
                               <X size={16} />
