@@ -308,5 +308,5 @@ railway redeploy
 
 ---
 
-**Last Updated**: October 2025  
+**Last Updated**: October 2025
 **Tested On**: Strapi v5.25.0, Railway.app

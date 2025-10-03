@@ -4,10 +4,10 @@ Unified monorepo wiring HandyWriterz web (Vite) with Microfeed (Cloudflare Pages
 
 ## 🚨 Railway Deployment Issues?
 
-### Problem: "Cannot send secure cookie over unencrypted connection" 
+### Problem: "Cannot send secure cookie over unencrypted connection"
 
-👉 **Step-by-Step Fix (5 min)**: [RAILWAY_PROXY_FIX_STEPS.md](./RAILWAY_PROXY_FIX_STEPS.md)  
-👉 **Comprehensive Guide**: [RAILWAY_PROXY_FIX.md](./RAILWAY_PROXY_FIX.md)  
+👉 **Step-by-Step Fix (5 min)**: [RAILWAY_PROXY_FIX_STEPS.md](./RAILWAY_PROXY_FIX_STEPS.md)
+👉 **Comprehensive Guide**: [RAILWAY_PROXY_FIX.md](./RAILWAY_PROXY_FIX.md)
 👉 **Automation Script**: `railway-reset-password.ps1`
 
 **Quick Fix:**
@@ -18,8 +18,8 @@ Unified monorepo wiring HandyWriterz web (Vite) with Microfeed (Cloudflare Pages
 
 ### Problem: Can't create first admin
 
-👉 **Quick Fix (2 minutes)**: [QUICK_FIX_RAILWAY_ADMIN.md](./QUICK_FIX_RAILWAY_ADMIN.md)  
-👉 **Comprehensive Guide**: [RAILWAY_ADMIN_FIX_GUIDE.md](./RAILWAY_ADMIN_FIX_GUIDE.md)  
+👉 **Quick Fix (2 minutes)**: [QUICK_FIX_RAILWAY_ADMIN.md](./QUICK_FIX_RAILWAY_ADMIN.md)
+👉 **Comprehensive Guide**: [RAILWAY_ADMIN_FIX_GUIDE.md](./RAILWAY_ADMIN_FIX_GUIDE.md)
 👉 **Understanding the Issue**: [RAILWAY_ISSUE_EXPLAINED.md](./RAILWAY_ISSUE_EXPLAINED.md)
 
 **Automation Scripts:**

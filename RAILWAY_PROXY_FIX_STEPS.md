@@ -60,7 +60,7 @@ Visit: https://ahandywriterz-production.up.railway.app/admin
 ```
 Browser → HTTPS → Railway Proxy → HTTP → Strapi Container
                                         ↑
-                                  Strapi thinks: "I'm on HTTP, 
+                                  Strapi thinks: "I'm on HTTP,
                                   can't send secure cookies!"
 ```
 
@@ -326,7 +326,7 @@ Without email configured, "Forgot Password" won't work. You'll need CLI access f
 After completing all steps:
 
 - [ ] `ENABLE_PROXY=true` set in Railway Variables
-- [ ] `URL=https://...` set in Railway Variables  
+- [ ] `URL=https://...` set in Railway Variables
 - [ ] Service redeployed (check logs for startup success)
 - [ ] Variables verified with `railway run printenv`
 - [ ] Password reset via CLI succeeded
@@ -385,6 +385,6 @@ Browser ──HTTPS──→ Railway Proxy ──HTTP + Headers──→ Strapi
 
 ---
 
-**Last Updated**: October 2025  
-**Tested**: Strapi v5.25.0 + Railway.app  
+**Last Updated**: October 2025
+**Tested**: Strapi v5.25.0 + Railway.app
 **Author**: HandyWriterz DevOps Team

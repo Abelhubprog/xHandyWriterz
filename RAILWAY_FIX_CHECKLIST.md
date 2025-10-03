@@ -1,7 +1,7 @@
 # 🎯 Railway Strapi Fix - Action Checklist
 
-**Date**: October 2, 2025  
-**Issue**: "Cannot send secure cookie over unencrypted connection"  
+**Date**: October 2, 2025
+**Issue**: "Cannot send secure cookie over unencrypted connection"
 **Status**: Ready to execute
 
 ---
@@ -35,7 +35,7 @@ Value: true
 5. Click **+ New Variable** again and add:
 
 ```
-Variable: URL  
+Variable: URL
 Value: https://ahandywriterz-production.up.railway.app
 ```
 
@@ -172,7 +172,7 @@ All of these should be ✅:
 
 - [x] Code changes deployed (`server.ts` with proxy config)
 - [ ] `ENABLE_PROXY=true` in Railway
-- [ ] `URL=https://...` in Railway  
+- [ ] `URL=https://...` in Railway
 - [ ] Service redeployed successfully
 - [ ] Password reset succeeded
 - [ ] Login works at `/admin`
@@ -272,13 +272,13 @@ See detailed guides:
 
 ## 📝 Notes
 
-**Time required**: ~10 minutes total  
-**Difficulty**: Easy (mostly copy-paste commands)  
-**Risk**: Low (non-destructive, can rollback)  
+**Time required**: ~10 minutes total
+**Difficulty**: Easy (mostly copy-paste commands)
+**Risk**: Low (non-destructive, can rollback)
 
-**Current Status**: 
+**Current Status**:
 - Date: ________________
-- Time: ________________  
+- Time: ________________
 - Completed by: ________________
 - Result: ☐ Success ☐ Issues (describe): ________________
 
