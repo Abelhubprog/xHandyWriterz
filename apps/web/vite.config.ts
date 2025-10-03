@@ -1,4 +1,4 @@
-﻿import { defineConfig } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 
@@ -46,5 +46,21 @@ export default defineConfig({
         rewrite: (path) => path
       }
     }
+  },
+  preview: {
+    port: 4173,
+    strictPort: false,
+    host: true,
+    open: false, // CRITICAL: Disable browser auto-open for Railway deployment
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
+    }
   }
 });
+
+
+
+
