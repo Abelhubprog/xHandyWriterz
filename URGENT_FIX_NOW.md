@@ -2,8 +2,8 @@
 
 ## ⚠️ Current Status
 
-**Error**: "Internal Server Error" when logging in  
-**Root Cause**: `ENABLE_PROXY=true` **NOT SET** in Railway Variables  
+**Error**: "Internal Server Error" when logging in
+**Root Cause**: `ENABLE_PROXY=true` **NOT SET** in Railway Variables
 **Result**: Strapi refuses to set secure cookies, login fails with 500 error
 
 **From Your Logs**:
@@ -251,6 +251,6 @@ If still stuck after adding `ENABLE_PROXY=true` and redeploying:
 
 ---
 
-**Last Updated**: Just now (after password reset attempt)  
-**Status**: ⏳ Waiting for `ENABLE_PROXY=true` to be set  
+**Last Updated**: Just now (after password reset attempt)
+**Status**: ⏳ Waiting for `ENABLE_PROXY=true` to be set
 **Next Action**: Add variable in Railway dashboard NOW ⚡

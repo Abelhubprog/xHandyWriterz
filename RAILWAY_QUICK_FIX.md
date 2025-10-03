@@ -2,7 +2,7 @@
 
 ## 🚨 Critical Issues Fixed
 
-✅ **Build Error** - FIXED in commit `d6d8c67` (just pushed)  
+✅ **Build Error** - FIXED in commit `d6d8c67` (just pushed)
 ⏳ **Secure Cookie Error** - NEEDS your action (1 minute)
 
 ---
@@ -167,5 +167,5 @@ You already have DNS records configured ✅
 
 ---
 
-**Commit**: `d6d8c67` (build fix pushed)  
+**Commit**: `d6d8c67` (build fix pushed)
 **Next**: Add `ENABLE_PROXY=true` in Railway, wait for deploy, login! ⚡

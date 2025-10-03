@@ -297,8 +297,8 @@ You'll know everything is fixed when:
 
 ---
 
-**Last Updated**: October 3, 2025 (Build Fix)  
-**Commit**: d6d8c67  
+**Last Updated**: October 3, 2025 (Build Fix)
+**Commit**: d6d8c67
 **Status**: Build should now succeed; login requires `ENABLE_PROXY=true` variable
 
 ---

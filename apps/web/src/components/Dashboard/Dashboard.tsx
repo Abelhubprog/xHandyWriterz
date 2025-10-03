@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser, useAuth } from '@clerk/clerk-react';
 // database import disabled pending data layer unification
@@ -108,21 +108,21 @@ const Dashboard = () => {
   const turnitinFileInputRef = useRef<HTMLInputElement>(null);
 
   const supportAreas = [
-    { id: 'adult', title: 'Adult Health Nursing', icon: '👨‍⚕️' },
-    { id: 'mental', title: 'Mental Health Nursing', icon: '🧠' },
-    { id: 'child', title: 'Child Nursing', icon: '👶' },
-    { id: 'disability', title: 'Disability Nursing', icon: '♿' },
-    { id: 'social', title: 'Social Work', icon: '🤝' },
-    { id: 'special', title: 'Special Education Needs', icon: '📚' }
+    { id: 'adult', title: 'Adult Health Nursing', icon: 'ðŸ‘¨â€âš•ï¸' },
+    { id: 'mental', title: 'Mental Health Nursing', icon: 'ðŸ§ ' },
+    { id: 'child', title: 'Child Nursing', icon: 'ðŸ‘¶' },
+    { id: 'disability', title: 'Disability Nursing', icon: 'â™¿' },
+    { id: 'social', title: 'Social Work', icon: 'ðŸ¤' },
+    { id: 'special', title: 'Special Education Needs', icon: 'ðŸ“š' }
   ];
 
   const services = [
-    { id: 'dissertation', title: 'Dissertation', icon: '📑', desc: 'Expert dissertation writing support' },
-    { id: 'essays', title: 'Essays', icon: '✍️', desc: 'Professional essay writing' },
-    { id: 'reflection', title: 'Placement Reflections', icon: '📝', desc: 'Clinical reflection writing' },
-    { id: 'reports', title: 'Reports', icon: '📊', desc: 'Detailed academic reports' },
-    { id: 'portfolio', title: 'E-Portfolio', icon: '💼', desc: 'Portfolio development' },
-    { id: 'turnitin', title: 'Turnitin Check', icon: '🔍', desc: 'Plagiarism detection & originality report' }
+    { id: 'dissertation', title: 'Dissertation', icon: 'ðŸ“‘', desc: 'Expert dissertation writing support' },
+    { id: 'essays', title: 'Essays', icon: 'âœï¸', desc: 'Professional essay writing' },
+    { id: 'reflection', title: 'Placement Reflections', icon: 'ðŸ“', desc: 'Clinical reflection writing' },
+    { id: 'reports', title: 'Reports', icon: 'ðŸ“Š', desc: 'Detailed academic reports' },
+    { id: 'portfolio', title: 'E-Portfolio', icon: 'ðŸ’¼', desc: 'Portfolio development' },
+    { id: 'turnitin', title: 'Turnitin Check', icon: 'ðŸ”', desc: 'Plagiarism detection & originality report' }
   ];
 
   const mockOrders = [
@@ -315,7 +315,7 @@ const Dashboard = () => {
 
         // Enforce cap
         if (deduped.length > MAX_FILES) {
-          toast(`${deduped.length - MAX_FILES} file(s) were not added because the maximum is ${MAX_FILES}.`, { icon: '⚠️' });
+          toast(`${deduped.length - MAX_FILES} file(s) were not added because the maximum is ${MAX_FILES}.`, { icon: 'âš ï¸' });
           return deduped.slice(0, MAX_FILES);
         }
 
@@ -413,7 +413,7 @@ const Dashboard = () => {
         if (fileInputRef.current) fileInputRef.current.value = '';
       } else {
         // Files were already uploaded via the main flow
-        toast('Files already submitted earlier. Admin has been notified.', { icon: 'ℹ️' });
+        toast('Files already submitted earlier. Admin has been notified.');
         setShowEmailOption(false);
       }
     } catch (error: any) {
@@ -466,7 +466,7 @@ const Dashboard = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: 5, // £5 fixed price
+          amount: 5, // Â£5 fixed price
           currency: 'GBP',
         }),
       });
@@ -926,7 +926,7 @@ const Dashboard = () => {
           {/* Welcome Section */}
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6 sm:mb-8 shadow-sm">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1 sm:mb-2">
-              Welcome back{user ? `, ${userName}` : ''}! 👋
+              Welcome back{user ? `, ${userName}` : ''}! ðŸ‘‹
             </h1>
             <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">
               Get expert help with your coursework. Choose a subject area to get started.
@@ -977,7 +977,7 @@ const Dashboard = () => {
                       <div>
                         <h3 className="font-semibold text-lg">{`${order.service_type || 'Assignment'} - ${order.subject_area || 'General'}`}</h3>
                         <p className="text-gray-600">
-                          {order.word_count?.toLocaleString()} words • Due {new Date(order.due_date).toLocaleDateString()}
+                          {order.word_count?.toLocaleString()} words â€¢ Due {new Date(order.due_date).toLocaleDateString()}
                         </p>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-sm ${
@@ -990,7 +990,7 @@ const Dashboard = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">
-                        £{typeof order.price === 'number' ? order.price.toFixed(2) : '0.00'}
+                        Â£{typeof order.price === 'number' ? order.price.toFixed(2) : '0.00'}
                       </span>
                       <button
                         className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
@@ -1124,17 +1124,17 @@ const Dashboard = () => {
                 {calculatedPrice !== null && (
                   <div className="mt-2 text-sm">
                     <span className="font-medium text-gray-900 dark:text-gray-100">Estimated Price: </span>
-                    <span className="text-blue-600 dark:text-blue-400">£{calculatedPrice.toFixed(2)}</span>
+                    <span className="text-blue-600 dark:text-blue-400">Â£{calculatedPrice.toFixed(2)}</span>
                   </div>
                 )}
                 {showPriceBreakdown && (
                   <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm border border-gray-200 dark:border-gray-700">
                     <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Price Calculation</h4>
                     <ul className="space-y-1 text-gray-700 dark:text-gray-300">
-                      <li>• £18/275 words for dissertations</li>
-                      <li>• £18/275 words for Level 7 work</li>
-                      <li>• £18/275 words for urgent orders (&lt; 2 days)</li>
-                      <li>• £15/275 words for all other cases</li>
+                      <li>â€¢ Â£18/275 words for dissertations</li>
+                      <li>â€¢ Â£18/275 words for Level 7 work</li>
+                      <li>â€¢ Â£18/275 words for urgent orders (&lt; 2 days)</li>
+                      <li>â€¢ Â£15/275 words for all other cases</li>
                     </ul>
                   </div>
                 )}
@@ -1402,7 +1402,7 @@ const Dashboard = () => {
                       <div>
                         <h3 className="font-semibold text-lg">{`${order.service_type || 'Assignment'} - ${order.subject_area || 'General'}`}</h3>
                         <p className="text-gray-600">
-                          {order.word_count?.toLocaleString()} words • Completed {new Date(order.due_date).toLocaleDateString()}
+                          {order.word_count?.toLocaleString()} words â€¢ Completed {new Date(order.due_date).toLocaleDateString()}
                         </p>
                       </div>
                       <span className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm">
@@ -1411,7 +1411,7 @@ const Dashboard = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">
-                        £{typeof order.price === 'number' ? order.price.toFixed(2) : '0.00'}
+                        Â£{typeof order.price === 'number' ? order.price.toFixed(2) : '0.00'}
                       </span>
                       <div className="flex gap-2">
                         <button
@@ -1664,7 +1664,7 @@ const Dashboard = () => {
                         <div className="mt-2 text-sm">
                           <p className="text-gray-600">
                             {files.length > 0 && `${files.length} new file(s) selected`}
-                            {files.length > 0 && uploadedFiles.length > 0 && ' • '}
+                            {files.length > 0 && uploadedFiles.length > 0 && ' â€¢ '}
                             {uploadedFiles.length > 0 && `${uploadedFiles.length} file(s) already uploaded`}
                           </p>
 
@@ -1989,7 +1989,7 @@ const Dashboard = () => {
                               Processing...
                             </div>
                           ) : (
-                            'Check Turnitin (£5)'
+                            'Check Turnitin (Â£5)'
                           )}
                         </button>
                       </div>
@@ -2023,3 +2023,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

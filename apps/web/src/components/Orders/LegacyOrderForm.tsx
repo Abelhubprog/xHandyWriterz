@@ -48,27 +48,34 @@ const LegacyOrderForm: React.FC = () => {
   const [adminNotified, setAdminNotified] = useState(false);
 
   const supportAreas = [
-    { id: 'adult', title: 'Adult Health Nursing', icon: '👨‍⚕️' },
-    { id: 'mental', title: 'Mental Health Nursing', icon: '🧠' },
-    { id: 'child', title: 'Child Nursing', icon: '👶' },
-    { id: 'disability', title: 'Disability Nursing', icon: '♿' },
-    { id: 'social', title: 'Social Work', icon: '🤝' },
-    { id: 'special', title: 'Special Education Needs', icon: '📚' }
+    { id: 'adult', title: 'Adult Health Nursing' },
+    { id: 'mental', title: 'Mental Health Nursing' },
+    { id: 'child', title: 'Child Nursing' },
+    { id: 'disability', title: 'Disability Nursing' },
+    { id: 'social', title: 'Social Work' },
+    { id: 'special', title: 'Special Education Needs' }
   ];
 
   const services = [
-    { id: 'dissertation', title: 'Dissertation', icon: '📑', desc: 'Expert dissertation writing support' },
-    { id: 'essays', title: 'Essays', icon: '✍️', desc: 'Professional essay writing' },
-    { id: 'reflection', title: 'Placement Reflections', icon: '📝', desc: 'Clinical reflection writing' },
-    { id: 'reports', title: 'Reports', icon: '📊', desc: 'Detailed academic reports' },
-    { id: 'portfolio', title: 'E-Portfolio', icon: '💼', desc: 'Portfolio development' },
+    { id: 'dissertation', title: 'Dissertation', desc: 'Expert dissertation writing support' },
+    { id: 'essays', title: 'Essays', desc: 'Professional essay writing' },
+    { id: 'reflection', title: 'Placement Reflections', desc: 'Clinical reflection writing' },
+    { id: 'reports', title: 'Reports', desc: 'Detailed academic reports' },
+    { id: 'portfolio', title: 'E-Portfolio', desc: 'Portfolio development' },
   ];
 
   const { submitDocuments, status: submissionStatus, error: submissionError } = useDocumentSubmission({
-    onSuccess: () => {
+    onSuccess: (_submissionId, attachments) => {
+      const uploaded = attachments.map((attachment) => ({
+        name: attachment.filename,
+        url: attachment.r2Key,
+        path: attachment.r2Key,
+      }));
+      setUploadedFiles(uploaded);
       setAdminNotified(true);
-      toast.success('Documents sent to admin successfully!');
       setUploading(false);
+      setFiles([]);
+      toast.success('Documents sent to admin successfully!');
     },
     onError: (err) => {
       toast.error(err.message || 'Failed to submit documents');
@@ -226,7 +233,7 @@ const LegacyOrderForm: React.FC = () => {
 
     setUploading(true);
     try {
-      const result = await submitDocuments(files, {
+      await submitDocuments(files, {
         serviceType: selectedService?.title || '',
         subjectArea: selectedArea || '',
         wordCount: wordCount,
@@ -234,17 +241,6 @@ const LegacyOrderForm: React.FC = () => {
         dueDate: dueDate,
         instructions: instructions
       });
-
-      if (result.success && result.r2Keys) {
-        const newUploadedFiles = result.r2Keys.map((key: string, idx: number) => ({
-          name: files[idx].name,
-          url: `https://your-r2-url.com/${key}`,
-          path: key
-        }));
-        setUploadedFiles(newUploadedFiles);
-        setFiles([]);
-        setAdminNotified(true);
-      }
     } catch (error) {
       console.error('Upload failed:', error);
     }
@@ -264,9 +260,7 @@ const LegacyOrderForm: React.FC = () => {
                   onClick={() => setSelectedArea(area.id)}
                   className="p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-600 dark:hover:border-blue-500 hover:shadow-md transition-all text-left"
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="text-3xl">{area.icon}</span>
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100">{area.title}</h3>
+                  <div className="flex items-center gap-4">\n                    <h3 className="font-medium text-gray-900 dark:text-gray-100">{area.title}</h3>
                   </div>
                 </button>
               ))}
@@ -294,9 +288,7 @@ const LegacyOrderForm: React.FC = () => {
                   onClick={() => setSelectedService(service)}
                   className="p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-600 dark:hover:border-blue-500 hover:shadow-md transition-all text-left"
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="text-2xl">{service.icon}</span>
-                    <div>
+                  <div className="flex items-center gap-4">\n                    <div>
                       <h3 className="font-medium text-gray-900 dark:text-gray-100">{service.title}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">{service.desc}</p>
                     </div>
@@ -454,7 +446,7 @@ const LegacyOrderForm: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Estimated Price:</span>
                     <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                      £{calculatedPrice.toFixed(2)}
+                      GBP {calculatedPrice.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -492,3 +484,4 @@ const LegacyOrderForm: React.FC = () => {
 };
 
 export default LegacyOrderForm;
+

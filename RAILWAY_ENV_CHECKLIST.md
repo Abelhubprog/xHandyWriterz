@@ -322,6 +322,6 @@ NEXT STEPS:
 
 ---
 
-**Last Updated**: October 3, 2025  
-**Railway Project**: 9e62407b-8aae-4958-b87f-db206b359006  
+**Last Updated**: October 3, 2025
+**Railway Project**: 9e62407b-8aae-4958-b87f-db206b359006
 **Quick Start**: [RAILWAY_ENV_VARIABLES.md](./RAILWAY_ENV_VARIABLES.md)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -143,8 +143,8 @@ const PaymentGateway: React.FC = () => {
     if (!paymentData) return;
 
     toast.loading('Redirecting to StableLink...', { id: 'payment' });
-    
-    const result = await stableLinkPaymentService.createPayment({
+
+    const response = await stableLinkPaymentService.createPayment({
       amount: paymentData.amount,
       currency: paymentData.currency,
       orderId: paymentData.orderId,
@@ -155,12 +155,19 @@ const PaymentGateway: React.FC = () => {
       },
     });
 
-    if (result.success && result.data?.checkoutUrl) {
+    if (response.checkoutUrl) {
       toast.success('Redirecting...', { id: 'payment' });
-      window.location.href = result.data.checkoutUrl;
-    } else {
-      throw new Error(result.error || 'Failed to create payment');
+      window.location.href = response.checkoutUrl;
+      return;
     }
+
+    if (response.status === 'completed') {
+      toast.success('Payment completed', { id: 'payment' });
+      navigate('/dashboard');
+      return;
+    }
+
+    throw new Error('Payment provider did not return a checkout URL.');
   };
 
   const handlePayPal = async () => {
@@ -416,3 +423,5 @@ const PaymentGateway: React.FC = () => {
 };
 
 export default PaymentGateway;
+
+

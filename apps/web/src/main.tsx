@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Main Application Entry
  *
  * Sets up the React application and all required providers.
@@ -70,7 +70,7 @@ try {
             <QueryClientProvider client={queryClient}>
               <Toaster />
               <ErrorBoundary>
-                <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-200 bg-slate-950">Loading…</div>}>
+                <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-200 bg-slate-950">Loadingâ€¦</div>}>
                   <RouterProvider router={router} />
                 </Suspense>
               </ErrorBoundary>
@@ -93,3 +93,4 @@ try {
     `;
   }
 }
+

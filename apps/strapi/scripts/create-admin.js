@@ -1,69 +1,47 @@
-// Script to create a new admin user in production
-// Run this via Railway CLI: railway run node scripts/create-admin.js
+﻿const { spawn } = require('node:child_process');
+const path = require('node:path');
 
-const strapi = require('@strapi/strapi');
+const projectRoot = path.resolve(__dirname, '..');
+const nodeBinary = process.execPath;
+const strapiBin = require.resolve('@strapi/strapi/bin/strapi.js', { paths: [projectRoot] });
 
-async function createAdmin() {
-  const app = await strapi().load();
+const params = {
+  email: process.env.ADMIN_EMAIL || 'admin@example.com',
+  password: process.env.ADMIN_PASSWORD || 'Admin123!',
+  firstname: process.env.ADMIN_FIRSTNAME || 'Admin',
+  lastname: process.env.ADMIN_LASTNAME || 'User',
+};
 
-  const params = {
-    username: process.env.ADMIN_USERNAME || 'admin',
-    email: process.env.ADMIN_EMAIL || 'admin@example.com',
-    password: process.env.ADMIN_PASSWORD || 'Admin123!',
-    firstname: process.env.ADMIN_FIRSTNAME || 'Admin',
-    lastname: process.env.ADMIN_LASTNAME || 'User',
-    blocked: false,
-    isActive: true,
-  };
+console.log('Creating Strapi admin user with:');
+console.log(  email: );
+console.log(  firstname: );
+console.log(  lastname: );
 
-  console.log('Creating admin user with email:', params.email);
+const args = [
+  strapiBin,
+  'admin:create-user',
+  '--email',
+  params.email,
+  '--password',
+  params.password,
+  '--firstname',
+  params.firstname,
+  '--lastname',
+  params.lastname,
+];
 
-  try {
-    // Check if admin already exists
-    const admins = await strapi.query('admin::user').findMany();
-    console.log('Existing admins:', admins.length);
+const child = spawn(nodeBinary, args, {
+  cwd: projectRoot,
+  stdio: 'inherit',
+  env: {
+    ...process.env,
+    FORCE_COLOR: '0',
+  },
+});
 
-    if (admins.length > 0) {
-      console.log('Admin already exists. Updating password...');
-      const admin = admins[0];
-
-      await strapi.query('admin::user').update({
-        where: { id: admin.id },
-        data: {
-          password: params.password,
-          email: params.email,
-        },
-      });
-
-      console.log('✅ Admin password updated successfully!');
-      console.log('Email:', params.email);
-    } else {
-      console.log('Creating new admin...');
-      const superAdminRole = await strapi.query('admin::role').findOne({
-        where: { code: 'strapi-super-admin' },
-      });
-
-      await strapi.query('admin::user').create({
-        data: {
-          ...params,
-          roles: [superAdminRole.id],
-        },
-      });
-
-      console.log('✅ Admin created successfully!');
-    }
-
-    console.log('\nLogin credentials:');
-    console.log('Email:', params.email);
-    console.log('Password:', params.password);
-    console.log('\nLogin at: https://ahandywriterz-production.up.railway.app/admin');
-
-  } catch (error) {
-    console.error('❌ Error:', error.message);
-  } finally {
-    await app.destroy();
-    process.exit(0);
+child.on('exit', (code) => {
+  if (code === 0) {
+    console.log('Admin user created successfully.');
   }
-}
-
-createAdmin();
+  process.exit(code ?? 0);
+});
