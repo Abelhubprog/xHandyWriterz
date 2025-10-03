@@ -2,7 +2,28 @@
 
 Unified monorepo wiring HandyWriterz web (Vite) with Microfeed (Cloudflare Pages) and Strapi 5 CMS for content management.
 
-## 🚨 Railway Deployment Issues?
+## � **LATEST**: Railway Deployment Ready
+
+**Status**: ✅ **Configured** | ⚠️ **Database Provisioning Required**
+
+All Strapi 5 secrets configured. Just need to provision Postgres database:
+
+```bash
+# One-command setup (Windows)
+railway-setup-database.bat
+
+# OR manual (from apps/strapi)
+railway add --database postgres
+railway up
+```
+
+📖 **Complete Guide**: [RAILWAY_DEPLOYMENT_COMPLETE.md](./RAILWAY_DEPLOYMENT_COMPLETE.md)  
+📊 **Current Status**: [RAILWAY_DEPLOYMENT_STATUS.md](./RAILWAY_DEPLOYMENT_STATUS.md)  
+🔧 **Troubleshooting**: [RAILWAY_COMPLETE_GUIDE.md](./RAILWAY_COMPLETE_GUIDE.md)
+
+---
+
+## �🚨 Railway Deployment Issues?
 
 ### Problem: "Cannot send secure cookie over unencrypted connection"
 
@@ -25,6 +46,45 @@ Unified monorepo wiring HandyWriterz web (Vite) with Microfeed (Cloudflare Pages
 **Automation Scripts:**
 - Windows: `railway-admin-reset.bat`
 - Mac/Linux: `railway-admin-reset.sh`
+
+### Problem: Database connection failed (ECONNREFUSED 127.0.0.1:5432)
+
+**Status**: ✅ All environment variables configured | ⚠️ **Database not provisioned**
+
+👉 **Complete Deployment Guide**: [RAILWAY_DEPLOYMENT_COMPLETE.md](./RAILWAY_DEPLOYMENT_COMPLETE.md)  
+👉 **Troubleshooting Reference**: [RAILWAY_COMPLETE_GUIDE.md](./RAILWAY_COMPLETE_GUIDE.md)  
+👉 **Current Status**: [RAILWAY_DEPLOYMENT_STATUS.md](./RAILWAY_DEPLOYMENT_STATUS.md)
+
+**Quick Fix (5 minutes):**
+
+```bash
+# Option 1: Automated setup (Windows)
+railway-setup-database.bat
+
+# Option 2: Automated setup (Mac/Linux)
+./railway-setup-database.sh
+
+# Option 3: Manual setup
+cd apps/strapi
+railway add --database postgres
+railway up
+railway logs --follow
+```
+
+**What's Configured**:
+- ✅ APP_KEYS (4 session keys)
+- ✅ All 6 Strapi secrets (JWT, API, encryption)
+- ✅ Proxy settings (ENABLE_PROXY, ADMIN_SESSION cookies)
+- ✅ Build pipeline (passes TypeScript compilation)
+
+**What's Missing**:
+- ❌ DATABASE_URL (auto-injected after `railway add --database postgres`)
+
+**Next Steps After Database Setup**:
+1. Wait for deployment to complete (~2 min)
+2. Get URL: `railway status`
+3. Create admin: Navigate to `/admin` and register first user
+4. Generate API token for front-end integration
 
 ## Local development
 
