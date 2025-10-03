@@ -9,19 +9,26 @@
 
 ## 🎯 Action Required (Steps 1-3, ~3 min total)
 
-### Step 1: Add Environment Variable (30 seconds)
+### Step 1: Add Critical Environment Variables (1 minute)
 
 **Railway Dashboard**: https://railway.app/project/9e62407b-8aae-4958-b87f-db206b359006
 
 1. Click **Strapi service** → **Variables** tab
-2. Add (if missing):
+2. **Add these critical variables** (if missing):
    ```
    ENABLE_PROXY=true
-   ```
-3. Verify exists:
-   ```
    URL=https://ahandywriterz-production.up.railway.app
+   DATABASE_CLIENT=postgres
    ```
+3. **Verify these exist** (Railway auto-generates):
+   ```
+   APP_KEYS=(comma-separated keys)
+   ADMIN_JWT_SECRET=(random string)
+   JWT_SECRET=(random string)
+   DATABASE_URL=(postgresql://...)
+   ```
+
+📚 **Need help with env vars?** See [RAILWAY_ENV_VARIABLES.md](./RAILWAY_ENV_VARIABLES.md) for complete guide.
 
 Railway will auto-deploy the fix we just pushed.
 
