@@ -13,7 +13,7 @@ if (!email || !password) {
   process.exit(1);
 }
 
-console.log(Resetting Strapi admin password for );
+console.log(`Resetting Strapi admin password for ${email}`);
 
 const args = [
   strapiBin,
