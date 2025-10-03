@@ -12,8 +12,9 @@
     "dev:api": "wrangler pages dev ./public --port 8789 --local --compatibility-date=2025-06-17 --compatibility-flags=nodejs_compat",
     "dev:clean": "vite --force",
     "build": "tsc -p tsconfig.app.json --skipLibCheck && vite build",
-    "preview": "vite preview",
-    "start": "vite preview",
+    "preview": "node scripts/preview.mjs",
+    "start": "node scripts/server.mjs",
+    "start:preview": "node scripts/preview.mjs",
     "lint": "eslint --config eslint.config.js \"src/**/*.{ts,tsx,js,jsx}\"",
     "type-check": "tsc -p tsconfig.app.json --noEmit --skipLibCheck",
     "clean": "rm -rf node_modules/.vite dist"

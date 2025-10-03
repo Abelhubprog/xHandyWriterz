@@ -1,4 +1,4 @@
-import rawTaxonomy from '../../../../config/taxonomy.json';
+import rawTaxonomy from './taxonomy.json';
 
 export type DomainEntry = {
   tag: string;
