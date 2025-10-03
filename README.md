@@ -4,15 +4,25 @@ Unified monorepo wiring HandyWriterz web (Vite) with Microfeed (Cloudflare Pages
 
 ## 🚨 Railway Deployment Issues?
 
-**Can't access admin at your Railway Strapi URL?**
+### Problem: "Cannot send secure cookie over unencrypted connection" 
 
-👉 **Quick Fix (2 minutes)**: See [QUICK_FIX_RAILWAY_ADMIN.md](./QUICK_FIX_RAILWAY_ADMIN.md)
+👉 **Step-by-Step Fix (5 min)**: [RAILWAY_PROXY_FIX_STEPS.md](./RAILWAY_PROXY_FIX_STEPS.md)  
+👉 **Comprehensive Guide**: [RAILWAY_PROXY_FIX.md](./RAILWAY_PROXY_FIX.md)  
+👉 **Automation Script**: `railway-reset-password.ps1`
 
-👉 **Comprehensive Guide**: See [RAILWAY_ADMIN_FIX_GUIDE.md](./RAILWAY_ADMIN_FIX_GUIDE.md)
+**Quick Fix:**
+1. Add `ENABLE_PROXY=true` in Railway Variables
+2. Add `URL=https://ahandywriterz-production.up.railway.app`
+3. Run: `.\railway-reset-password.ps1`
+4. Login and change password!
 
-👉 **Understanding the Issue**: See [RAILWAY_ISSUE_EXPLAINED.md](./RAILWAY_ISSUE_EXPLAINED.md)
+### Problem: Can't create first admin
 
-**Automation Scripts Available:**
+👉 **Quick Fix (2 minutes)**: [QUICK_FIX_RAILWAY_ADMIN.md](./QUICK_FIX_RAILWAY_ADMIN.md)  
+👉 **Comprehensive Guide**: [RAILWAY_ADMIN_FIX_GUIDE.md](./RAILWAY_ADMIN_FIX_GUIDE.md)  
+👉 **Understanding the Issue**: [RAILWAY_ISSUE_EXPLAINED.md](./RAILWAY_ISSUE_EXPLAINED.md)
+
+**Automation Scripts:**
 - Windows: `railway-admin-reset.bat`
 - Mac/Linux: `railway-admin-reset.sh`
 

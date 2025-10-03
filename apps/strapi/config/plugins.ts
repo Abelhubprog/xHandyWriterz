@@ -36,4 +36,29 @@ export default ({ env }) => ({
       },
     },
   },
+
+  // Email Provider Configuration
+  // Supports: resend (recommended), nodemailer (SMTP), sendgrid
+  email: env('EMAIL_PROVIDER') ? {
+    config: {
+      provider: env('EMAIL_PROVIDER', 'sendmail'),
+      providerOptions: env('EMAIL_PROVIDER') === 'resend' ? {
+        apiKey: env('RESEND_API_KEY'),
+      } : env('EMAIL_PROVIDER') === 'nodemailer' ? {
+        host: env('SMTP_HOST'),
+        port: env.int('SMTP_PORT', 587),
+        secure: env.bool('SMTP_SECURE', false),
+        auth: {
+          user: env('SMTP_USERNAME'),
+          pass: env('SMTP_PASSWORD'),
+        },
+      } : env('EMAIL_PROVIDER') === 'sendgrid' ? {
+        apiKey: env('SENDGRID_API_KEY'),
+      } : {},
+      settings: {
+        defaultFrom: env('EMAIL_FROM', 'noreply@handywriterz.com'),
+        defaultReplyTo: env('EMAIL_REPLY_TO', 'support@handywriterz.com'),
+      },
+    },
+  } : undefined,
 });
