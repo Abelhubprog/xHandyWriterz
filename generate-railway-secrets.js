@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 
 const crypto = require('node:crypto');
 
@@ -47,3 +47,4 @@ console.log('  ENABLE_PROXY=true');
 console.log('  ADMIN_SESSION_COOKIE_SECURE=true');
 console.log('  ADMIN_SESSION_COOKIE_SAMESITE=none');
 console.log('  DATABASE_CLIENT=postgres (Railway adds DATABASE_URL automatically)');
+
