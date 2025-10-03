@@ -423,7 +423,7 @@ const Dashboard = () => {
     }
   };
 
-  // Note: Legacy "send to admin" functions removed. 
+  // Note: Legacy "send to admin" functions removed.
   // Use /dashboard/new-order for Mattermost-integrated orders
   // Use /dashboard/email-admin for direct admin communication
 
@@ -2023,13 +2023,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-
-
-
-
-
-
-
-
-

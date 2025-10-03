@@ -40,7 +40,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8789',
+        target: 'https://ahandywriterz-production.up.railway.app',  // Production Strapi
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path

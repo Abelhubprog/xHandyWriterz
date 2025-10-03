@@ -2,8 +2,8 @@
 
 ## URL: http://localhost:5173/admin/content/new
 
-**Date:** October 1, 2025  
-**Component:** `ArticleEditor.tsx` (750 lines)  
+**Date:** October 1, 2025
+**Component:** `ArticleEditor.tsx` (750 lines)
 **Status:** ⚠️ **PARTIALLY CORRECT** - Has Strapi + Clerk, but **missing** Mattermost & embedded email
 
 ---
@@ -51,8 +51,8 @@ const loadArticle = async () => {
         title: attrs.title || '',
         slug: attrs.slug || '',
         summary: attrs.summary || '',
-        content: typeof attrs.content === 'string' 
-          ? JSON.parse(attrs.content) 
+        content: typeof attrs.content === 'string'
+          ? JSON.parse(attrs.content)
           : attrs.content || [],
         status: attrs.status || 'draft',
         domain: attrs.domain || '',
@@ -164,7 +164,7 @@ useEffect(() => {
         placeholder={formData.title || 'SEO title...'}
       />
     </div>
-    
+
     <div>
       <Label htmlFor="seoDescription">Meta Description</Label>
       <Textarea
@@ -175,7 +175,7 @@ useEffect(() => {
         rows={3}
       />
     </div>
-    
+
     <div>
       <Label>Keywords</Label>
       {/* Keyword tags with add/remove functionality */}
@@ -239,7 +239,7 @@ const handleImageUpload = async (file: File, field: 'heroImage' | 'ogImage') => 
 
 ### 1. **Mattermost Messaging Integration** ❌
 
-**Expected:** Direct messaging/collaboration within content editor  
+**Expected:** Direct messaging/collaboration within content editor
 **Current Status:** Only a placeholder "collaboration" toggle
 
 ```typescript
@@ -266,10 +266,10 @@ import { useMattermostClient } from '@/hooks/useMattermost';
 import { MessageThread } from '@/components/Messaging/MessageThread';
 
 // Should have:
-const { 
-  sendMessage, 
-  getChannelMessages, 
-  createContentChannel 
+const {
+  sendMessage,
+  getChannelMessages,
+  createContentChannel
 } = useMattermostClient();
 
 // Should render:
@@ -279,7 +279,7 @@ const {
       <CardTitle>Team Discussion</CardTitle>
     </CardHeader>
     <CardContent>
-      <MessageThread 
+      <MessageThread
         channelId={contentChannelId}
         context={{ articleId: id, title: formData.title }}
       />
@@ -292,7 +292,7 @@ const {
 
 ### 2. **Embedded Email Functionality** ❌
 
-**Expected:** Email composition/sending within editor  
+**Expected:** Email composition/sending within editor
 **Current Status:** No email functionality at all
 
 **What Should Be There:**
@@ -325,7 +325,7 @@ import { EmailComposer } from '@/components/Email/EmailComposer';
 
 ### 3. **File Sharing via Mattermost** ❌
 
-**Expected:** Attach/share article drafts in Mattermost channels  
+**Expected:** Attach/share article drafts in Mattermost channels
 **Current Status:** No file sharing integration
 
 **What Should Be There:**
@@ -452,9 +452,9 @@ interface MessageThreadProps {
   };
 }
 
-export const MessageThread: React.FC<MessageThreadProps> = ({ 
-  channelId, 
-  context 
+export const MessageThread: React.FC<MessageThreadProps> = ({
+  channelId,
+  context
 }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -469,7 +469,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
       }
     };
     loadMessages();
-    
+
     // Poll for new messages every 3 seconds
     const interval = setInterval(loadMessages, 3000);
     return () => clearInterval(interval);
@@ -477,7 +477,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
 
   const handleSend = async () => {
     if (!newMessage.trim()) return;
-    
+
     setLoading(true);
     try {
       await sendMessage(newMessage, channelId);
@@ -569,7 +569,7 @@ useEffect(() => {
     </CardHeader>
     <CardContent>
       <div className="h-96 border rounded-lg p-4">
-        <MessageThread 
+        <MessageThread
           channelId={channelId}
           context={{ articleId: id, title: formData.title }}
         />
@@ -645,7 +645,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         <DialogHeader>
           <DialogTitle>Email Article</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium">To</label>

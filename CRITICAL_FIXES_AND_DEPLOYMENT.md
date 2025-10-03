@@ -99,7 +99,7 @@ VITE_CMS_TOKEN=                                # Empty!
 ```bash
 # apps/web/.env - Add these:
 VITE_ENABLE_FILE_UPLOAD=false
-VITE_ENABLE_MESSAGING=false  
+VITE_ENABLE_MESSAGING=false
 VITE_ENABLE_STRAPI_CONTENT=false
 
 # This will hide file upload UI and messaging sections

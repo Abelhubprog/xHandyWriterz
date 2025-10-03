@@ -7,10 +7,10 @@ import { SignIn } from '@clerk/clerk-react';
 
 /**
  * Admin Login Page - Clerk-based Authentication with Role Verification
- * 
- * This page authenticates administrators using Clerk and verifies they have 
+ *
+ * This page authenticates administrators using Clerk and verifies they have
  * the required 'admin' or 'editor' role in their publicMetadata.
- * 
+ *
  * Setup Instructions:
  * 1. Go to Clerk Dashboard → Users → Select a user
  * 2. Navigate to Metadata tab
@@ -34,7 +34,7 @@ const AdminLogin: React.FC = () => {
           icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
           duration: 2000,
         });
-        
+
         setTimeout(() => {
           navigate(adminUrl);
         }, 800);
@@ -44,7 +44,7 @@ const AdminLogin: React.FC = () => {
           icon: <AlertCircle className="h-5 w-5 text-red-500" />,
           duration: 3000,
         });
-        
+
         setTimeout(() => {
           navigate('/dashboard');
         }, 2000);
@@ -124,11 +124,11 @@ const AdminLogin: React.FC = () => {
                   card: 'bg-transparent shadow-none',
                   headerTitle: 'hidden',
                   headerSubtitle: 'hidden',
-                  socialButtonsBlockButton: 
+                  socialButtonsBlockButton:
                     'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100',
-                  formButtonPrimary: 
+                  formButtonPrimary:
                     'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg',
-                  formFieldInput: 
+                  formFieldInput:
                     'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-indigo-500',
                   formFieldLabel: 'text-gray-700 dark:text-gray-300',
                   footerActionLink: 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300',

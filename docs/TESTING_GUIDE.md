@@ -311,9 +311,9 @@ When reporting issues, please include:
 **Device:** (e.g., iPhone 14, Desktop 1920x1080)
 **Theme:** (Light/Dark)
 **Steps to Reproduce:**
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 **Expected Behavior:**
 
@@ -374,6 +374,6 @@ When reporting issues, please include:
 
 ---
 
-**Testing Duration Estimate:** 4-6 hours for comprehensive testing  
-**Priority:** HIGH - User-facing improvements  
+**Testing Duration Estimate:** 4-6 hours for comprehensive testing
+**Priority:** HIGH - User-facing improvements
 **Status:** Ready for QA (sections completed), In Progress (sections pending)

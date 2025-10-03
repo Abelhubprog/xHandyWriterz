@@ -17,14 +17,14 @@ NC='\033[0m' # No Color
 echo "📄 Checking Environment Configuration..."
 if [ -f "apps/web/.env" ]; then
     echo -e "${GREEN}✓${NC} .env file found"
-    
+
     # Check critical env vars
     if grep -q "VITE_CLERK_PUBLISHABLE_KEY=pk_" apps/web/.env; then
         echo -e "${GREEN}✓${NC} Clerk key configured"
     else
         echo -e "${RED}✗${NC} Clerk key missing or invalid"
     fi
-    
+
     if grep -q "VITE_CMS_TOKEN=" apps/web/.env; then
         if grep -q "VITE_CMS_TOKEN=$" apps/web/.env || grep -q "VITE_CMS_TOKEN=\"\"" apps/web/.env; then
             echo -e "${YELLOW}⚠${NC} Strapi API token empty (optional)"
@@ -34,13 +34,13 @@ if [ -f "apps/web/.env" ]; then
     else
         echo -e "${YELLOW}⚠${NC} Strapi API token not set (optional)"
     fi
-    
+
     if grep -q "VITE_UPLOAD_BROKER_URL=http" apps/web/.env; then
         echo -e "${GREEN}✓${NC} Upload broker URL configured"
     else
         echo -e "${YELLOW}⚠${NC} Upload broker URL not set (optional)"
     fi
-    
+
     if grep -q "VITE_MATTERMOST_URL=http" apps/web/.env; then
         echo -e "${GREEN}✓${NC} Mattermost URL configured"
     else

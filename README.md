@@ -1,6 +1,20 @@
-# newHandyWriterz — HandyWriterz × Microfeed
+# newHandyWriterz — HandyWriterz × Microfeed × Strapi 5
 
-Unified monorepo wiring HandyWriterz web (Vite) with Microfeed (Cloudflare Pages) for content under `/services/*`.
+Unified monorepo wiring HandyWriterz web (Vite) with Microfeed (Cloudflare Pages) and Strapi 5 CMS for content management.
+
+## 🚨 Railway Deployment Issues?
+
+**Can't access admin at your Railway Strapi URL?**
+
+👉 **Quick Fix (2 minutes)**: See [QUICK_FIX_RAILWAY_ADMIN.md](./QUICK_FIX_RAILWAY_ADMIN.md)
+
+👉 **Comprehensive Guide**: See [RAILWAY_ADMIN_FIX_GUIDE.md](./RAILWAY_ADMIN_FIX_GUIDE.md)
+
+👉 **Understanding the Issue**: See [RAILWAY_ISSUE_EXPLAINED.md](./RAILWAY_ISSUE_EXPLAINED.md)
+
+**Automation Scripts Available:**
+- Windows: `railway-admin-reset.bat`
+- Mac/Linux: `railway-admin-reset.sh`
 
 ## Local development
 

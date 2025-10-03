@@ -310,7 +310,7 @@ export const NursingDomainPage: React.FC = () => {
   return (
     <div className="min-h-screen">
       <h1>Nursing Services</h1>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {services?.map((service) => (
           <ServiceCard key={service.id} service={service} />
@@ -397,16 +397,16 @@ Apply the same changes as Input component.
   :root {
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-serif: 'Playfair Display', Georgia, serif;
-    
+
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  
+
   input, textarea, select {
     color: hsl(var(--foreground)) !important;
     font-weight: 500;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif);
     font-weight: 700;

@@ -15,7 +15,7 @@ const NewOrder: React.FC = () => {
         <title>Place Order - HandyWriterz</title>
         <meta name="description" content="Submit your academic writing order with file uploads and instant communication" />
       </Helmet>
-      
+
       <LegacyOrderForm />
     </ErrorBoundary>
   );

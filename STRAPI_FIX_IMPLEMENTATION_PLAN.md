@@ -1,7 +1,7 @@
 # Strapi Connection & CMS Implementation Plan
 
-**Date:** October 1, 2025  
-**Status:** 🚧 Implementation in Progress  
+**Date:** October 1, 2025
+**Status:** 🚧 Implementation in Progress
 **Priority:** P0 - CRITICAL
 
 ---
@@ -438,15 +438,15 @@ Title: "Nursing Essay Writing Services"
 Slug: "nursing-essay-writing"
 Summary: "Expert nursing essay writing with clinical precision"
 Body: |
-  Our nursing essay writing services combine academic excellence with clinical expertise. 
+  Our nursing essay writing services combine academic excellence with clinical expertise.
   We help nursing students with:
-  
+
   - Clinical case studies
   - Reflective essays
   - Evidence-based practice papers
   - Nursing care plans
   - Literature reviews
-  
+
   All our writers hold advanced nursing degrees and understand HIPAA compliance.
 Domain: nursing
 Type Tags: ["essay", "writing", "clinical"]
@@ -462,13 +462,13 @@ Slug: "ai-research-papers"
 Summary: "Cutting-edge AI research assistance"
 Body: |
   We provide expert assistance with AI and machine learning research papers:
-  
+
   - Algorithm design and analysis
   - Model evaluation papers
   - Survey papers on AI trends
   - Technical white papers
   - Conference paper preparation
-  
+
   Our team includes PhD researchers in AI/ML.
 Domain: ai
 Type Tags: ["research", "technical", "papers"]
@@ -484,13 +484,13 @@ Slug: "marketing-case-studies"
 Summary: "Professional marketing analysis and strategy"
 Body: |
   Expert marketing case study assistance:
-  
+
   - Brand analysis
   - Market research reports
   - Digital marketing strategies
   - Consumer behavior studies
   - Campaign performance analysis
-  
+
   Real-world marketing expertise applied to academic requirements.
 Domain: marketing
 Type Tags: ["case-study", "analysis", "strategy"]
@@ -523,7 +523,7 @@ import { fetchServicesList } from '@/lib/cms';
 export const NursingDomainPage: React.FC = () => {
   const { data: services, isLoading, error } = useQuery({
     queryKey: ['services', 'nursing'],
-    queryFn: () => fetchServicesList({ 
+    queryFn: () => fetchServicesList({
       filters: { domain: { $eq: 'nursing' } },
       sort: ['order:asc', 'title:asc'],
       populate: ['heroImage', 'seo']
@@ -535,11 +535,11 @@ export const NursingDomainPage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <DomainHeader 
+      <DomainHeader
         title="Nursing Academic Services"
         description="Clinical expertise meets academic excellence"
       />
-      
+
       <ServiceGrid services={services} />
     </div>
   );
@@ -672,26 +672,26 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     /* Typography */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-serif: 'Playfair Display', Georgia, serif;
-    
+
     /* Better text rendering */
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
-  
+
   /* Input fields with better contrast */
   input, textarea, select {
     color: hsl(var(--foreground)) !important;
     font-weight: 500;
   }
-  
+
   input::placeholder,
   textarea::placeholder {
     color: hsl(var(--muted-foreground)) !important;
     opacity: 0.6;
   }
-  
+
   /* Dark mode specific */
   .dark input,
   .dark textarea,
@@ -699,7 +699,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     color: #ffffff !important;
     background-color: hsl(var(--background));
   }
-  
+
   /* Headings with serif font */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif);
@@ -739,8 +739,8 @@ module.exports = {
 <div
   className={cn(
     "border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200",
-    isDragging 
-      ? "border-primary bg-primary/5 scale-105" 
+    isDragging
+      ? "border-primary bg-primary/5 scale-105"
       : "border-gray-300 dark:border-gray-700 hover:border-primary/50",
     "cursor-pointer"
   )}
@@ -771,12 +771,12 @@ module.exports = {
 
 ```typescript
 import React from 'react';
-import { 
-  Save, 
-  Eye, 
-  Clock, 
-  Trash2, 
-  Copy, 
+import {
+  Save,
+  Eye,
+  Clock,
+  Trash2,
+  Copy,
   Share2,
   FileText,
   Image,
@@ -819,18 +819,18 @@ export const ContentToolbar: React.FC<ContentToolbarProps> = ({
           <Save className="h-4 w-4 mr-2" />
           {saving ? 'Saving...' : 'Save'}
         </Button>
-        
+
         <Button variant="outline" onClick={onPreview}>
           <Eye className="h-4 w-4 mr-2" />
           Preview
         </Button>
-        
+
         <Button variant="outline" onClick={onSchedule}>
           <Clock className="h-4 w-4 mr-2" />
           Schedule
         </Button>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -849,7 +849,7 @@ export const ContentToolbar: React.FC<ContentToolbarProps> = ({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {canDelete && (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={onDelete}
                 className="text-destructive"
               >
@@ -927,7 +927,7 @@ useEffect(() => {
       setMattermostStatus('disconnected');
       return;
     }
-    
+
     try {
       const response = await fetch(`${mattermostUrl}/api/v4/system/ping`);
       if (response.ok) {
@@ -939,7 +939,7 @@ useEffect(() => {
       setMattermostStatus('disconnected');
     }
   };
-  
+
   checkMattermost();
 }, [mattermostUrl]);
 
@@ -1021,19 +1021,19 @@ Key files to create:
 ## 🚨 Known Issues & Fixes
 
 ### Issue 1: Strapi v4 → v5 Migration
-**Symptom:** Invalid package.json  
+**Symptom:** Invalid package.json
 **Fix:** Update all @strapi packages to v5.0.0
 
 ### Issue 2: Faded Input Text
-**Symptom:** Can barely see text in inputs  
+**Symptom:** Can barely see text in inputs
 **Fix:** Change text color from `text-muted-foreground` to `text-foreground font-medium`
 
 ### Issue 3: Missing API Token
-**Symptom:** "Failed to save article"  
+**Symptom:** "Failed to save article"
 **Fix:** Generate token in Strapi admin, add to VITE_CMS_TOKEN
 
 ### Issue 4: Hardcoded Services
-**Symptom:** Content not editable  
+**Symptom:** Content not editable
 **Fix:** Replace hardcoded arrays with Strapi queries
 
 ---

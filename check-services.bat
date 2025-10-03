@@ -11,7 +11,7 @@ REM Check if .env exists
 echo Checking Environment Configuration...
 if exist "apps\web\.env" (
     echo [OK] .env file found
-    
+
     REM Check for Clerk key
     findstr /C:"VITE_CLERK_PUBLISHABLE_KEY=pk_" apps\web\.env >nul
     if %errorlevel% equ 0 (
@@ -19,7 +19,7 @@ if exist "apps\web\.env" (
     ) else (
         echo [!!] Clerk key missing or invalid
     )
-    
+
     REM Check for Strapi token
     findstr /C:"VITE_CMS_TOKEN=" apps\web\.env >nul
     if %errorlevel% equ 0 (
@@ -27,7 +27,7 @@ if exist "apps\web\.env" (
     ) else (
         echo [..] Strapi not configured ^(optional^)
     )
-    
+
     REM Check for Upload Broker URL
     findstr /C:"VITE_UPLOAD_BROKER_URL=http" apps\web\.env >nul
     if %errorlevel% equ 0 (
@@ -35,7 +35,7 @@ if exist "apps\web\.env" (
     ) else (
         echo [..] Upload broker not configured ^(optional^)
     )
-    
+
     REM Check for Mattermost URL
     findstr /C:"VITE_MATTERMOST_URL=http" apps\web\.env >nul
     if %errorlevel% equ 0 (
