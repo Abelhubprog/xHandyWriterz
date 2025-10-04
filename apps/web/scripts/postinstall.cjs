@@ -1,5 +1,5 @@
-﻿import { chmod, mkdir, writeFile } from "fs/promises";
-import { dirname, join } from "path";
+﻿const { chmod, mkdir, writeFile } = require("fs/promises");
+const { dirname, join } = require("path");
 
 const projectRoot = process.cwd();
 const binDir = join(projectRoot, "node_modules", ".bin");
