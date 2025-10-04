@@ -8,14 +8,13 @@ RUN corepack enable
 
 WORKDIR /app
 
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-RUN mkdir -p apps/web
-COPY apps/web/package.json apps/web/package.json
-
-RUN pnpm install --filter @handywriterz/web... --prod --no-frozen-lockfile
-
+# Copy entire repo to ensure all workspace files are present
 COPY . .
 
+# Install only web workspace dependencies
+RUN pnpm install --filter @handywriterz/web... --prod --no-frozen-lockfile
+
+# Build the web app
 RUN pnpm --filter @handywriterz/web... build
 
 WORKDIR /app/apps/web
