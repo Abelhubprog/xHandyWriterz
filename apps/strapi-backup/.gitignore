@@ -1,9 +1,0 @@
-﻿# Strapi build artifacts
-.build
-.cache
-.tmp
-node_modules
-.env
-.DS_Store
-*.log
-public/uploads
