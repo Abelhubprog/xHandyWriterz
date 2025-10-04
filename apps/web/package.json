@@ -17,7 +17,8 @@
     "start:preview": "node scripts/preview.mjs",
     "lint": "eslint --config eslint.config.js \"src/**/*.{ts,tsx,js,jsx}\"",
     "type-check": "tsc -p tsconfig.app.json --noEmit --skipLibCheck",
-    "clean": "rm -rf node_modules/.vite dist"
+    "clean": "rm -rf node_modules/.vite dist",
+    "postinstall": "node scripts/postinstall.cjs"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.27.0",

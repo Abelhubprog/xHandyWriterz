@@ -2,6 +2,7 @@ import React from 'react';
 import { createBrowserRouter, RouteObject } from 'react-router-dom';
 import RootLayout from './components/layouts/RootLayout';
 import DashboardLayout from './components/layouts/DashboardLayout';
+import AdminLayout from './components/layouts/AdminLayout';
 
 // Pages
 const Homepage = React.lazy(() => import('./pages/Homepage'));
@@ -106,7 +107,7 @@ const routes: RouteObject[] = [
   },
   {
     path: '/admin',
-    element: <DashboardLayout />,
+    element: <AdminLayout />,
     children: [
       { index: true, element: <AdminDashboard /> },
       { path: 'content', element: <AdminDashboard /> },
@@ -128,3 +129,4 @@ const routes: RouteObject[] = [
 ];
 
 export const router = createBrowserRouter(routes);
+
