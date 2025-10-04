@@ -9,8 +9,8 @@ WORKDIR /app
 
 COPY . .
 
-RUN pnpm install --filter @handywriterz/web... --frozen-lockfile
-RUN pnpm --filter @handywriterz/web build
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @handywriterz/web... build
 
 WORKDIR /app/apps/web
 
