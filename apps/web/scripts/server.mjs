@@ -10,6 +10,12 @@ const port = Number.parseInt(process.env.PORT ?? "", 10) || 4173;
 const host = process.env.HOST ?? "0.0.0.0";
 const distDir = join(__dirname, "..", "dist");
 
+console.log("[web] Starting server...");
+console.log("[web] PORT from env:", process.env.PORT);
+console.log("[web] Final port:", port);
+console.log("[web] Host:", host);
+console.log("[web] Dist directory:", distDir);
+
 const getContentType = (filePath) => {
   const extension = extname(filePath).toLowerCase();
   switch (extension) {
@@ -45,6 +51,13 @@ const getContentType = (filePath) => {
 
 const server = createServer(async (req, res) => {
   try {
+    // Quick health check response for Railway
+    if (req.url === "/health" || req.url === "/healthz") {
+      res.writeHead(200, { "Content-Type": "text/plain" });
+      res.end("OK");
+      return;
+    }
+
     let filePath = req.url === "/" ? "/index.html" : req.url ?? "/index.html";
 
     const queryIndex = filePath.indexOf("?");
