@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { createToaster } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
+import { resolveApiUrl } from '@/lib/api-base';
 
 interface UserData {
   name: string;
@@ -50,13 +51,13 @@ const UserProfile: React.FC<UserProfileProps> = ({
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/users/${userId}`);
+      const response = await fetch(resolveApiUrl(`/api/users/${userId}`));
       if (!response.ok) throw new Error('Failed to fetch user data');
       const data = await response.json();
       setUserData(data);
     } catch (error) {
       setError('Failed to load user profile');
-      toaster.create({
+      toast({
         title: "Error",
         description: "Failed to load user profile",
         variant: "destructive"
@@ -70,7 +71,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
     setSaving(true);
     setError(null);
     try {
-      const response = await fetch(`/api/users/${userId}`, {
+      const response = await fetch(resolveApiUrl(`/api/users/${userId}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -82,13 +83,13 @@ const UserProfile: React.FC<UserProfileProps> = ({
       setIsEditing(false);
       onProfileUpdate?.(updatedData);
       
-      toaster.create({
+      toast({
         title: "Success",
         description: "Profile updated successfully",
       });
     } catch (error) {
       setError('Failed to update profile');
-      toaster.create({
+      toast({
         title: "Error",
         description: "Failed to update profile",
         variant: "destructive"
@@ -106,7 +107,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
     formData.append('image', file);
 
     try {
-      const response = await fetch('/api/upload-avatar', {
+      const response = await fetch(resolveApiUrl('/api/upload-avatar'), {
         method: 'POST',
         body: formData,
       });
@@ -114,12 +115,12 @@ const UserProfile: React.FC<UserProfileProps> = ({
       const { url } = await response.json();
       setUserData(prev => ({ ...prev, avatarUrl: url }));
       
-      toaster.create({
+      toast({
         title: "Success",
         description: "Profile picture updated successfully",
       });
     } catch (error) {
-      toaster.create({
+      toast({
         title: "Error",
         description: "Failed to upload profile picture",
         variant: "destructive"

@@ -4,6 +4,8 @@
  * (Cloudflare D1, PostgreSQL, etc.)
  */
 
+import { resolveApiUrl } from '@/lib/api-base';
+
 export interface QueryResult<T = any> {
   rows: T[];
   count: number;
@@ -25,7 +27,7 @@ export class DatabaseService {
       type: 'd1',
       apiUrl: '/api/db',
     };
-    this.apiUrl = this.config.apiUrl || '/api/db';
+    this.apiUrl = resolveApiUrl(this.config.apiUrl || '/api/db');
   }
 
   /**

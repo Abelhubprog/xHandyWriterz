@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Share2, ThumbsUp, MessageCircle, ChevronLeft } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cloudflareDb } from '@/lib/cloudflare';
+import { resolveApiUrl } from '@/lib/api-base';
 
 const ServicePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -58,7 +59,7 @@ const ServicePage: React.FC = () => {
     try {
       if (!service) return;
 
-      const response = await fetch(`/api/services/${service.id}/like`, {
+      const response = await fetch(resolveApiUrl(`/api/services/${service.id}/like`), {
         method: 'POST',
       });
 

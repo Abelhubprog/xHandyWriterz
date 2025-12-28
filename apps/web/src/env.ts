@@ -76,6 +76,7 @@ function getEnvVars() {
     // CMS
     VITE_CMS_URL: import.meta.env.VITE_CMS_URL || 'http://localhost:1337',
     VITE_CMS_TOKEN: import.meta.env.VITE_CMS_TOKEN || '',
+    VITE_UPLOAD_BROKER_URL: import.meta.env.VITE_UPLOAD_BROKER_URL,
 
     // Application Settings
     VITE_APP_NAME: import.meta.env.VITE_APP_NAME || 'HandyWriterz',

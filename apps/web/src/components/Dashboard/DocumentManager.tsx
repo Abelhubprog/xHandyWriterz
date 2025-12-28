@@ -19,6 +19,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Download, Globe, Lock, MoreVertical, Share2, Trash2, Upload, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { resolveApiUrl } from '@/lib/api-base';
 
 // Document type extending the database model
 interface Document {
@@ -69,7 +70,7 @@ const DocumentManager: React.FC = () => {
       setError(null);
       // Fetch list of files from R2 via Pages Function
       const prefix = user ? `orders/${user.id}/` : '';
-      const res = await fetch(`/api/r2/list?prefix=${encodeURIComponent(prefix)}&delimiter=/&limit=100`);
+      const res = await fetch(resolveApiUrl(`/api/r2/list?prefix=${encodeURIComponent(prefix)}&delimiter=/&limit=100`));
       if (!res.ok) throw new Error('Failed to load documents');
       const json = await res.json();
       const files = (json.files || []) as Array<{ key: string; size: number; lastModified: string }>;

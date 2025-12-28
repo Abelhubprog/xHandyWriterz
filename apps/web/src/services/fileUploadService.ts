@@ -4,6 +4,8 @@
  * Integrates with presigned URL generation and multipart uploads
  */
 
+import { resolveApiUrl } from '@/lib/api-base';
+
 export interface UploadProgress {
   loaded: number;
   total: number;
@@ -42,7 +44,10 @@ export class FileUploadService {
   private brokerUrl: string;
 
   constructor(brokerUrl?: string) {
-    this.brokerUrl = brokerUrl || import.meta.env.VITE_UPLOAD_BROKER_URL || '/api/upload';
+    const fallbackBase = resolveApiUrl('').replace(/\/$/, '');
+    const resolved = brokerUrl || import.meta.env.VITE_UPLOAD_BROKER_URL || fallbackBase;
+    const normalized = resolved ? resolved.replace(/\/$/, '') : '';
+    this.brokerUrl = normalized.endsWith('/s3') ? normalized.slice(0, -3) : normalized;
   }
 
   /**

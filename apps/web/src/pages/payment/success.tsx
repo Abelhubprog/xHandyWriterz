@@ -17,7 +17,7 @@ const PaymentSuccess: React.FC = () => {
   useEffect(() => {
     // If this is a PayPal return, capture the order
     if (provider === 'paypal' && token && !captured) {
-      fetch('/api/payments/paypal/capture', {
+      fetch(resolveApiUrl('/api/payments/paypal/capture'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ orderId, paypalOrderId: token })

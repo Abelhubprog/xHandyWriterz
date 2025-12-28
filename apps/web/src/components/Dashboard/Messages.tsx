@@ -43,6 +43,7 @@ import { format } from 'date-fns';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
+import { resolveApiUrl } from '@/lib/api-base';
 
 interface Message {
   id: string;
@@ -192,7 +193,7 @@ const Messages: React.FC = () => {
         query += `?status=${filterStatus}`;
       }
 
-      const response = await fetch(query);
+      const response = await fetch(resolveApiUrl(query));
       
       if (!response.ok) {
         throw new Error(`Failed to fetch conversations: ${response.status}`);
@@ -228,7 +229,7 @@ const Messages: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/messages/conversation/${conversationId}`);
+      const response = await fetch(resolveApiUrl(`/api/messages/conversation/${conversationId}`));
       
       if (!response.ok) {
         throw new Error(`Failed to fetch messages: ${response.status}`);
@@ -258,7 +259,7 @@ const Messages: React.FC = () => {
       if (!user) return;
 
       // Mark all messages as read
-      const markReadResponse = await fetch(`/api/messages/mark-read`, {
+      const markReadResponse = await fetch(resolveApiUrl(`/api/messages/mark-read`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -280,7 +281,7 @@ const Messages: React.FC = () => {
       }
 
       // Update conversation unread count
-      const updateResponse = await fetch(`/api/conversations/${conversationId}/read`, {
+      const updateResponse = await fetch(resolveApiUrl(`/api/conversations/${conversationId}/read`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -326,7 +327,7 @@ const Messages: React.FC = () => {
           formData.append('file', file);
           formData.append('type', 'message-attachment');
           
-          const uploadResponse = await fetch('/api/upload', {
+          const uploadResponse = await fetch(resolveApiUrl('/api/upload'), {
             method: 'POST',
             body: formData
           });
@@ -350,7 +351,7 @@ const Messages: React.FC = () => {
         attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined
       };
 
-      const messageResponse = await fetch('/api/messages', {
+      const messageResponse = await fetch(resolveApiUrl('/api/messages'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -371,7 +372,7 @@ const Messages: React.FC = () => {
       }
 
       // Update conversation last message and time
-      const conversationUpdateResponse = await fetch(`/api/conversations/${selectedConversation.id}`, {
+      const conversationUpdateResponse = await fetch(resolveApiUrl(`/api/conversations/${selectedConversation.id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -452,7 +453,7 @@ const Messages: React.FC = () => {
     try {
       if (!selectedConversation) return;
 
-      await fetch(`/api/conversations/${selectedConversation.id}`, {
+      await fetch(resolveApiUrl(`/api/conversations/${selectedConversation.id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

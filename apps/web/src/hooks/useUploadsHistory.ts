@@ -1,21 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
+import { resolveApiUrl } from '@/lib/api-base';
 
 // Schemas
-const UploadFileSchema = z.object({
-  r2Key: z.string(),
-  filename: z.string().nullable().optional(),
-  size: z.number().optional(),
-  contentType: z.string().nullable().optional(),
-});
-
 const UploadItemSchema = z.object({
-  id: z.string(),
-  userExternalId: z.string(),
-  status: z.string(),
-  createdAt: z.string(),
-  updatedAt: z.string().optional(),
-  files: z.array(UploadFileSchema),
+  key: z.string(),
+  filename: z.string().optional(),
+  contentType: z.string().optional(),
+  size: z.number().optional(),
+  userId: z.string(),
+  submissionId: z.string().optional(),
+  uploadedAt: z.string().optional(),
 });
 
 const UploadsResponseSchema = z.object({
@@ -23,7 +18,6 @@ const UploadsResponseSchema = z.object({
 });
 
 // Types inferred from schemas
-export type UploadFile = z.infer<typeof UploadFileSchema>;
 export type UploadItem = z.infer<typeof UploadItemSchema>;
 export type UploadsResponse = z.infer<typeof UploadsResponseSchema>;
 
@@ -31,7 +25,7 @@ export function useUploadsHistory(authToken?: string) {
   return useQuery<UploadsResponse>({
     queryKey: ['uploads-history'],
     queryFn: async () => {
-      const res = await fetch('/api/uploads', {
+      const res = await fetch(resolveApiUrl('/api/uploads/history'), {
         method: 'GET',
         headers: { 'accept': 'application/json', ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
         credentials: 'same-origin',

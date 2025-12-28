@@ -15,6 +15,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import stableLinkPaymentService from '@/services/stableLinkPaymentService';
+import { resolveApiUrl } from '@/lib/api-base';
 
 interface PaymentData {
   orderId: string;
@@ -175,7 +176,7 @@ const PaymentGateway: React.FC = () => {
 
     toast.loading('Connecting to PayPal...', { id: 'payment' });
     
-    const response = await fetch('/api/payments/paypal/create', {
+    const response = await fetch(resolveApiUrl('/api/payments/paypal/create'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

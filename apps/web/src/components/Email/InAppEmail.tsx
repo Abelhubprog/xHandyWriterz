@@ -31,6 +31,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { mattermostClient, type MattermostFileInfo } from '@/lib/mm-client';
 import useMMAuth from '@/hooks/mattermost/useMMAuth';
+import { resolveApiUrl } from '@/lib/api-base';
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -235,7 +236,7 @@ ${uploadedFiles.length > 0 ? `\n**Attachments:** ${uploadedFiles.length} file(s)
       // Optional: Send actual email notification to admin (backend integration needed)
       // This would typically call a backend API to send the actual email
       try {
-        await fetch('/api/notify-admin-email', {
+        await fetch(resolveApiUrl('/api/notify-admin-email'), {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({

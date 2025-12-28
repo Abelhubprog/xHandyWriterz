@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Mail, Phone, MessageSquare, Save, User } from 'lucide-react';
 import MessagingInterface from './MessagingInterface';
+import { resolveApiUrl } from '@/lib/api-base';
 
 interface UserProfileProps {
   userId: string;
@@ -33,7 +34,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, initialData }) => {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch(`/api/users/${userId}`);
+      const response = await fetch(resolveApiUrl(`/api/users/${userId}`));
       if (!response.ok) throw new Error('Failed to fetch user data');
       const data = await response.json();
       setUserData(data);
@@ -44,7 +45,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, initialData }) => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const response = await fetch(`/api/users/${userId}`, {
+      const response = await fetch(resolveApiUrl(`/api/users/${userId}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -65,7 +66,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, initialData }) => {
     formData.append('image', file);
 
     try {
-      const response = await fetch('/api/upload-avatar', {
+      const response = await fetch(resolveApiUrl('/api/upload-avatar'), {
         method: 'POST',
         body: formData,
       });

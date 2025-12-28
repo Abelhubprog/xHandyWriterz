@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Paperclip, X, Image, File, Smile, MoreVertical } from 'lucide-react';
+import { resolveApiUrl } from '@/lib/api-base';
 
 interface Message {
   id: string;
@@ -47,7 +48,7 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`/api/messages?userId=${userId}`);
+      const response = await fetch(resolveApiUrl(`/api/messages?userId=${userId}`));
       if (!response.ok) throw new Error('Failed to fetch messages');
       const data = await response.json();
       setMessages(data);
@@ -98,7 +99,7 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
         formData.append('files', file);
       });
 
-      const response = await fetch('/api/messages', {
+      const response = await fetch(resolveApiUrl('/api/messages'), {
         method: 'POST',
         body: formData,
       });

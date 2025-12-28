@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, X } from 'lucide-react';
+import { resolveApiUrl } from '@/lib/api-base';
 
 interface Notification {
   id: string;
@@ -27,7 +28,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ userId }) => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(`/api/notifications?userId=${userId}`);
+      const response = await fetch(resolveApiUrl(`/api/notifications?userId=${userId}`));
       if (!response.ok) throw new Error('Failed to fetch notifications');
       const data = await response.json();
       setNotifications(data);
@@ -38,7 +39,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ userId }) => {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await fetch(`/api/notifications/${notificationId}`, {
+      await fetch(resolveApiUrl(`/api/notifications/${notificationId}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ read: true }),
@@ -54,7 +55,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ userId }) => {
 
   const markAllAsRead = async () => {
     try {
-      await fetch('/api/notifications/mark-all-read', {
+      await fetch(resolveApiUrl('/api/notifications/mark-all-read'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),

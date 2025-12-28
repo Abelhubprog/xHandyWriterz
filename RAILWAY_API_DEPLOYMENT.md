@@ -6,8 +6,11 @@ This guide walks through deploying the new `apps/api` Express service to Railway
 
 The API service replaces the broken Cloudflare Workers and provides:
 - `/api/uploads/*` - R2 presigned URL generation
+- `/api/upload-url` - Legacy upload dropzone compatibility
+- `/s3/*` - Worker-compatible presign endpoints
 - `/api/payments/*` - Payment intent creation  
 - `/api/messaging/*` - Mattermost auth exchange
+- `/api/turnitin/*` - Submission notifications
 - `/api/webhooks/*` - Strapi, R2, and payment webhooks
 - `/sitemap.xml` - Dynamic sitemap generation
 - `/robots.txt` - SEO robots file
@@ -75,9 +78,8 @@ R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
 
 # Mattermost (for messaging integration)
 MATTERMOST_ADMIN_TOKEN=<your-mm-admin-token>
-MM_BOT_TOKEN=<your-mm-bot-token>
-MM_DEFAULT_TEAM_ID=<your-default-team>
-MM_SUPPORT_CHANNEL_ID=<your-support-channel>
+MATTERMOST_BOT_TOKEN=<your-mm-bot-token>
+MATTERMOST_ADMIN_CHANNEL=<your-support-channel-id>
 
 # Payment Providers (optional)
 STABLELINK_API_KEY=<stablelink-key>
@@ -90,6 +92,10 @@ COINBASE_API_KEY=<coinbase-key>
 STRAPI_WEBHOOK_SECRET=<strapi-webhook-secret>
 R2_WEBHOOK_SECRET=<r2-webhook-secret>
 PAYMENT_WEBHOOK_SECRET=<payment-webhook-secret>
+
+# Upload compatibility (temporary)
+ALLOW_ANON_UPLOADS=true
+ALLOW_ANON_DOWNLOADS=true
 
 # Cloudflare (for cache purge)
 CF_ZONE_ID=<cloudflare-zone-id>

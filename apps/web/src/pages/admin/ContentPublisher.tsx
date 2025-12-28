@@ -12,6 +12,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { env } from '@/env';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -107,10 +108,10 @@ export const ContentPublisher: React.FC = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${process.env.VITE_CMS_URL}/api/${formData.type}s/${id}?populate=*`,
+        `${env.VITE_CMS_URL}/api/${formData.type}s/${id}?populate=*`,
         {
           headers: {
-            Authorization: `Bearer ${process.env.VITE_CMS_TOKEN}`,
+            Authorization: `Bearer ${env.VITE_CMS_TOKEN}`,
           },
         }
       );
@@ -232,14 +233,14 @@ export const ContentPublisher: React.FC = () => {
       };
 
       const url = isEditing
-        ? `${process.env.VITE_CMS_URL}/api/${formData.type}s/${id}`
-        : `${process.env.VITE_CMS_URL}/api/${formData.type}s`;
+        ? `${env.VITE_CMS_URL}/api/${formData.type}s/${id}`
+        : `${env.VITE_CMS_URL}/api/${formData.type}s`;
 
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.VITE_CMS_TOKEN}`,
+          Authorization: `Bearer ${env.VITE_CMS_TOKEN}`,
         },
         body: JSON.stringify(payload),
       });
@@ -281,14 +282,14 @@ export const ContentPublisher: React.FC = () => {
       };
 
       const url = isEditing
-        ? `${process.env.VITE_CMS_URL}/api/${formData.type}s/${id}`
-        : `${process.env.VITE_CMS_URL}/api/${formData.type}s`;
+        ? `${env.VITE_CMS_URL}/api/${formData.type}s/${id}`
+        : `${env.VITE_CMS_URL}/api/${formData.type}s`;
 
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.VITE_CMS_TOKEN}`,
+          Authorization: `Bearer ${env.VITE_CMS_TOKEN}`,
         },
         body: JSON.stringify(payload),
       });
@@ -299,8 +300,8 @@ export const ContentPublisher: React.FC = () => {
       toast.success('Content published successfully!');
 
       // Trigger cache purge webhook if configured
-      if (process.env.VITE_CACHE_PURGE_WEBHOOK) {
-        await fetch(process.env.VITE_CACHE_PURGE_WEBHOOK, {
+      if (import.meta.env.VITE_CACHE_PURGE_WEBHOOK) {
+        await fetch(import.meta.env.VITE_CACHE_PURGE_WEBHOOK, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

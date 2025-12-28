@@ -40,6 +40,7 @@ import { format } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import LoadingState from './LoadingState';
 import { motion } from 'framer-motion';
+import { resolveApiUrl } from '@/lib/api-base';
 
 interface Email {
   id: string;
@@ -109,7 +110,7 @@ export default function EmailInterface() {
   const fetchEmails = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/emails');
+      const response = await fetch(resolveApiUrl('/api/emails'));
       if (!response.ok) throw new Error('Failed to fetch emails');
       
       const data = await response.json();
@@ -137,7 +138,7 @@ export default function EmailInterface() {
         formData.append('files', file);
       });
 
-      const response = await fetch('/api/emails/send', {
+      const response = await fetch(resolveApiUrl('/api/emails/send'), {
         method: 'POST',
         body: formData
       });
@@ -162,7 +163,7 @@ export default function EmailInterface() {
     if (!confirm('Are you sure you want to delete this email?')) return;
 
     try {
-      const response = await fetch(`/api/emails/${emailId}`, {
+      const response = await fetch(resolveApiUrl(`/api/emails/${emailId}`), {
         method: 'DELETE'
       });
 

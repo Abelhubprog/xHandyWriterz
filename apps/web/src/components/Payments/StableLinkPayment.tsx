@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import stableLinkPaymentService from '@/services/stableLinkPaymentService';
+import { resolveApiUrl } from '@/lib/api-base';
 import toast from 'react-hot-toast';
 import { CreditCard, ExternalLink, CheckCircle, AlertCircle, Clock, Wallet } from 'lucide-react';
 
@@ -93,7 +94,7 @@ const StableLinkPayment: React.FC<StableLinkPaymentProps> = ({ orderDetails, onS
       };
 
       // Create payment server-side to avoid exposing API key
-      const serverRes = await fetch('/api/payments/stablelink-create', {
+      const serverRes = await fetch(resolveApiUrl('/api/payments/stablelink-create'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -118,7 +119,7 @@ const StableLinkPayment: React.FC<StableLinkPaymentProps> = ({ orderDetails, onS
       setState('pending');
       // Persist payment record to backend DB
       try {
-        await fetch('/api/payments', {
+        await fetch(resolveApiUrl('/api/payments'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

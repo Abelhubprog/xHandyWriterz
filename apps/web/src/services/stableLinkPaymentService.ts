@@ -1,6 +1,8 @@
 // StableLink payment service wrapper
 // Provides createPayment and checkPaymentStatus via our serverless API proxy
 
+import { resolveApiUrl } from '@/lib/api-base';
+
 export type CreatePaymentRequest = {
   amount: number;
   currency: string;
@@ -26,7 +28,7 @@ export type PaymentStatus = {
 };
 
 async function postJSON<T>(url: string, body: any): Promise<T> {
-  const res = await fetch(url, {
+  const res = await fetch(resolveApiUrl(url), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

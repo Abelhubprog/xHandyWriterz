@@ -1,5 +1,6 @@
 ﻿import { useCallback, useMemo, useRef, useState } from 'react';
 import { env } from '@/env';
+import { resolveApiUrl } from '@/lib/api-base';
 
 export type SubmissionStatus =
   | 'idle'
@@ -78,9 +79,9 @@ export function useDocumentSubmission(options: UseDocumentSubmissionOptions = {}
 
       try {
         const brokerUrl = env.VITE_UPLOAD_BROKER_URL?.replace(/\/$/, '') ?? '';
-        if (!brokerUrl) {
-          throw new Error('Upload broker not configured. Set VITE_UPLOAD_BROKER_URL.');
-        }
+        const presignEndpoint = brokerUrl
+          ? `${brokerUrl}/s3/presign-put`
+          : resolveApiUrl('/api/uploads/presign-put');
 
         for (const file of files) {
           if (isCancelledRef.current) {
@@ -93,7 +94,7 @@ export function useDocumentSubmission(options: UseDocumentSubmissionOptions = {}
           const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
           const key = `submissions/${localSubmissionId}/${safeName}`;
 
-          const presignRes = await fetch(`${brokerUrl}/s3/presign-put`, {
+          const presignRes = await fetch(presignEndpoint, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ key, contentType: file.type || 'application/octet-stream' }),
@@ -138,7 +139,7 @@ export function useDocumentSubmission(options: UseDocumentSubmissionOptions = {}
         setStatus('submitting');
 
         try {
-          const persistRes = await fetch('/api/uploads', {
+          const persistRes = await fetch(resolveApiUrl('/api/uploads'), {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ attachments: uploaded, metadata }),
@@ -164,7 +165,7 @@ export function useDocumentSubmission(options: UseDocumentSubmissionOptions = {}
           '';
 
         if (email) {
-          const notifyRes = await fetch('/api/turnitin/notify', {
+          const notifyRes = await fetch(resolveApiUrl('/api/turnitin/notify'), {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ orderId: nextSubmissionId, email, attachments: uploaded }),
@@ -180,7 +181,7 @@ export function useDocumentSubmission(options: UseDocumentSubmissionOptions = {}
           }
 
           try {
-            await fetch('/api/turnitin/receipt', {
+            await fetch(resolveApiUrl('/api/turnitin/receipt'), {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
               body: JSON.stringify({ orderId: nextSubmissionId, email }),

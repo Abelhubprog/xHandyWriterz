@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader } from '@/components/ui/Loader';
 import { useToast } from '@/components/ui/use-toast';
+import { resolveApiUrl } from '@/lib/api-base';
 
-// Uploads flow now uses the presign worker that issues R2 uploads.
+// Uploads flow uses the presign service that issues R2 uploads.
 interface UploadDropzoneProps {
   onUpload: () => void;
 }
@@ -27,7 +28,7 @@ export function UploadDropzone({ onUpload }: UploadDropzoneProps) {
           continue;
         }
 
-        const presignRes = await fetch('/api/upload-url', {
+        const presignRes = await fetch(resolveApiUrl('/api/upload-url'), {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ contentType: file.type, filename: file.name, size: file.size }),

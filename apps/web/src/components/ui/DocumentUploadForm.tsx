@@ -16,6 +16,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useDropzone } from 'react-dropzone';
 import { useSession } from 'next-auth/react';
+import { resolveApiUrl } from '@/lib/api-base';
 
 interface UploadFormData {
   region: string;
@@ -98,7 +99,7 @@ export default function DocumentUploadForm() {
       form.append('questionTwo', String(formData.questionTwo));
 
       // Upload document
-      const response = await fetch('/api/documents/upload', {
+      const response = await fetch(resolveApiUrl('/api/documents/upload'), {
         method: 'POST',
         body: form
       });

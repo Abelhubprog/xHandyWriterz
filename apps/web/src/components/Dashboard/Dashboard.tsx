@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import useDocumentSubmission from '@/hooks/useDocumentSubmission';
+import { resolveApiUrl } from '@/lib/api-base';
 // import { createOrder } from '@/lib/services';
 import SubscriptionStatus from './SubscriptionStatus';
 
@@ -460,7 +461,7 @@ const Dashboard = () => {
 
     try {
       // First, create a payment intent
-      const paymentResponse = await fetch('/api/create-turnitin-payment', {
+      const paymentResponse = await fetch(resolveApiUrl('/api/create-turnitin-payment'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -504,7 +505,7 @@ const Dashboard = () => {
             return;
           }
 
-          const statusResponse = await fetch(`/api/check-charge/${chargeId}`);
+          const statusResponse = await fetch(resolveApiUrl(`/api/check-charge/${chargeId}`));
           if (!statusResponse.ok) {
             const error = await statusResponse.json();
             throw new Error(error.message || 'Failed to check payment status');
@@ -523,7 +524,7 @@ const Dashboard = () => {
             formData.append('file', turnitinFile);
             formData.append('chargeId', chargeId);
 
-            const response = await fetch('/api/check-turnitin', {
+            const response = await fetch(resolveApiUrl('/api/check-turnitin'), {
               method: 'POST',
               body: formData,
             });
@@ -676,8 +677,7 @@ const Dashboard = () => {
 
         try {
           // Build the API URL with a proper base URL check
-          const baseUrl = isDev ? window.location.origin : 'https://handywriterz.com';
-          const apiUrl = `${baseUrl}/api/orders/user/${user.id}`;
+          const apiUrl = resolveApiUrl(`/api/orders/user/${user.id}`);
 
           // Add a timeout to prevent long waiting times if API is down
           const controller = new AbortController();
@@ -2023,4 +2023,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

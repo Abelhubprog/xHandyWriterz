@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { TelegramInteractionStep } from '@/services/telegramBotInteractionService';
 import { useInterval } from '@/hooks/useInterval';
+import { resolveApiUrl } from '@/lib/api-base';
 
 interface DocumentProcessingStatusProps {
   requestId: string;
@@ -51,7 +52,7 @@ export default function DocumentProcessingStatus({
 
   const fetchStatus = async () => {
     try {
-      const response = await fetch(`/api/documents/${requestId}/status`);
+      const response = await fetch(resolveApiUrl(`/api/documents/${requestId}/status`));
       if (!response.ok) throw new Error('Failed to fetch status');
 
       const data = await response.json();

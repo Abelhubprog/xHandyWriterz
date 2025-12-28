@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
+import { useQuery } from '@tanstack/react-query';
 import {
   Search,
   Filter,
@@ -16,14 +17,18 @@ import {
   Clock,
   Users,
   X,
+  AlertCircle,
 } from 'lucide-react';
 import { ContentPlaceholder } from '@/components/common/LoadingStates';
+import { fetchServicesList } from '@/lib/cms';
+import type { ServiceListItem } from '@/lib/cms';
 
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
 
 interface Service {
+  id?: string;
   slug: string;
   title: string;
   description: string;
@@ -39,10 +44,10 @@ interface Service {
 }
 
 // ============================================================================
-// SAMPLE DATA
+// FALLBACK DATA (used when CMS is unavailable)
 // ============================================================================
 
-const SERVICES: Service[] = [
+const FALLBACK_SERVICES: Service[] = [
   {
     slug: 'adult-health',
     title: 'Adult Health Nursing',
@@ -124,14 +129,58 @@ const SERVICES: Service[] = [
   },
 ];
 
-const CATEGORIES = [
-  { id: 'all', label: 'All Services', count: SERVICES.length },
-  { id: 'nursing', label: 'Nursing', count: SERVICES.filter(s => s.category === 'nursing').length },
-  { id: 'healthcare', label: 'Healthcare', count: SERVICES.filter(s => s.category === 'healthcare').length },
-  { id: 'social', label: 'Social Work', count: SERVICES.filter(s => s.category === 'social').length },
-  { id: 'tech', label: 'Technology', count: SERVICES.filter(s => s.category === 'tech').length },
-  { id: 'business', label: 'Business', count: SERVICES.filter(s => s.category === 'business').length },
-];
+// Icon mapping for CMS services
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  'adult-health': GraduationCap,
+  'mental-health': Brain,
+  'child-nursing': Heart,
+  'social-work': BookOpen,
+  'ai': Sparkles,
+  'crypto': Star,
+  default: BookOpen,
+};
+
+// Color mapping for CMS services
+const COLOR_MAP: Record<string, { color: string; bgColor: string }> = {
+  'adult-health': { color: 'from-emerald-500 to-emerald-600', bgColor: 'from-emerald-100/40 to-emerald-200/20' },
+  'mental-health': { color: 'from-violet-500 to-violet-600', bgColor: 'from-violet-100/40 to-violet-200/20' },
+  'child-nursing': { color: 'from-sky-500 to-sky-600', bgColor: 'from-sky-100/40 to-sky-200/20' },
+  'social-work': { color: 'from-amber-500 to-amber-600', bgColor: 'from-amber-100/40 to-amber-200/20' },
+  'ai': { color: 'from-indigo-500 to-indigo-600', bgColor: 'from-indigo-100/40 to-indigo-200/20' },
+  'crypto': { color: 'from-amber-500 to-amber-600', bgColor: 'from-amber-100/40 to-amber-200/20' },
+  default: { color: 'from-gray-500 to-gray-600', bgColor: 'from-gray-100/40 to-gray-200/20' },
+};
+
+// Map category from domain
+function mapDomainToCategory(domain?: string): Service['category'] {
+  const domainMap: Record<string, Service['category']> = {
+    'adult-health': 'nursing',
+    'mental-health': 'nursing',
+    'child-nursing': 'nursing',
+    'social-work': 'social',
+    'ai': 'tech',
+    'crypto': 'tech',
+  };
+  return domainMap[domain || ''] || 'nursing';
+}
+
+// Transform CMS data to Service format
+function transformCmsServices(cmsServices: ServiceListItem[]): Service[] {
+  return cmsServices.map(item => ({
+    id: item.id,
+    slug: item.slug,
+    title: item.title,
+    description: item.summary || '',
+    icon: ICON_MAP[item.slug] || ICON_MAP.default,
+    color: (COLOR_MAP[item.slug] || COLOR_MAP.default).color,
+    bgColor: (COLOR_MAP[item.slug] || COLOR_MAP.default).bgColor,
+    category: mapDomainToCategory(item.domain),
+    articleCount: 0, // Would need separate query
+    featured: true,
+    readTime: item.readingTime || 10,
+    students: 0,
+  }));
+}
 
 // ============================================================================
 // MAIN COMPONENT
@@ -141,33 +190,37 @@ export default function ServicesHub() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate API fetch (replace with actual Strapi call in production)
-  useEffect(() => {
-    const loadServices = async () => {
-      try {
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // TODO: Replace with actual API call
-        // const response = await fetch(`${import.meta.env.VITE_CMS_URL}/api/services?populate=*`);
-        // const data = await response.json();
-        // setServices(data.data);
-        
-        setIsLoading(false);
-      } catch (error) {
-        console.error('[ServicesHub] Failed to load services:', error);
-        setIsLoading(false);
-      }
-    };
+  // Fetch services from CMS with fallback
+  const { data: cmsServices, isLoading, error, isError } = useQuery({
+    queryKey: ['services-list'],
+    queryFn: () => fetchServicesList(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
 
-    loadServices();
-  }, []);
+  // Use CMS data if available, otherwise fallback to static data
+  const services = useMemo(() => {
+    if (cmsServices && cmsServices.length > 0) {
+      return transformCmsServices(cmsServices);
+    }
+    return FALLBACK_SERVICES;
+  }, [cmsServices]);
+
+  const usingFallback = !cmsServices || cmsServices.length === 0;
+
+  const CATEGORIES = useMemo(() => [
+    { id: 'all', label: 'All Services', count: services.length },
+    { id: 'nursing', label: 'Nursing', count: services.filter(s => s.category === 'nursing').length },
+    { id: 'healthcare', label: 'Healthcare', count: services.filter(s => s.category === 'healthcare').length },
+    { id: 'social', label: 'Social Work', count: services.filter(s => s.category === 'social').length },
+    { id: 'tech', label: 'Technology', count: services.filter(s => s.category === 'tech').length },
+    { id: 'business', label: 'Business', count: services.filter(s => s.category === 'business').length },
+  ], [services]);
 
   // Filter services based on search and category
   const filteredServices = useMemo(() => {
-    return SERVICES.filter(service => {
+    return services.filter(service => {
       const matchesSearch = service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           service.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory;
@@ -175,12 +228,12 @@ export default function ServicesHub() {
 
       return matchesSearch && matchesCategory && matchesFeatured;
     });
-  }, [searchQuery, selectedCategory, showFeaturedOnly]);
+  }, [services, searchQuery, selectedCategory, showFeaturedOnly]);
 
   const stats = {
-    totalServices: SERVICES.length,
-    totalArticles: SERVICES.reduce((sum, s) => sum + s.articleCount, 0),
-    totalStudents: SERVICES.reduce((sum, s) => sum + (s.students || 0), 0),
+    totalServices: services.length,
+    totalArticles: services.reduce((sum, s) => sum + s.articleCount, 0),
+    totalStudents: services.reduce((sum, s) => sum + (s.students || 0), 0),
   };
 
   // Show loading state while fetching
@@ -200,6 +253,24 @@ export default function ServicesHub() {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+        {/* CMS Connection Status Banner */}
+        {(isError || usingFallback) && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-50 border-b border-amber-200 px-4 py-3"
+          >
+            <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-amber-700 text-sm">
+              <AlertCircle className="h-4 w-4" />
+              <span>
+                {isError 
+                  ? 'Unable to connect to content server. Showing cached content.'
+                  : 'Showing default content. Content management system offline.'}
+              </span>
+            </div>
+          </motion.div>
+        )}
+
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 py-20 px-4">
           <div className="absolute inset-0 opacity-10">
@@ -278,6 +349,8 @@ export default function ServicesHub() {
                 <button
                   onClick={() => setSearchQuery('')}
                   className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  title="Clear search"
+                  aria-label="Clear search"
                 >
                   <X className="h-5 w-5 text-gray-400" />
                 </button>

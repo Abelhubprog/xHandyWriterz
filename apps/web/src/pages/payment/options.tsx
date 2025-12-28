@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { CreditCard, Coins } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { resolveApiUrl } from '@/lib/api-base';
 import stableLinkPaymentService from '@/services/stableLinkPaymentService';
 
 const PaymentOptions: React.FC = () => {
@@ -43,7 +44,7 @@ const PaymentOptions: React.FC = () => {
 
   const handlePayPal = async () => {
     try {
-      const res = await fetch('/api/payments/paypal/create', {
+      const res = await fetch(resolveApiUrl('/api/payments/paypal/create'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

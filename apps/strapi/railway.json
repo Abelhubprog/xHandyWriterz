@@ -1,14 +1,14 @@
 ﻿{
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "RAILPACK",
-    "buildCommand": "cd apps/strapi && npm run build",
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "apps/strapi/Dockerfile",
+    "contextPath": ".",
     "watchPatterns": ["apps/strapi/**"]
   },
   "deploy": {
-    "startCommand": "cd apps/strapi && npm run start",
     "healthcheckPath": "/_health",
-    "healthcheckTimeout": 120,
+    "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

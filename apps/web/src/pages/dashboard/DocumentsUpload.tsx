@@ -5,6 +5,7 @@ import { Helmet } from 'react-helmet-async';
 import { toast } from 'react-hot-toast';
 import { Upload, Trash2, Download, Copy, Info } from 'lucide-react';
 import { env } from '@/env';
+import { resolveApiUrl } from '@/lib/api-base';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -32,6 +33,12 @@ const DocumentsUpload: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const brokerUrl = useMemo(() => env.VITE_UPLOAD_BROKER_URL?.replace(/\/$/, '') ?? '', []);
+  const presignPutEndpoint = brokerUrl
+    ? `${brokerUrl}/s3/presign-put`
+    : resolveApiUrl('/api/uploads/presign-put');
+  const presignGetEndpoint = brokerUrl
+    ? `${brokerUrl}/s3/presign`
+    : resolveApiUrl('/api/uploads/presign-get');
 
   React.useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -107,7 +114,7 @@ const DocumentsUpload: React.FC = () => {
 
   const uploadFiles = useCallback(async () => {
     if (!brokerUrl) {
-      toast.error('Upload broker URL is not configured. Set VITE_UPLOAD_BROKER_URL.');
+      toast.error('Upload API is not configured. Set VITE_API_URL or VITE_UPLOAD_BROKER_URL.');
       return;
     }
     if (!selectedFiles.length) {
@@ -123,7 +130,7 @@ const DocumentsUpload: React.FC = () => {
         const userSegment = user?.id ? `users/${user.id}` : 'anonymous';
         const key = `${userSegment}/${Date.now()}-${safeName}`;
 
-        const presignRes = await fetch(`${brokerUrl}/s3/presign-put`, {
+        const presignRes = await fetch(presignPutEndpoint, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ key, contentType: file.type || 'application/octet-stream' }),
@@ -167,7 +174,7 @@ const DocumentsUpload: React.FC = () => {
   const handleDownload = useCallback(async (key: string) => {
     if (!brokerUrl) return;
     try {
-      const res = await fetch(`${brokerUrl}/s3/presign`, {
+      const res = await fetch(presignGetEndpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ key }),
@@ -189,7 +196,7 @@ const DocumentsUpload: React.FC = () => {
   const handleCopyLink = useCallback(async (key: string) => {
     if (!brokerUrl) return;
     try {
-      const res = await fetch(`${brokerUrl}/s3/presign`, {
+      const res = await fetch(presignGetEndpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ key }),
@@ -227,7 +234,7 @@ const DocumentsUpload: React.FC = () => {
           <Alert className="border-yellow-400 bg-yellow-50 text-yellow-800">
             <AlertTitle>Upload broker unavailable</AlertTitle>
             <AlertDescription>
-              Set <code>VITE_UPLOAD_BROKER_URL</code> in your environment so the dashboard can request presigned upload URLs.
+              Set <code>VITE_API_URL</code> (or <code>VITE_UPLOAD_BROKER_URL</code>) so the dashboard can request presigned upload URLs.
             </AlertDescription>
           </Alert>
         )}

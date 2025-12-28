@@ -4,6 +4,8 @@
  * Integrates with Stripe and other payment providers
  */
 
+import { resolveApiUrl } from '@/lib/api-base';
+
 export interface PaymentMethod {
   id: string;
   type: 'card' | 'paypal' | 'crypto';
@@ -37,7 +39,7 @@ export class PaymentService {
   private apiUrl: string;
 
   constructor(apiUrl: string = '/api/payments') {
-    this.apiUrl = apiUrl;
+    this.apiUrl = resolveApiUrl(apiUrl);
   }
 
   /**
