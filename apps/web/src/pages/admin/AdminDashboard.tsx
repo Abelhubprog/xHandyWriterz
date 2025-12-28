@@ -47,6 +47,8 @@ const cmsBaseUrl = import.meta.env.VITE_CMS_URL || "";
 const cmsAdminUrl = buildUrl(cmsBaseUrl, "/admin");
 const mattermostUrl = buildUrl(import.meta.env.VITE_MATTERMOST_URL);
 const uploadBrokerUrl = buildUrl(import.meta.env.VITE_UPLOAD_BROKER_URL);
+const apiBaseUrl = buildUrl(import.meta.env.VITE_API_URL);
+const apiRootUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
 
 export const AdminDashboard: React.FC = () => {
   const { user, isEditor } = useAuth();
@@ -69,10 +71,12 @@ export const AdminDashboard: React.FC = () => {
       present: Boolean(mattermostUrl),
     },
     {
-      label: "Upload Worker",
-      description: "Presigned uploads + antivirus pipeline for R2.",
-      href: uploadBrokerUrl,
-      present: Boolean(uploadBrokerUrl),
+      label: uploadBrokerUrl ? "Upload Broker" : "Upload API",
+      description: uploadBrokerUrl
+        ? "Presigned uploads + antivirus pipeline for R2."
+        : "Railway API fallback for presigned uploads.",
+      href: uploadBrokerUrl || apiRootUrl,
+      present: Boolean(uploadBrokerUrl || apiRootUrl),
     },
   ], []);
 
@@ -342,4 +346,3 @@ export const AdminDashboard: React.FC = () => {
 };
 
 export default AdminDashboard;
-

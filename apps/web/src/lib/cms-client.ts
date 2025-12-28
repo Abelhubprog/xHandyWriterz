@@ -42,12 +42,16 @@ class CMSClient {
               title
               slug
               summary
+              excerpt
               content
+              body
               status
               publishedAt
               domain
               categories
               tags
+              typeTags
+              author
               heroImage {
                 data {
                   attributes {
@@ -56,19 +60,17 @@ class CMSClient {
                   }
                 }
               }
-              author {
+              images {
                 data {
                   attributes {
-                    firstname
-                    lastname
-                    email
+                    url
+                    alternativeText
                   }
                 }
               }
               seo {
                 title
                 description
-                keywords
                 ogImage {
                   data {
                     attributes {
@@ -77,9 +79,6 @@ class CMSClient {
                   }
                 }
               }
-              viewCount
-              likeCount
-              shareCount
               createdAt
               updatedAt
             }
@@ -104,7 +103,8 @@ class CMSClient {
           or: [
             { title: { containsi: filters.search } },
             { summary: { containsi: filters.search } },
-            { content: { containsi: filters.search } }
+            { content: { containsi: filters.search } },
+            { body: { containsi: filters.search } }
           ]
         })
       },
@@ -133,71 +133,35 @@ class CMSClient {
               title
               slug
               summary
+              excerpt
               content
+              body
               status
               publishedAt
-              scheduledAt
               domain
               categories
               tags
+              typeTags
+              author
               heroImage {
                 data {
                   attributes {
                     url
                     alternativeText
-                    caption
-                    width
-                    height
                   }
                 }
               }
-              gallery {
+              images {
                 data {
                   attributes {
                     url
                     alternativeText
-                    caption
-                  }
-                }
-              }
-              attachments {
-                data {
-                  attributes {
-                    url
-                    name
-                    ext
-                    size
-                  }
-                }
-              }
-              author {
-                data {
-                  attributes {
-                    firstname
-                    lastname
-                    email
-                    avatar {
-                      data {
-                        attributes {
-                          url
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-              contributors {
-                data {
-                  attributes {
-                    firstname
-                    lastname
                   }
                 }
               }
               seo {
                 title
                 description
-                keywords
                 ogImage {
                   data {
                     attributes {
@@ -205,13 +169,7 @@ class CMSClient {
                     }
                   }
                 }
-                twitterCard
               }
-              viewCount
-              likeCount
-              shareCount
-              version
-              isLatest
               createdAt
               updatedAt
             }
@@ -329,11 +287,21 @@ class CMSClient {
             attributes {
               title
               slug
+              summary
+              body
               domain
-              hero {
+              typeTags
+              heroImage {
+                data {
+                  attributes {
+                    url
+                  }
+                }
+              }
+              seo {
                 title
-                subtitle
-                image {
+                description
+                ogImage {
                   data {
                     attributes {
                       url
@@ -341,12 +309,7 @@ class CMSClient {
                   }
                 }
               }
-              status
               publishedAt
-              seo {
-                title
-                description
-              }
               createdAt
               updatedAt
             }
@@ -376,31 +339,21 @@ class CMSClient {
             attributes {
               title
               slug
+              summary
+              body
               domain
-              hero {
-                title
-                subtitle
-                image {
-                  data {
-                    attributes {
-                      url
-                      alternativeText
-                    }
+              typeTags
+              heroImage {
+                data {
+                  attributes {
+                    url
+                    alternativeText
                   }
                 }
-                video
-                cta {
-                  text
-                  url
-                }
               }
-              sections
-              status
-              publishedAt
               seo {
                 title
                 description
-                keywords
                 ogImage {
                   data {
                     attributes {
@@ -409,6 +362,7 @@ class CMSClient {
                   }
                 }
               }
+              publishedAt
               createdAt
               updatedAt
             }

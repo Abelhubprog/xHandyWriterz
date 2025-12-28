@@ -9,6 +9,9 @@ const __dirname = dirname(__filename);
 const port = Number.parseInt(process.env.PORT ?? "", 10) || 4173;
 const host = process.env.HOST ?? "0.0.0.0";
 const distDir = join(__dirname, "..", "dist");
+const apiBase = process.env.API_URL ?? process.env.VITE_API_URL ?? "";
+const apiOrigin = apiBase.replace(/\/$/, "");
+const apiRoot = apiOrigin.endsWith("/api") ? apiOrigin.slice(0, -4) : apiOrigin;
 
 console.log("[web] Starting server...");
 console.log("[web] PORT from env:", process.env.PORT);
@@ -58,7 +61,29 @@ const server = createServer(async (req, res) => {
       return;
     }
 
-    let filePath = req.url === "/" ? "/index.html" : req.url ?? "/index.html";
+    const rawUrl = req.url ?? "/";
+    const pathOnly = rawUrl.split("?")[0];
+
+    if ((pathOnly === "/sitemap.xml" || pathOnly === "/robots.txt") && apiRoot) {
+      try {
+        const apiUrl = new URL(rawUrl, apiRoot);
+        const apiResponse = await fetch(apiUrl, {
+          headers: { "User-Agent": req.headers["user-agent"] ?? "web-proxy" },
+        });
+        const buffer = Buffer.from(await apiResponse.arrayBuffer());
+        res.writeHead(apiResponse.status, {
+          "Content-Type": apiResponse.headers.get("content-type") ?? "text/plain; charset=utf-8",
+          "Cache-Control": apiResponse.headers.get("cache-control") ?? "public, max-age=300",
+          "X-Content-Type-Options": "nosniff",
+        });
+        res.end(buffer);
+        return;
+      } catch (error) {
+        console.error("[server] SEO proxy error:", error);
+      }
+    }
+
+    let filePath = rawUrl === "/" ? "/index.html" : rawUrl;
 
     const queryIndex = filePath.indexOf("?");
     if (queryIndex !== -1) {

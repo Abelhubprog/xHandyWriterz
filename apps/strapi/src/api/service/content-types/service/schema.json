@@ -45,32 +45,32 @@
       },
       "required": true,
       "enum": [
-        "nursing",
+        "adult-health",
+        "mental-health",
+        "child-nursing",
+        "social-work",
+        "technology",
         "ai",
         "crypto",
-        "marketing",
         "enterprise",
-        "education",
-        "research"
+        "general"
       ]
     },
-    "Summary": {
-      "type": "string",
+    "summary": {
+      "type": "text",
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
-      },
-      "required": true
+      }
     },
     "body": {
-      "type": "blocks",
+      "type": "text",
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
-      },
-      "required": true
+      }
     },
     "heroImage": {
       "type": "media",
@@ -87,6 +87,31 @@
         "videos",
         "audios"
       ]
+    },
+    "attachments": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "author": {
+      "type": "string"
+    },
+    "typeTags": {
+      "type": "json"
+    },
+    "seo": {
+      "type": "component",
+      "component": "seo.seo",
+      "repeatable": false
+    },
+    "previewToken": {
+      "type": "string"
     },
     "featured": {
       "type": "boolean",

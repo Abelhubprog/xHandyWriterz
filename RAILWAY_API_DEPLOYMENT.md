@@ -7,9 +7,10 @@ This guide walks through deploying the new `apps/api` Express service to Railway
 The API service replaces the broken Cloudflare Workers and provides:
 - `/api/uploads/*` - R2 presigned URL generation
 - `/api/upload-url` - Legacy upload dropzone compatibility
-- `/s3/*` - Worker-compatible presign endpoints
+- `/api/r2/list` - Legacy document manager list
+- `/s3/*` - Worker-compatible presign endpoints (plus delete)
 - `/api/payments/*` - Payment intent creation  
-- `/api/messaging/*` - Mattermost auth exchange
+- `/api/messaging/*` - Mattermost auth exchange/refresh
 - `/api/turnitin/*` - Submission notifications
 - `/api/webhooks/*` - Strapi, R2, and payment webhooks
 - `/sitemap.xml` - Dynamic sitemap generation

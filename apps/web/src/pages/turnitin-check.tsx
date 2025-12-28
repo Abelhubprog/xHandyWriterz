@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'react-hot-toast';
 import { env } from '@/env';
+import { resolveApiUrl } from '@/lib/api-base';
 
 type UploadedFile = { r2Key: string; filename: string; size: number; contentType: string };
 
@@ -18,6 +19,8 @@ const TurnitinCheckPage: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const brokerUrl = useMemo(() => env.VITE_UPLOAD_BROKER_URL?.replace(/\/$/, '') ?? '', []);
+  const apiUrl = useMemo(() => env.VITE_API_URL?.replace(/\/$/, '') ?? '', []);
+  const presignEndpoint = brokerUrl ? `${brokerUrl}/s3/presign-put` : resolveApiUrl('/api/uploads/presign-put');
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -44,11 +47,11 @@ const TurnitinCheckPage: React.FC = () => {
     try {
       setUploading(true);
       const uploaded: UploadedFile[] = [];
-      if (!brokerUrl) throw new Error('Upload broker not configured. Set VITE_UPLOAD_BROKER_URL');
+      if (!brokerUrl && !apiUrl) throw new Error('Upload API is not configured. Set VITE_API_URL or VITE_UPLOAD_BROKER_URL');
       for (const file of files) {
         const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
         const key = `turnitin/${Date.now()}-${safeName}`;
-        const presignRes = await fetch(`${brokerUrl}/s3/presign-put`, {
+        const presignRes = await fetch(presignEndpoint, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ key, contentType: file.type || 'application/octet-stream' }),

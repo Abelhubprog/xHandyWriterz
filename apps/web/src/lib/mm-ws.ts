@@ -195,11 +195,16 @@ class MattermostRealtimeClient {
 }
 
 let singleton: MattermostRealtimeClient | null = null;
+let lastUrl: string | null = null;
 
 export function getMattermostRealtimeClient(): MattermostRealtimeClient {
-  if (!singleton) {
-    const url = getMattermostWebsocketUrl();
+  const url = getMattermostWebsocketUrl();
+  if (!singleton || lastUrl !== url) {
+    if (singleton && lastUrl !== url) {
+      singleton.disconnect();
+    }
     singleton = new MattermostRealtimeClient(url);
+    lastUrl = url;
   }
   return singleton;
 }

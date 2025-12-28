@@ -8,6 +8,7 @@ import type {
   ServiceDetail,
   ServiceListItem,
   ServiceListResponse,
+  SeoMeta,
 } from '@/types/cms';
 
 type FetchParams = Record<string, string | number | boolean | undefined | null>;
@@ -61,6 +62,16 @@ function resolveMediaUrl(url: string | null | undefined): string | null {
   return new URL(url, CMS_URL).toString();
 }
 
+function mapSeoMeta(entry: any): SeoMeta | null {
+  if (!entry) return null;
+  const ogImageUrl = resolveMediaUrl(entry.ogImage?.data?.attributes?.url ?? entry.ogImage?.url ?? null);
+  return {
+    title: entry.title ?? null,
+    description: entry.description ?? entry.metaDescription ?? null,
+    ogImage: ogImageUrl,
+  };
+}
+
 function safeRandomId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -72,22 +83,31 @@ function mapServiceEntry(entry: any): ServiceListItem | null {
   if (!entry) return null;
   const { id, attributes } = entry;
   if (!attributes) return null;
-  const heroImage = attributes.heroImage?.data?.attributes ?? null;
-  const heroImageUrl = resolveMediaUrl(heroImage?.url);
-  const readingMinutes = attributes.body ? estimateReadingTime(attributes.body) : null;
+  const heroImageUrl = resolveMediaUrl(
+    attributes.heroImage?.data?.attributes?.url ?? attributes.heroImage?.url ?? null
+  );
+  const summary = attributes.summary ?? attributes.Summary ?? null;
+  const contentForReading = attributes.body ?? attributes.content ?? '';
+  const readingMinutes = contentForReading ? estimateReadingTime(String(contentForReading)) : null;
+  const typeTags = Array.isArray(attributes.typeTags)
+    ? attributes.typeTags
+    : Array.isArray(attributes.type_tags)
+      ? attributes.type_tags
+      : [];
+  const seo = mapSeoMeta(attributes.seo ?? null);
 
   return {
     id: String(id ?? attributes.slug ?? safeRandomId()),
     slug: attributes.slug ?? String(id),
     title: attributes.title ?? 'Untitled',
-    summary: attributes.summary ?? null,
+    summary,
     domain: attributes.domain ?? null,
-    typeTags: Array.isArray(attributes.typeTags) ? attributes.typeTags : [],
+    typeTags,
     heroImageUrl,
     publishedAt: attributes.publishedAt ?? null,
     readingMinutes,
-    authorName: attributes.author ?? null,
-    seo: attributes.seo ?? null,
+    authorName: attributes.author ?? attributes.authorName ?? null,
+    seo,
   };
 }
 
@@ -95,16 +115,24 @@ function mapServiceDetail(entry: any): ServiceDetail | null {
   const base = mapServiceEntry(entry);
   if (!base) return null;
   const { attributes } = entry;
-  const attachments = Array.isArray(attributes?.attachments) ? attributes.attachments : [];
-  const mappedAttachments = attachments.map((attachment: any) => ({
-    url: resolveMediaUrl(attachment?.url || attachment?.url?.url || null),
-    mimeType: attachment?.mimeType || attachment?.mime_type || null,
-    sizeInBytes: attachment?.sizeInBytes ?? attachment?.size_in_bytes ?? null,
-  }));
+  const attachmentsData = attributes?.attachments?.data;
+  const attachments = Array.isArray(attachmentsData)
+    ? attachmentsData
+    : Array.isArray(attributes?.attachments)
+      ? attributes.attachments
+      : [];
+  const mappedAttachments = attachments.map((attachment: any) => {
+    const file = attachment?.attributes ?? attachment;
+    return {
+      url: resolveMediaUrl(file?.url ?? file?.url?.url ?? null),
+      mimeType: file?.mimeType || file?.mime_type || null,
+      sizeInBytes: file?.sizeInBytes ?? file?.size_in_bytes ?? file?.size ?? null,
+    };
+  });
 
   return {
     ...base,
-    body: attributes?.body ?? null,
+    body: attributes?.body ?? attributes?.content ?? null,
     attachments: mappedAttachments,
   };
 }
@@ -213,18 +241,21 @@ function mapArticleSummary(entry: any): ArticleSummary | null {
     heroImageUrl = resolveMediaUrl(imageData[0]?.attributes?.url ?? null);
   } else if (Array.isArray(attributes.images) && attributes.images.length > 0) {
     heroImageUrl = resolveMediaUrl(attributes.images[0]?.url ?? null);
+  } else if (attributes.heroImage?.data || attributes.heroImage?.url) {
+    heroImageUrl = resolveMediaUrl(attributes.heroImage?.data?.attributes?.url ?? attributes.heroImage?.url ?? null);
   }
+  const contentForReading = attributes.body ?? attributes.content ?? '';
 
   return {
     id: String(id ?? attributes.slug ?? safeRandomId()),
     slug: attributes.slug ?? String(id ?? safeRandomId()),
     title: attributes.title ?? 'Untitled article',
-    excerpt: attributes.excerpt ?? null,
-    publishedAt: attributes.publishedAt ?? null,
+    excerpt: attributes.excerpt ?? attributes.summary ?? null,
+    publishedAt: attributes.publishedAt ?? attributes.datePublished ?? null,
     heroImageUrl,
     authorName: attributes.author ?? null,
     category: attributes.category ?? null,
-    readingMinutes: attributes.body ? estimateReadingTime(attributes.body) : null,
+    readingMinutes: contentForReading ? estimateReadingTime(String(contentForReading)) : null,
   };
 }
 
@@ -387,7 +418,7 @@ export async function fetchArticlesBySlugs(
   const params: FetchParams = {
     'pagination[pageSize]': Math.max(slugs.length, 1),
     'sort[0]': 'publishedAt:desc',
-    populate: 'images',
+    populate: 'images,heroImage',
     publicationState: includeDraft ? 'preview' : 'live',
   };
 
@@ -410,7 +441,7 @@ export async function fetchArticlesList(
   const params: FetchParams = {
     'pagination[pageSize]': limit,
     'sort[0]': 'publishedAt:desc',
-    populate: 'images',
+    populate: 'images,heroImage',
     publicationState: includeDraft ? 'preview' : 'live',
   };
 

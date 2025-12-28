@@ -13,13 +13,14 @@
 - [x] Add upload compatibility endpoints:
   - `/s3/presign-put`
   - `/s3/presign-get`
+  - `/s3/presign`
   - `/api/upload-url`
 - [x] Update front-end to use `VITE_API_URL` for uploads + Turnitin flows.
-- [ ] Update remaining front-end API calls to use `VITE_API_URL` (payments, messaging, notifications).
-- [ ] Align Strapi schemas to web contract or update mappers to Strapi blocks.
-- [ ] Add missing Strapi content types: `landing-sections`, `domain-pages`.
-- [ ] Replace static ServicesHub and domain data with CMS-driven fetch.
-- [ ] Serve `/sitemap.xml` and `/robots.txt` from Railway API in production.
+- [x] Update remaining front-end API calls to use `VITE_API_URL` (payments, messaging, notifications).
+- [x] Align Strapi schemas to web contract and add fallback mapping in `cms.ts`.
+- [x] Add missing Strapi content types: `landing-sections`, `domain-pages`.
+- [x] Replace static ServicesHub and domain data with CMS-driven fetch.
+- [x] Serve `/sitemap.xml` and `/robots.txt` from Railway API in production.
 - [ ] Unify messaging: keep Mattermost path, gate/remove D1 legacy client.
 
 ---
@@ -27,7 +28,6 @@
 ## In Progress
 
 - [ ] Upload metadata persistence (move in-memory map to DB).
-- [ ] Mattermost auth alignment (cookie domain + session handling).
 - [ ] Payments API placeholders → real providers or gated UI.
 
 ---
@@ -37,6 +37,17 @@
 - [x] API routes: `uploads`, `payments`, `messaging`, `webhooks`, `sitemap`.
 - [x] Added `resolveApiUrl` helper and wired uploads + Turnitin + payment services to it.
 - [x] Updated DocumentsUpload + UploadDropzone to use API presign endpoints.
+- [x] Fixed submission hook + NotificationSystem API wiring.
+- [x] Normalized upload broker base in file upload service for Railway fallback.
+- [x] Added file upload service compatibility exports + `/s3/delete` API endpoint.
+- [x] Added `/api/r2/list` compatibility endpoint for document manager.
+- [x] Mattermost auth exchange/refresh endpoints + token-based client auth.
+- [x] Fixed Strapi ContentPublisher hero image to send media IDs.
+- [x] Fixed Strapi ContentPublisher to parse REST `attributes` shape.
+- [x] Updated cms-client GraphQL queries to match Strapi schema.
+- [x] Fixed ServicesHub CMS mapping + reading time fields.
+- [x] Proxy `/sitemap.xml` and `/robots.txt` to the API in `apps/web/scripts/server.mjs`.
+- [x] Turnitin upload flows now fall back to `VITE_API_URL` when the broker is unset.
 
 ---
 

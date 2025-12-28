@@ -79,7 +79,7 @@ const DocumentManager: React.FC = () => {
         id: f.key,
         filename: f.key.split('/').pop() || `file-${i}`,
         file_path: f.key,
-        file_url: `/r2/${f.key}`,
+        file_url: f.key,
         file_size: f.size,
         file_type: 'document',
         category: 'document',
@@ -94,6 +94,27 @@ const DocumentManager: React.FC = () => {
     } catch (err) {
       setError('Failed to load documents. Please try again later.');
       setIsLoading(false);
+    }
+  };
+
+  const handleDownload = async (doc: Document) => {
+    try {
+      const response = await fetch(resolveApiUrl('/api/uploads/presign-get'), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ key: doc.file_path }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create download link');
+      }
+
+      const data = await response.json();
+      if (data?.url) {
+        window.open(data.url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (err) {
+      setError('Failed to download file. Please try again.');
     }
   };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -301,7 +322,7 @@ const DocumentManager: React.FC = () => {
                 <CardContent>
                   <div className="flex items-center justify-end space-x-2">
                     {(doc.is_public || (user && doc.user_id === user.id)) && (
-                      <Button variant="outline" size="sm" onClick={() => window.open(doc.file_url, '_blank', 'noopener,noreferrer')}>
+                      <Button variant="outline" size="sm" onClick={() => handleDownload(doc)}>
                         <Download className="h-4 w-4 mr-1" />
                         Download
                       </Button>

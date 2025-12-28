@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'react-hot-toast';
 import { Upload, FileText, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import { env } from '@/env';
+import { resolveApiUrl } from '@/lib/api-base';
 import emailService from '@/services/emailService';
 
 type UploadedFile = { r2Key: string; filename: string; size: number; contentType: string };
@@ -30,6 +31,8 @@ const TurnitinSubmission: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<'form' | 'confirm'>('form');
   
   const brokerUrl = useMemo(() => env.VITE_UPLOAD_BROKER_URL?.replace(/\/$/, '') ?? '', []);
+  const apiUrl = useMemo(() => env.VITE_API_URL?.replace(/\/$/, '') ?? '', []);
+  const presignEndpoint = brokerUrl ? `${brokerUrl}/s3/presign-put` : resolveApiUrl('/api/uploads/presign-put');
 
   // Validation
   const isEmailValid = useMemo(() => {
@@ -92,8 +95,8 @@ const TurnitinSubmission: React.FC = () => {
 
   // Upload files to R2
   const uploadFiles = async (): Promise<UploadedFile[]> => {
-    if (!brokerUrl) {
-      throw new Error('Upload broker not configured. Contact support.');
+    if (!brokerUrl && !apiUrl) {
+      throw new Error('Upload API is not configured. Set VITE_API_URL or VITE_UPLOAD_BROKER_URL.');
     }
 
     const uploaded: UploadedFile[] = [];
@@ -107,7 +110,7 @@ const TurnitinSubmission: React.FC = () => {
 
       try {
         // Get presigned URL
-        const presignRes = await fetch(`${brokerUrl}/s3/presign-put`, {
+        const presignRes = await fetch(presignEndpoint, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ 

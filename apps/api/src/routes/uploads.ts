@@ -1,5 +1,5 @@
-import { Router, IRouter } from 'express';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { Router, IRouter, Request, Response } from 'express';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { z } from 'zod';
 import { verifyClerkToken } from '../lib/clerk.js';
@@ -63,6 +63,19 @@ const uploadUrlSchema = z.object({
   size: z.number().optional(),
 });
 
+const deleteSchema = z.object({
+  key: z.string().min(1),
+});
+
+const listSchema = z.object({
+  prefix: z.string().optional(),
+  delimiter: z.string().optional(),
+  limit: z
+    .string()
+    .optional()
+    .transform((value) => (value ? Number.parseInt(value, 10) : undefined)),
+});
+
 type ResolvedUser = { userId: string } | null;
 
 async function resolveUser(req: { headers: Record<string, string | undefined> }, allowAnonymous: boolean): Promise<ResolvedUser> {
@@ -108,38 +121,7 @@ async function buildPresignedPut(key: string, contentType: string, userId: strin
   };
 }
 
-/**
- * POST /api/uploads/presign-put
- * Generate presigned URL for uploading to R2
- */
-uploadRouter.post('/presign-put', async (req, res) => {
-  try {
-    const user = await resolveUser(req, ALLOW_ANON_UPLOADS);
-    if (!user) {
-      return res.status(401).json({ error: 'Missing or invalid authorization header' });
-    }
-
-    // Validate request body
-    const parsed = presignPutSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid request', details: parsed.error.issues });
-    }
-
-    const { key, contentType, contentLength } = parsed.data;
-
-    const payload = await buildPresignedPut(key, contentType, user.userId, contentLength);
-    res.json(payload);
-  } catch (error) {
-    console.error('Presign PUT error:', error);
-    res.status(500).json({ error: 'Failed to generate presigned URL' });
-  }
-});
-
-/**
- * POST /api/uploads/presign-get
- * Generate presigned URL for downloading from R2
- */
-uploadRouter.post('/presign-get', async (req, res) => {
+async function handlePresignGet(req: Request, res: Response) {
   try {
     const user = await resolveUser(req, ALLOW_ANON_DOWNLOADS);
     if (!user) {
@@ -177,6 +159,110 @@ uploadRouter.post('/presign-get', async (req, res) => {
   } catch (error) {
     console.error('Presign GET error:', error);
     res.status(500).json({ error: 'Failed to generate presigned URL' });
+  }
+}
+
+/**
+ * POST /api/uploads/presign-put
+ * Generate presigned URL for uploading to R2
+ */
+uploadRouter.post('/presign-put', async (req, res) => {
+  try {
+    const user = await resolveUser(req, ALLOW_ANON_UPLOADS);
+    if (!user) {
+      return res.status(401).json({ error: 'Missing or invalid authorization header' });
+    }
+
+    // Validate request body
+    const parsed = presignPutSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid request', details: parsed.error.issues });
+    }
+
+    const { key, contentType, contentLength } = parsed.data;
+
+    const payload = await buildPresignedPut(key, contentType, user.userId, contentLength);
+    res.json(payload);
+  } catch (error) {
+    console.error('Presign PUT error:', error);
+    res.status(500).json({ error: 'Failed to generate presigned URL' });
+  }
+});
+
+/**
+ * POST /api/uploads/presign-get
+ * Generate presigned URL for downloading from R2
+ */
+uploadRouter.post('/presign-get', handlePresignGet);
+uploadRouter.post('/presign', handlePresignGet);
+
+/**
+ * POST /api/uploads/delete
+ * Delete an object from R2
+ */
+uploadRouter.post('/delete', async (req, res) => {
+  try {
+    const user = await resolveUser(req, ALLOW_ANON_UPLOADS);
+    if (!user) {
+      return res.status(401).json({ error: 'Missing or invalid authorization header' });
+    }
+
+    const parsed = deleteSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid request', details: parsed.error.issues });
+    }
+
+    await s3Client.send(new DeleteObjectCommand({
+      Bucket: BUCKET,
+      Key: parsed.data.key,
+    }));
+
+    res.json({ deleted: true, key: parsed.data.key });
+  } catch (error) {
+    console.error('Delete object error:', error);
+    res.status(500).json({ error: 'Failed to delete object' });
+  }
+});
+
+/**
+ * GET /api/r2/list
+ * List objects in R2 for compatibility with legacy UI
+ */
+uploadCompatRouter.get('/r2/list', async (req, res) => {
+  try {
+    const user = await resolveUser(req, ALLOW_ANON_DOWNLOADS);
+    if (!user) {
+      return res.status(401).json({ error: 'Missing or invalid authorization header' });
+    }
+
+    const parsed = listSchema.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid query', details: parsed.error.issues });
+    }
+
+    const limit = parsed.data.limit && Number.isFinite(parsed.data.limit) ? Math.min(parsed.data.limit, 1000) : 100;
+
+    const result = await s3Client.send(new ListObjectsV2Command({
+      Bucket: BUCKET,
+      Prefix: parsed.data.prefix || undefined,
+      Delimiter: parsed.data.delimiter || undefined,
+      MaxKeys: limit,
+    }));
+
+    const files = (result.Contents || []).map((item) => ({
+      key: item.Key || '',
+      size: item.Size ?? 0,
+      lastModified: item.LastModified ? item.LastModified.toISOString() : new Date().toISOString(),
+    }));
+
+    const prefixes = (result.CommonPrefixes || [])
+      .map((prefix) => prefix.Prefix)
+      .filter(Boolean);
+
+    res.json({ files, prefixes });
+  } catch (error) {
+    console.error('List objects error:', error);
+    res.status(500).json({ error: 'Failed to list objects' });
   }
 });
 

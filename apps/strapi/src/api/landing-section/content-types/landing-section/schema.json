@@ -1,0 +1,64 @@
+{
+  "kind": "collectionType",
+  "collectionName": "landing_sections",
+  "info": {
+    "singularName": "landing-section",
+    "pluralName": "landing-sections",
+    "displayName": "Landing Section"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "sectionKey": {
+      "type": "string",
+      "required": true
+    },
+    "pageSlug": {
+      "type": "string",
+      "required": true
+    },
+    "eyebrow": {
+      "type": "string"
+    },
+    "heading": {
+      "type": "string"
+    },
+    "subheading": {
+      "type": "text"
+    },
+    "body": {
+      "type": "text"
+    },
+    "ctaLabel": {
+      "type": "string"
+    },
+    "ctaUrl": {
+      "type": "string"
+    },
+    "secondaryCtaLabel": {
+      "type": "string"
+    },
+    "secondaryCtaUrl": {
+      "type": "string"
+    },
+    "media": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos"
+      ]
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    },
+    "items": {
+      "type": "component",
+      "component": "landing.landing-item",
+      "repeatable": true
+    }
+  }
+}

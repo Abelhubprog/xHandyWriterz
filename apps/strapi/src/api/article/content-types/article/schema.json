@@ -22,9 +22,17 @@
       "targetField": "title",
       "required": true
     },
+    "summary": {
+      "type": "text"
+    },
+    "excerpt": {
+      "type": "text"
+    },
     "content": {
-      "type": "blocks",
-      "required": true
+      "type": "text"
+    },
+    "body": {
+      "type": "text"
     },
     "author": {
       "type": "string",
@@ -33,6 +41,35 @@
     "category": {
       "type": "string"
     },
+    "categories": {
+      "type": "json"
+    },
+    "tags": {
+      "type": "json"
+    },
+    "domain": {
+      "type": "enumeration",
+      "required": false,
+      "enum": [
+        "adult-health",
+        "mental-health",
+        "child-nursing",
+        "social-work",
+        "technology",
+        "ai",
+        "crypto",
+        "enterprise",
+        "general"
+      ]
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "draft",
+        "published"
+      ],
+      "default": "draft"
+    },
     "heroImage": {
       "type": "media",
       "multiple": false,
@@ -40,6 +77,23 @@
         "images",
         "files"
       ]
+    },
+    "images": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files"
+      ]
+    },
+    "typeTags": {
+      "type": "json"
+    },
+    "seo": {
+      "type": "component",
+      "component": "seo.seo",
+      "repeatable": false
     },
     "datePublished": {
       "type": "datetime"

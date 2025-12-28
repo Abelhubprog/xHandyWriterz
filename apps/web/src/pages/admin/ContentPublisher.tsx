@@ -46,6 +46,7 @@ interface ContentFormData {
   domain: string;
   typeTags: string[];
   heroImageUrl: string;
+  heroImageId: number | null;
   publishedAt: string | null;
   status: 'draft' | 'published';
   seo: {
@@ -73,6 +74,7 @@ export const ContentPublisher: React.FC = () => {
     domain: '',
     typeTags: [],
     heroImageUrl: '',
+    heroImageId: null,
     publishedAt: null,
     status: 'draft',
     seo: {
@@ -119,17 +121,19 @@ export const ContentPublisher: React.FC = () => {
       if (!response.ok) throw new Error('Failed to load content');
 
       const data = await response.json();
-      const content = data.data;
+      const content = data.data?.attributes ?? {};
+      const heroImageData = content.heroImage?.data ?? null;
 
       setFormData({
         type: formData.type,
         title: content.title || '',
         slug: content.slug || '',
-        summary: content.summary || '',
-        body: content.body || '',
+        summary: content.summary || content.Summary || '',
+        body: content.body || content.content || '',
         domain: content.domain || '',
         typeTags: content.typeTags || [],
-        heroImageUrl: content.heroImage?.url || '',
+        heroImageUrl: heroImageData?.attributes?.url || '',
+        heroImageId: heroImageData?.id || null,
         publishedAt: content.publishedAt || null,
         status: content.status || 'draft',
         seo: {
@@ -176,9 +180,11 @@ export const ContentPublisher: React.FC = () => {
     setUploadingImage(true);
     try {
       const uploadedMedia = await uploadMedia(file);
+      const mediaItem = Array.isArray(uploadedMedia) ? uploadedMedia[0] : uploadedMedia;
       setFormData((prev) => ({
         ...prev,
-        heroImageUrl: uploadedMedia.url,
+        heroImageUrl: mediaItem?.url || '',
+        heroImageId: typeof mediaItem?.id === 'number' ? mediaItem.id : null,
       }));
       toast.success('Image uploaded successfully');
     } catch (error) {
@@ -226,7 +232,7 @@ export const ContentPublisher: React.FC = () => {
           body: formData.body,
           domain: formData.domain,
           typeTags: formData.typeTags,
-          heroImage: formData.heroImageUrl,
+          heroImage: formData.heroImageId ?? undefined,
           status: 'draft',
           seo: formData.seo,
         },
@@ -274,7 +280,7 @@ export const ContentPublisher: React.FC = () => {
           body: formData.body,
           domain: formData.domain,
           typeTags: formData.typeTags,
-          heroImage: formData.heroImageUrl,
+          heroImage: formData.heroImageId ?? undefined,
           status: 'published',
           publishedAt: formData.publishedAt || new Date().toISOString(),
           seo: formData.seo,
@@ -564,7 +570,7 @@ export const ContentPublisher: React.FC = () => {
                         size="sm"
                         variant="destructive"
                         className="absolute top-2 right-2"
-                        onClick={() => setFormData({ ...formData, heroImageUrl: '' })}
+                        onClick={() => setFormData({ ...formData, heroImageUrl: '', heroImageId: null })}
                       >
                         <X className="h-4 w-4" />
                       </Button>

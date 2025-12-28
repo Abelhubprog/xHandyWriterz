@@ -18,6 +18,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { env } from '@/env';
+import { resolveApiUrl } from '@/lib/api-base';
 import emailService from '@/services/emailService';
 
 interface TurnitinSubmission {
@@ -39,6 +40,9 @@ const TurnitinReports: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   
   const brokerUrl = env.VITE_UPLOAD_BROKER_URL?.replace(/\/$/, '') ?? '';
+  const apiUrl = env.VITE_API_URL?.replace(/\/$/, '') ?? '';
+  const presignPutEndpoint = brokerUrl ? `${brokerUrl}/s3/presign-put` : resolveApiUrl('/api/uploads/presign-put');
+  const presignGetEndpoint = brokerUrl ? `${brokerUrl}/s3/presign` : resolveApiUrl('/api/uploads/presign');
 
   useEffect(() => {
     if (!isAdmin) {
@@ -96,15 +100,15 @@ const TurnitinReports: React.FC = () => {
 
   // Upload PDF to R2
   const uploadPdf = async (file: File): Promise<string> => {
-    if (!brokerUrl) {
-      throw new Error('Upload broker not configured');
+    if (!brokerUrl && !apiUrl) {
+      throw new Error('Upload API is not configured');
     }
 
     const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
     const key = `turnitin-reports/${orderId}/${Date.now()}-${safeName}`;
 
     // Get presigned URL
-    const presignRes = await fetch(`${brokerUrl}/s3/presign-put`, {
+    const presignRes = await fetch(presignPutEndpoint, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ 
@@ -131,7 +135,7 @@ const TurnitinReports: React.FC = () => {
     }
 
     // Get download URL
-    const downloadRes = await fetch(`${brokerUrl}/s3/presign`, {
+    const downloadRes = await fetch(presignGetEndpoint, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ 

@@ -1,0 +1,76 @@
+{
+  "kind": "collectionType",
+  "collectionName": "domain_pages",
+  "info": {
+    "singularName": "domain-page",
+    "pluralName": "domain-pages",
+    "displayName": "Domain Page"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "domain": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "adult-health",
+        "mental-health",
+        "child-nursing",
+        "social-work",
+        "technology",
+        "ai",
+        "crypto",
+        "enterprise",
+        "general"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "heroEyebrow": {
+      "type": "string"
+    },
+    "heroTitle": {
+      "type": "string"
+    },
+    "heroDescription": {
+      "type": "text"
+    },
+    "heroImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos"
+      ]
+    },
+    "ctaLabel": {
+      "type": "string"
+    },
+    "ctaUrl": {
+      "type": "string"
+    },
+    "highlights": {
+      "type": "component",
+      "component": "domain.domain-highlight",
+      "repeatable": true
+    },
+    "spotlight": {
+      "type": "component",
+      "component": "landing.landing-item",
+      "repeatable": true
+    },
+    "serviceSlugs": {
+      "type": "json"
+    },
+    "articleSlugs": {
+      "type": "json"
+    },
+    "metaDescription": {
+      "type": "text"
+    }
+  }
+}

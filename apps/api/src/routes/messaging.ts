@@ -5,6 +5,7 @@ import { z } from 'zod';
 export const messagingRouter: IRouter = Router();
 
 const MATTERMOST_URL = process.env.MATTERMOST_URL || 'https://mattermost.handywriterz.com';
+const SESSION_TTL_SECONDS = 24 * 60 * 60;
 
 /**
  * POST /api/messaging/auth/exchange
@@ -12,12 +13,12 @@ const MATTERMOST_URL = process.env.MATTERMOST_URL || 'https://mattermost.handywr
  */
 messagingRouter.post('/auth/exchange', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ error: 'Missing authorization header' });
+    const token = typeof req.body?.token === 'string'
+      ? req.body.token
+      : req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'Missing Clerk token' });
     }
-
-    const token = authHeader.replace('Bearer ', '');
     const clerkUser = await verifyClerkToken(token);
     if (!clerkUser) {
       return res.status(401).json({ error: 'Invalid Clerk token' });
@@ -46,16 +47,69 @@ messagingRouter.post('/auth/exchange', async (req, res) => {
     }
 
     res.json({
+      ok: true,
       token: mmSession.token,
-      userId: mmUser.id,
-      username: mmUser.username,
       expiresAt: mmSession.expiresAt,
-      mmUrl: MATTERMOST_URL,
+      user: {
+        id: mmUser.id,
+        email: mmUser.email,
+        username: mmUser.username,
+        first_name: mmUser.first_name || clerkUser.firstName || '',
+        last_name: mmUser.last_name || clerkUser.lastName || '',
+      },
     });
   } catch (error) {
     console.error('MM auth exchange error:', error);
     res.status(500).json({ error: 'Authentication exchange failed' });
   }
+});
+
+/**
+ * POST /api/messaging/auth/refresh
+ * Validate Mattermost session token
+ */
+messagingRouter.post('/auth/refresh', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: 'Missing authorization header' });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const response = await fetch(`${MATTERMOST_URL}/api/v4/users/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return res.status(401).json({ error: 'Invalid Mattermost token' });
+    }
+
+    const profile = await response.json() as MMUser;
+    return res.json({
+      ok: true,
+      expiresAt: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
+      user: {
+        id: profile.id,
+        email: profile.email,
+        username: profile.username,
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+      },
+    });
+  } catch (error) {
+    console.error('MM auth refresh error:', error);
+    res.status(500).json({ error: 'Authentication refresh failed' });
+  }
+});
+
+/**
+ * POST /api/messaging/auth/logout
+ * Clear Mattermost session token client-side
+ */
+messagingRouter.post('/auth/logout', async (_req, res) => {
+  res.json({ ok: true });
 });
 
 /**
@@ -164,11 +218,13 @@ interface MMUser {
   id: string;
   username: string;
   email: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 interface MMSession {
   token: string;
-  expiresAt: string;
+  expiresAt: number;
 }
 
 async function findOrCreateMMUser(clerkUser: ClerkUser, adminToken: string): Promise<MMUser | null> {
@@ -236,7 +292,7 @@ async function createMMSession(userId: string, adminToken: string): Promise<MMSe
       const token = await response.json() as { token: string };
       return {
         token: token.token,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+        expiresAt: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
       };
     }
 

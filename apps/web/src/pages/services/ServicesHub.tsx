@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { ContentPlaceholder } from '@/components/common/LoadingStates';
 import { fetchServicesList } from '@/lib/cms';
-import type { ServiceListItem } from '@/lib/cms';
+import type { ServiceListItem, ServiceListResponse } from '@/types/cms';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -177,7 +177,7 @@ function transformCmsServices(cmsServices: ServiceListItem[]): Service[] {
     category: mapDomainToCategory(item.domain),
     articleCount: 0, // Would need separate query
     featured: true,
-    readTime: item.readingTime || 10,
+    readTime: item.readingMinutes || 10,
     students: 0,
   }));
 }
@@ -192,7 +192,7 @@ export default function ServicesHub() {
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
 
   // Fetch services from CMS with fallback
-  const { data: cmsServices, isLoading, error, isError } = useQuery({
+  const { data: cmsServices, isLoading, error, isError } = useQuery<ServiceListResponse>({
     queryKey: ['services-list'],
     queryFn: () => fetchServicesList(),
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -201,13 +201,14 @@ export default function ServicesHub() {
 
   // Use CMS data if available, otherwise fallback to static data
   const services = useMemo(() => {
-    if (cmsServices && cmsServices.length > 0) {
-      return transformCmsServices(cmsServices);
+    const items = cmsServices?.items ?? [];
+    if (items.length > 0) {
+      return transformCmsServices(items);
     }
     return FALLBACK_SERVICES;
   }, [cmsServices]);
 
-  const usingFallback = !cmsServices || cmsServices.length === 0;
+  const usingFallback = (cmsServices?.items?.length ?? 0) === 0;
 
   const CATEGORIES = useMemo(() => [
     { id: 'all', label: 'All Services', count: services.length },

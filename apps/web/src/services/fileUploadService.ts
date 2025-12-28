@@ -5,6 +5,16 @@
  */
 
 import { resolveApiUrl } from '@/lib/api-base';
+import type { IconType } from 'react-icons';
+import {
+  FiArchive,
+  FiCode,
+  FiFile,
+  FiFileText,
+  FiImage,
+  FiMusic,
+  FiVideo,
+} from 'react-icons/fi';
 
 export interface UploadProgress {
   loaded: number;
@@ -44,8 +54,9 @@ export class FileUploadService {
   private brokerUrl: string;
 
   constructor(brokerUrl?: string) {
-    const fallbackBase = resolveApiUrl('').replace(/\/$/, '');
-    const resolved = brokerUrl || import.meta.env.VITE_UPLOAD_BROKER_URL || fallbackBase;
+    const fallbackBase = resolveApiUrl('/').replace(/\/$/, '');
+    const fallbackRoot = fallbackBase.endsWith('/api') ? fallbackBase.slice(0, -4) : fallbackBase;
+    const resolved = brokerUrl || import.meta.env.VITE_UPLOAD_BROKER_URL || fallbackRoot;
     const normalized = resolved ? resolved.replace(/\/$/, '') : '';
     this.brokerUrl = normalized.endsWith('/s3') ? normalized.slice(0, -3) : normalized;
   }
@@ -381,3 +392,114 @@ export const fileUploadService = new FileUploadService();
 
 // Export for direct usage
 export default fileUploadService;
+
+export type LegacyUploadResult = {
+  success: boolean;
+  url?: string;
+  key?: string;
+  path?: string;
+  bucket?: string;
+  error?: string;
+};
+
+function resolveUploadPrefix(bucket?: string, folder?: string): string | undefined {
+  if (folder) return folder;
+  if (bucket && bucket !== 'default') return bucket;
+  return undefined;
+}
+
+export function formatBytes(bytes: number): string {
+  return fileUploadService.formatFileSize(bytes);
+}
+
+export function formatFileSize(bytes: number): string {
+  return fileUploadService.formatFileSize(bytes);
+}
+
+export function getFileIconByCategory(category?: string): IconType {
+  const value = (category || '').toLowerCase();
+  if (value.includes('image')) return FiImage;
+  if (value.includes('video')) return FiVideo;
+  if (value.includes('audio') || value.includes('music')) return FiMusic;
+  if (value.includes('archive') || value.includes('zip') || value.includes('compressed')) return FiArchive;
+  if (value.includes('code') || value.includes('script') || value.includes('json')) return FiCode;
+  if (value.includes('doc') || value.includes('pdf') || value.includes('text')) return FiFileText;
+  return FiFile;
+}
+
+export async function uploadFile(
+  file: File,
+  bucket?: string,
+  folder?: string,
+  onProgress?: (percent: number) => void
+): Promise<LegacyUploadResult> {
+  try {
+    const prefix = resolveUploadPrefix(bucket, folder);
+    const result = await fileUploadService.uploadFile(
+      file,
+      prefix,
+      onProgress ? (progress) => onProgress(Math.round(progress.percentage)) : undefined
+    );
+    let downloadUrl = result.url;
+    try {
+      downloadUrl = await fileUploadService.getPresignedGetUrl(result.key);
+    } catch (error) {
+      console.warn('Download URL presign failed', error);
+    }
+    return {
+      success: true,
+      url: downloadUrl,
+      key: result.key,
+      path: result.key,
+      bucket: result.bucket,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+export async function uploadFiles(
+  files: File[],
+  bucket?: string,
+  folder?: string,
+  onProgress?: (percent: number) => void
+): Promise<LegacyUploadResult[]> {
+  const prefix = resolveUploadPrefix(bucket, folder);
+  return uploadMultipleFiles(files, onProgress, prefix);
+}
+
+export async function uploadMultipleFiles(
+  files: File[],
+  onProgress?: (percent: number) => void,
+  pathPrefix?: string
+): Promise<LegacyUploadResult[]> {
+  const results: LegacyUploadResult[] = [];
+  const total = files.length || 1;
+
+  for (let index = 0; index < files.length; index += 1) {
+    const file = files[index];
+    const result = await uploadFile(
+      file,
+      undefined,
+      pathPrefix,
+      onProgress
+        ? (percent) => {
+            const overall = Math.round(((index + percent / 100) / total) * 100);
+            onProgress(overall);
+          }
+        : undefined
+    );
+    results.push(result);
+  }
+
+  return results;
+}
+
+export async function deleteFile(bucket: string, key: string): Promise<void> {
+  const prefix = resolveUploadPrefix(bucket, undefined);
+  const resolvedKey = prefix ? `${prefix.replace(/\/$/, '')}/${key}` : key;
+  await fileUploadService.deleteFile(resolvedKey);
+}

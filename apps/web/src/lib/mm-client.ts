@@ -108,6 +108,7 @@ const fileUploadResponseSchema = z.object({
 
 const exchangeResponseSchema = z.object({
   ok: z.literal(true),
+  token: z.string(),
   user: z.object({
     id: z.string(),
     email: z.string().email(),
@@ -122,6 +123,7 @@ export type ExchangeResponse = z.infer<typeof exchangeResponseSchema>;
 
 const refreshResponseSchema = z.object({
   ok: z.literal(true),
+  token: z.string().optional(),
   user: z.object({
     id: z.string(),
     email: z.string().email(),
@@ -129,6 +131,7 @@ const refreshResponseSchema = z.object({
     first_name: z.string().optional().default(''),
     last_name: z.string().optional().default(''),
   }),
+  expiresAt: z.number().optional(),
 });
 
 export type RefreshResponse = z.infer<typeof refreshResponseSchema>;
@@ -185,6 +188,7 @@ export class MattermostRestClient {
   private readonly baseUrl?: string;
   private readonly authUrl?: string;
   private readonly defaultTeamId?: string;
+  private authToken?: string;
 
   constructor(config: MattermostRestClientConfig = {}) {
     this.baseUrl = config.baseUrl ?? computeApiBaseUrl();
@@ -204,7 +208,13 @@ export class MattermostRestClient {
   }
 
   get websocketUrl(): string {
-    return computeWsUrl(this.apiBaseUrl);
+    const base = computeWsUrl(this.apiBaseUrl);
+    if (!this.authToken) {
+      return base;
+    }
+    const url = new URL(base);
+    url.searchParams.set('token', this.authToken);
+    return url.toString();
   }
 
   get authEndpoint(): string {
@@ -221,17 +231,24 @@ export class MattermostRestClient {
       headers: { 'content-type': 'application/json' },
     });
     const data = await response.json();
-    return exchangeResponseSchema.parse(data);
+    const parsed = exchangeResponseSchema.parse(data);
+    this.authToken = parsed.token;
+    return parsed;
   }
 
   async refresh(): Promise<RefreshResponse> {
     const response = await this.fetchAuth('/refresh', { method: 'POST' });
     const data = await response.json();
-    return refreshResponseSchema.parse(data);
+    const parsed = refreshResponseSchema.parse(data);
+    if (parsed.token) {
+      this.authToken = parsed.token;
+    }
+    return parsed;
   }
 
   async logout(): Promise<void> {
     await this.fetchAuth('/logout', { method: 'POST' });
+    this.authToken = undefined;
   }
 
   async listTeams(): Promise<MattermostTeam[]> {
@@ -326,8 +343,13 @@ export class MattermostRestClient {
 
   private async fetchAuth(path: string, init: RequestInit): Promise<Response> {
     const url = `${this.authEndpoint}${path}`;
+    const headers = new Headers(init.headers ?? {});
+    if (this.authToken && !headers.has('authorization')) {
+      headers.set('authorization', `Bearer ${this.authToken}`);
+    }
     const response = await fetch(url, {
       ...init,
+      headers,
       credentials: 'include',
     });
     if (!response.ok) {
@@ -341,6 +363,9 @@ export class MattermostRestClient {
   private async request<T>(path: string, init: RequestOptions, schema?: z.ZodSchema<T>): Promise<T> {
     const url = `${this.apiBaseUrl}${path}`;
     const headers = new Headers(init.headers ?? {});
+    if (this.authToken && !headers.has('authorization')) {
+      headers.set('authorization', `Bearer ${this.authToken}`);
+    }
     if (!(init.body instanceof FormData) && !headers.has('content-type') && init.body) {
       headers.set('content-type', 'application/json');
     }

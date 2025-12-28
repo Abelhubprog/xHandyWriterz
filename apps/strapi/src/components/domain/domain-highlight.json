@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_domain_highlights",
+  "info": {
+    "displayName": "Domain Highlight",
+    "icon": "star"
+  },
+  "attributes": {
+    "label": {
+      "type": "string"
+    },
+    "value": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "iconKey": {
+      "type": "string"
+    }
+  }
+}
