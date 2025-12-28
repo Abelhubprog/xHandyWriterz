@@ -12,7 +12,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { env } from '@/env';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -31,7 +30,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { cmsClient, uploadMedia } from '@/lib/cms-client';
+import { useAuth as useClerkAuth } from '@clerk/clerk-react';
+import { uploadMedia } from '@/lib/cms-client';
+import { resolveApiUrl } from '@/lib/api-base';
 import { DOMAIN_TAGS, TYPE_TAGS } from '@/config/taxonomy';
 import { generatePreviewToken, encodePreviewToken, type PreviewToken } from '@/lib/preview-tokens';
 
@@ -61,6 +62,7 @@ export const ContentPublisher: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isAdmin, isEditor } = useAuth();
+  const { getToken } = useClerkAuth();
 
   const isEditing = Boolean(id && id !== 'new');
   const contentType = (searchParams.get('type') as ContentType) || 'article';
@@ -99,6 +101,15 @@ export const ContentPublisher: React.FC = () => {
       .trim();
   }, []);
 
+  const getAdminToken = useCallback(async () => {
+    const token = await getToken();
+    if (!token) {
+      toast.error('Authentication required');
+      throw new Error('Missing auth token');
+    }
+    return token;
+  }, [getToken]);
+
   // Load existing content if editing
   useEffect(() => {
     if (isEditing && id) {
@@ -109,11 +120,12 @@ export const ContentPublisher: React.FC = () => {
   const loadContent = async () => {
     setLoading(true);
     try {
+      const authToken = await getAdminToken();
       const response = await fetch(
-        `${env.VITE_CMS_URL}/api/${formData.type}s/${id}?populate=*`,
+        resolveApiUrl(`/api/cms/rest/${formData.type}s/${id}?populate=*`),
         {
           headers: {
-            Authorization: `Bearer ${env.VITE_CMS_TOKEN}`,
+            Authorization: `Bearer ${authToken}`,
           },
         }
       );
@@ -179,7 +191,8 @@ export const ContentPublisher: React.FC = () => {
 
     setUploadingImage(true);
     try {
-      const uploadedMedia = await uploadMedia(file);
+      const authToken = await getAdminToken();
+      const uploadedMedia = await uploadMedia(file, undefined, authToken);
       const mediaItem = Array.isArray(uploadedMedia) ? uploadedMedia[0] : uploadedMedia;
       setFormData((prev) => ({
         ...prev,
@@ -238,15 +251,16 @@ export const ContentPublisher: React.FC = () => {
         },
       };
 
+      const authToken = await getAdminToken();
       const url = isEditing
-        ? `${env.VITE_CMS_URL}/api/${formData.type}s/${id}`
-        : `${env.VITE_CMS_URL}/api/${formData.type}s`;
+        ? resolveApiUrl(`/api/cms/rest/${formData.type}s/${id}`)
+        : resolveApiUrl(`/api/cms/rest/${formData.type}s`);
 
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${env.VITE_CMS_TOKEN}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify(payload),
       });
@@ -287,15 +301,16 @@ export const ContentPublisher: React.FC = () => {
         },
       };
 
+      const authToken = await getAdminToken();
       const url = isEditing
-        ? `${env.VITE_CMS_URL}/api/${formData.type}s/${id}`
-        : `${env.VITE_CMS_URL}/api/${formData.type}s`;
+        ? resolveApiUrl(`/api/cms/rest/${formData.type}s/${id}`)
+        : resolveApiUrl(`/api/cms/rest/${formData.type}s`);
 
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${env.VITE_CMS_TOKEN}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify(payload),
       });

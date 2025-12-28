@@ -13,7 +13,11 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  BookOpen,
+  Users,
+  Zap,
+  Code
 } from "lucide-react";
 import { useClerk } from "@clerk/clerk-react";
 import HandyWriterzLogo from "@/components/HandyWriterzLogo";
@@ -146,6 +150,49 @@ const AdminLayout: React.FC = () => {
               );
             })}
           </nav>
+
+          {/* View Content Quick Links */}
+          {!sidebarCollapsed && (
+            <div className="px-4 py-4 border-t dark:border-slate-800">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                View Live Content
+              </h3>
+              <div className="space-y-1">
+                <Link
+                  to="/articles"
+                  className="flex items-center rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  <span>Articles</span>
+                  <ExternalLink className="h-3 w-3 ml-auto text-gray-400" />
+                </Link>
+                <Link
+                  to="/authors"
+                  className="flex items-center rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  <span>Authors</span>
+                  <ExternalLink className="h-3 w-3 ml-auto text-gray-400" />
+                </Link>
+                <Link
+                  to="/docs/x402"
+                  className="flex items-center rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <Zap className="h-4 w-4 mr-2" />
+                  <span>x402 Protocol</span>
+                  <ExternalLink className="h-3 w-3 ml-auto text-gray-400" />
+                </Link>
+                <Link
+                  to="/api"
+                  className="flex items-center rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <Code className="h-4 w-4 mr-2" />
+                  <span>API Docs</span>
+                  <ExternalLink className="h-3 w-3 ml-auto text-gray-400" />
+                </Link>
+              </div>
+            </div>
+          )}
 
           <div className="px-4 py-4 border-t dark:border-slate-800">
             <button

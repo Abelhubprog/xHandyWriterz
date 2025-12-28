@@ -1,557 +1,321 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Search,
-  Filter,
-  GraduationCap,
-  Brain,
-  Heart,
+  ArrowRight,
   BookOpen,
+  Brain,
+  Coins,
+  Cpu,
+  Heart,
+  Search,
+  Shield,
   Sparkles,
-  Star,
-  ChevronRight,
-  TrendingUp,
-  Clock,
   Users,
-  X,
-  AlertCircle,
 } from 'lucide-react';
-import { ContentPlaceholder } from '@/components/common/LoadingStates';
-import { fetchServicesList } from '@/lib/cms';
-import type { ServiceListItem, ServiceListResponse } from '@/types/cms';
+import { cn } from '@/lib/utils';
+import { fetchDomainsList, fetchServicesList } from '@/lib/cms';
+import type { DomainListItem, ServiceListItem } from '@/types/cms';
 
-// ============================================================================
-// TYPE DEFINITIONS
-// ============================================================================
-
-interface Service {
-  id?: string;
-  slug: string;
-  title: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  bgColor: string;
-  category: 'nursing' | 'healthcare' | 'social' | 'tech' | 'business';
-  articleCount: number;
-  featured?: boolean;
-  trending?: boolean;
-  readTime?: number; // average minutes
-  students?: number; // number of students
-}
-
-// ============================================================================
-// FALLBACK DATA (used when CMS is unavailable)
-// ============================================================================
-
-const FALLBACK_SERVICES: Service[] = [
-  {
-    slug: 'adult-health',
-    title: 'Adult Health Nursing',
-    description: 'Comprehensive support for adult health nursing students covering patient care, disease management, and clinical skills.',
-    icon: GraduationCap,
-    color: 'from-emerald-500 to-emerald-600',
-    bgColor: 'from-emerald-100/40 to-emerald-200/20',
-    category: 'nursing',
-    articleCount: 24,
-    featured: true,
-    trending: true,
-    readTime: 12,
-    students: 1250,
-  },
-  {
-    slug: 'mental-health',
-    title: 'Mental Health Nursing',
-    description: 'Specialized guidance for mental health nursing covering psychiatric care, therapeutic communication, and patient advocacy.',
-    icon: Brain,
-    color: 'from-violet-500 to-violet-600',
-    bgColor: 'from-violet-100/40 to-violet-200/20',
-    category: 'nursing',
-    articleCount: 18,
-    featured: true,
-    readTime: 15,
-    students: 890,
-  },
-  {
-    slug: 'child-nursing',
-    title: 'Pediatric & Child Nursing',
-    description: 'Dedicated support for pediatric nursing students with focus on child development, family-centered care, and pediatric emergencies.',
-    icon: Heart,
-    color: 'from-sky-500 to-sky-600',
-    bgColor: 'from-sky-100/40 to-sky-200/20',
-    category: 'nursing',
-    articleCount: 21,
-    trending: true,
-    readTime: 10,
-    students: 1100,
-  },
-  {
-    slug: 'social-work',
-    title: 'Social Work & Counseling',
-    description: 'Professional support for social work students covering case management, community resources, and ethical practice.',
-    icon: BookOpen,
-    color: 'from-amber-500 to-amber-600',
-    bgColor: 'from-amber-100/40 to-amber-200/20',
-    category: 'social',
-    articleCount: 16,
-    readTime: 14,
-    students: 670,
-  },
-  {
-    slug: 'ai',
-    title: 'Artificial Intelligence & ML',
-    description: 'Cutting-edge resources for AI and machine learning topics including neural networks, deep learning, and practical applications.',
-    icon: Sparkles,
-    color: 'from-indigo-500 to-indigo-600',
-    bgColor: 'from-indigo-100/40 to-indigo-200/20',
-    category: 'tech',
-    articleCount: 32,
-    featured: true,
-    trending: true,
-    readTime: 18,
-    students: 2100,
-  },
-  {
-    slug: 'crypto',
-    title: 'Blockchain & Cryptocurrency',
-    description: 'In-depth coverage of blockchain technology, cryptocurrency markets, DeFi, and Web3 applications.',
-    icon: Star,
-    color: 'from-amber-500 to-amber-600',
-    bgColor: 'from-amber-100/40 to-amber-200/20',
-    category: 'tech',
-    articleCount: 28,
-    trending: true,
-    readTime: 16,
-    students: 1850,
-  },
-];
-
-// Icon mapping for CMS services
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  'adult-health': GraduationCap,
-  'mental-health': Brain,
-  'child-nursing': Heart,
-  'social-work': BookOpen,
-  'ai': Sparkles,
-  'crypto': Star,
-  default: BookOpen,
+const ICON_MAP: Record<string, React.ElementType> = {
+  heart: Heart,
+  brain: Brain,
+  users: Users,
+  shield: Shield,
+  cpu: Cpu,
+  coins: Coins,
+  sparkles: Sparkles,
+  book: BookOpen,
+  'book-open': BookOpen,
 };
 
-// Color mapping for CMS services
-const COLOR_MAP: Record<string, { color: string; bgColor: string }> = {
-  'adult-health': { color: 'from-emerald-500 to-emerald-600', bgColor: 'from-emerald-100/40 to-emerald-200/20' },
-  'mental-health': { color: 'from-violet-500 to-violet-600', bgColor: 'from-violet-100/40 to-violet-200/20' },
-  'child-nursing': { color: 'from-sky-500 to-sky-600', bgColor: 'from-sky-100/40 to-sky-200/20' },
-  'social-work': { color: 'from-amber-500 to-amber-600', bgColor: 'from-amber-100/40 to-amber-200/20' },
-  'ai': { color: 'from-indigo-500 to-indigo-600', bgColor: 'from-indigo-100/40 to-indigo-200/20' },
-  'crypto': { color: 'from-amber-500 to-amber-600', bgColor: 'from-amber-100/40 to-amber-200/20' },
-  default: { color: 'from-gray-500 to-gray-600', bgColor: 'from-gray-100/40 to-gray-200/20' },
+const DOMAIN_ALIASES: Record<string, string> = {
+  'adult-health': 'adult-nursing',
 };
 
-// Map category from domain
-function mapDomainToCategory(domain?: string): Service['category'] {
-  const domainMap: Record<string, Service['category']> = {
-    'adult-health': 'nursing',
-    'mental-health': 'nursing',
-    'child-nursing': 'nursing',
-    'social-work': 'social',
-    'ai': 'tech',
-    'crypto': 'tech',
-  };
-  return domainMap[domain || ''] || 'nursing';
-}
+const getDomainIcon = (iconKey?: string | null) => {
+  if (!iconKey) return BookOpen;
+  const normalized = iconKey.toLowerCase();
+  return ICON_MAP[normalized] || BookOpen;
+};
 
-// Transform CMS data to Service format
-function transformCmsServices(cmsServices: ServiceListItem[]): Service[] {
-  return cmsServices.map(item => ({
-    id: item.id,
-    slug: item.slug,
-    title: item.title,
-    description: item.summary || '',
-    icon: ICON_MAP[item.slug] || ICON_MAP.default,
-    color: (COLOR_MAP[item.slug] || COLOR_MAP.default).color,
-    bgColor: (COLOR_MAP[item.slug] || COLOR_MAP.default).bgColor,
-    category: mapDomainToCategory(item.domain),
-    articleCount: 0, // Would need separate query
-    featured: true,
-    readTime: item.readingMinutes || 10,
-    students: 0,
-  }));
-}
-
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
-
-export default function ServicesHub() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
-
-  // Fetch services from CMS with fallback
-  const { data: cmsServices, isLoading, error, isError } = useQuery<ServiceListResponse>({
-    queryKey: ['services-list'],
-    queryFn: () => fetchServicesList(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
+const sortByPublished = (items: ServiceListItem[]) =>
+  [...items].sort((a, b) => {
+    const aDate = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+    const bDate = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+    return bDate - aDate;
   });
 
-  // Use CMS data if available, otherwise fallback to static data
-  const services = useMemo(() => {
-    const items = cmsServices?.items ?? [];
-    if (items.length > 0) {
-      return transformCmsServices(items);
-    }
-    return FALLBACK_SERVICES;
-  }, [cmsServices]);
+function ServicesHubSkeleton() {
+  return (
+    <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, idx) => (
+        <div key={idx} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="h-32 bg-slate-200 animate-pulse" />
+          <div className="p-6 space-y-4">
+            <div className="h-6 w-2/3 rounded bg-slate-200 animate-pulse" />
+            <div className="h-4 w-full rounded bg-slate-100 animate-pulse" />
+            <div className="h-4 w-3/4 rounded bg-slate-100 animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-10 rounded-xl bg-slate-100 animate-pulse" />
+              <div className="h-10 rounded-xl bg-slate-100 animate-pulse" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-  const usingFallback = (cmsServices?.items?.length ?? 0) === 0;
+function DomainCard({ domain, services }: { domain: DomainListItem; services: ServiceListItem[] }) {
+  const Icon = getDomainIcon(domain.iconKey);
+  const gradient = domain.gradient || 'from-slate-700 to-slate-900';
+  const themeColor = domain.themeColor || '#6366f1';
+  const featuredServices = sortByPublished(services).slice(0, 3);
 
-  const CATEGORIES = useMemo(() => [
-    { id: 'all', label: 'All Services', count: services.length },
-    { id: 'nursing', label: 'Nursing', count: services.filter(s => s.category === 'nursing').length },
-    { id: 'healthcare', label: 'Healthcare', count: services.filter(s => s.category === 'healthcare').length },
-    { id: 'social', label: 'Social Work', count: services.filter(s => s.category === 'social').length },
-    { id: 'tech', label: 'Technology', count: services.filter(s => s.category === 'tech').length },
-    { id: 'business', label: 'Business', count: services.filter(s => s.category === 'business').length },
-  ], [services]);
+  return (
+    <div className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl">
+      <div className={cn('relative h-36 bg-gradient-to-br', gradient)}>
+        {domain.heroImageUrl ? (
+          <img
+            src={domain.heroImageUrl}
+            alt={domain.name}
+            className="h-full w-full object-cover opacity-85"
+            loading="lazy"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Icon className="h-16 w-16 text-white/40" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+      </div>
 
-  // Filter services based on search and category
-  const filteredServices = useMemo(() => {
-    return services.filter(service => {
-      const matchesSearch = service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          service.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory;
-      const matchesFeatured = !showFeaturedOnly || service.featured;
+      <div className="p-6">
+        <div className="flex items-start gap-3">
+          <div
+            className="flex h-11 w-11 items-center justify-center rounded-xl"
+            style={{ backgroundColor: `${themeColor}20` }}
+          >
+            <Icon className="h-5 w-5" style={{ color: themeColor }} />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-slate-900">{domain.name}</h3>
+            {domain.tagline && (
+              <p className="text-sm text-slate-500 italic">{domain.tagline}</p>
+            )}
+          </div>
+        </div>
 
-      return matchesSearch && matchesCategory && matchesFeatured;
+        {domain.description && (
+          <p className="mt-3 text-sm text-slate-600 line-clamp-2">{domain.description}</p>
+        )}
+
+        <div className="mt-5">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Featured Services</h4>
+            <span className="text-xs text-slate-400">{services.length} total</span>
+          </div>
+
+          <div className="mt-3 space-y-2">
+            {featuredServices.length > 0 ? (
+              featuredServices.map((service) => (
+                <Link
+                  key={service.id}
+                  to={`/domains/${domain.slug}/services/${service.slug}`}
+                  className="group/button flex items-center justify-between rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <span className="line-clamp-1 font-medium">{service.title}</span>
+                  <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover/button:translate-x-1" />
+                </Link>
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500">
+                No services published yet.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-6 flex items-center justify-between">
+          <Link
+            to={`/domains/${domain.slug}`}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+          >
+            Explore domain
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            to={`/domains/${domain.slug}`}
+            className="text-xs font-medium text-slate-400 hover:text-slate-600"
+          >
+            View all content
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ServicesHub() {
+  const [search, setSearch] = useState('');
+
+  const {
+    data: domainsData,
+    isLoading: domainsLoading,
+    error: domainsError,
+  } = useQuery({
+    queryKey: ['services-domains'],
+    queryFn: () => fetchDomainsList({ activeOnly: true }),
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const {
+    data: servicesData,
+    isLoading: servicesLoading,
+    error: servicesError,
+  } = useQuery({
+    queryKey: ['services-ads'],
+    queryFn: () => fetchServicesList({ pageSize: 120 }),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const servicesByDomain = useMemo(() => {
+    const map: Record<string, ServiceListItem[]> = {};
+    const items = servicesData?.items ?? [];
+    items.forEach((item) => {
+      const rawDomain = item.domain ?? 'general';
+      const domainKey = DOMAIN_ALIASES[rawDomain] ?? rawDomain;
+      if (!map[domainKey]) {
+        map[domainKey] = [];
+      }
+      map[domainKey].push(item);
     });
-  }, [services, searchQuery, selectedCategory, showFeaturedOnly]);
+    return map;
+  }, [servicesData]);
 
-  const stats = {
-    totalServices: services.length,
-    totalArticles: services.reduce((sum, s) => sum + s.articleCount, 0),
-    totalStudents: services.reduce((sum, s) => sum + (s.students || 0), 0),
-  };
+  const filteredDomains = useMemo(() => {
+    const list = domainsData ?? [];
+    if (!search) return list;
+    const term = search.toLowerCase();
+    return list.filter((domain) =>
+      [domain.name, domain.slug, domain.tagline, domain.description]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(term)),
+    );
+  }, [domainsData, search]);
 
-  // Show loading state while fetching
-  if (isLoading) {
-    return <ContentPlaceholder type="grid" count={6} />;
-  }
+  const totalDomains = domainsData?.length ?? 0;
+  const totalServices = servicesData?.items?.length ?? 0;
+  const isLoading = domainsLoading || servicesLoading;
+  const hasError = Boolean(domainsError || servicesError);
 
   return (
     <>
       <Helmet>
-        <title>Services & Resources | HandyWriterz</title>
-        <meta 
-          name="description" 
-          content="Explore our comprehensive catalogue of academic services covering nursing, healthcare, technology, and more. Find expert resources tailored to your field." 
+        <title>Services by Domain | HandyWriterz</title>
+        <meta
+          name="description"
+          content="Explore HandyWriterz domains and jump directly into our expert services. Find the right domain, then choose the service that fits your needs."
         />
-        <meta name="keywords" content="academic services, nursing resources, healthcare education, technology learning" />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-        {/* CMS Connection Status Banner */}
-        {(isError || usingFallback) && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-amber-50 border-b border-amber-200 px-4 py-3"
-          >
-            <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-amber-700 text-sm">
-              <AlertCircle className="h-4 w-4" />
-              <span>
-                {isError 
-                  ? 'Unable to connect to content server. Showing cached content.'
-                  : 'Showing default content. Content management system offline.'}
-              </span>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 py-20 px-4">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-0 h-96 w-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob" />
-            <div className="absolute top-0 right-0 h-96 w-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-2000" />
-            <div className="absolute bottom-0 left-1/2 h-96 w-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-4000" />
+      <div className="min-h-screen bg-slate-50">
+        {/* Hero */}
+        <section className="relative overflow-hidden bg-slate-950 py-20 text-white">
+          <div className="absolute inset-0 opacity-40">
+            <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-indigo-500 blur-3xl" />
+            <div className="absolute right-0 top-20 h-64 w-64 rounded-full bg-fuchsia-500 blur-3xl" />
+            <div className="absolute bottom-0 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-cyan-400 blur-3xl" />
           </div>
-
-          <div className="relative max-w-7xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-                Professional Services & Resources
-              </h1>
-              <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
-                Explore our structured services catalogue powered by expert knowledge and curated domains.
-                Find the perfect resources for your academic journey.
-              </p>
-
-              {/* Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mt-12">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20"
-                >
-                  <div className="text-3xl font-bold text-white mb-2">{stats.totalServices}</div>
-                  <div className="text-blue-100">Service Categories</div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20"
-                >
-                  <div className="text-3xl font-bold text-white mb-2">{stats.totalArticles}+</div>
-                  <div className="text-blue-100">Expert Articles</div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20"
-                >
-                  <div className="text-3xl font-bold text-white mb-2">{(stats.totalStudents / 1000).toFixed(1)}K+</div>
-                  <div className="text-blue-100">Students Helped</div>
-                </motion.div>
+          <div className="relative mx-auto max-w-6xl px-4 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-white/80">
+              Services Directory
+            </div>
+            <h1 className="mt-6 text-4xl font-semibold md:text-5xl">
+              Choose a Domain, Jump Into a Service
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-base text-white/80 md:text-lg">
+              Every domain has its own set of expert services. Browse domains, then pick the service that fits your goal.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-white/80">
+              <div className="rounded-full bg-white/10 px-4 py-2">
+                {totalDomains} domains live
               </div>
-            </motion.div>
+              <div className="rounded-full bg-white/10 px-4 py-2">
+                {totalServices} services available
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Search & Filters */}
-        <section className="max-w-7xl mx-auto px-4 -mt-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 border border-gray-100"
-          >
-            {/* Search Bar */}
-            <div className="relative mb-6">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+        {/* Search */}
+        <section className="mx-auto -mt-10 max-w-5xl px-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Find a domain
+            </label>
+            <div className="mt-3 flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
+              <Search className="h-5 w-5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search services by name or description..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-12 py-4 border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none transition-colors text-gray-900 placeholder-gray-400"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search AI, Crypto, Adult Nursing..."
+                className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
               />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
-                  title="Clear search"
-                  aria-label="Clear search"
-                >
-                  <X className="h-5 w-5 text-gray-400" />
-                </button>
-              )}
             </div>
-
-            {/* Category Filters */}
-            <div className="flex flex-wrap gap-3 mb-4">
-              {CATEGORIES.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all ${
-                    selectedCategory === category.id
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {category.label}
-                  <span className="ml-2 text-sm opacity-75">({category.count})</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Featured Filter */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowFeaturedOnly(!showFeaturedOnly)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                  showFeaturedOnly
-                    ? 'bg-amber-100 text-amber-700 border-2 border-amber-300'
-                    : 'bg-gray-50 text-gray-600 border-2 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                <Star className={`h-4 w-4 ${showFeaturedOnly ? 'fill-amber-500 text-amber-500' : ''}`} />
-                Featured Only
-              </button>
-              <span className="text-sm text-gray-500">
-                {filteredServices.length} service{filteredServices.length !== 1 ? 's' : ''} found
-              </span>
-            </div>
-          </motion.div>
+          </div>
         </section>
 
-        {/* Services Grid */}
-        <section className="max-w-7xl mx-auto px-4 py-16">
-          {filteredServices.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-20"
-            >
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6">
-                <Search className="h-10 w-10 text-gray-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">No services found</h3>
-              <p className="text-gray-600 mb-6">Try adjusting your search or filters</p>
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('all');
-                  setShowFeaturedOnly(false);
-                }}
-                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-              >
-                Clear all filters
-              </button>
-            </motion.div>
+        {/* Domains Grid */}
+        <section className="mx-auto max-w-6xl px-4 py-16">
+          {hasError ? (
+            <div className="rounded-3xl border border-rose-200 bg-rose-50 p-8 text-center text-rose-700">
+              We could not load domains right now. Please refresh or try again soon.
+            </div>
+          ) : isLoading ? (
+            <ServicesHubSkeleton />
+          ) : filteredDomains.length === 0 ? (
+            <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center">
+              <p className="text-lg font-semibold text-slate-900">No domains found</p>
+              <p className="mt-2 text-sm text-slate-500">Try a different search term.</p>
+            </div>
           ) : (
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {filteredServices.map((service, index) => (
-                <motion.div
-                  key={service.slug}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Link
-                    to={`/d/${service.slug}`}
-                    className="block group relative overflow-hidden rounded-3xl bg-white shadow-lg border border-gray-100 hover:shadow-2xl transition-all duration-300"
-                  >
-                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${service.bgColor} pointer-events-none`} />
-                    
-                    <div className="relative p-8">
-                      {/* Badges */}
-                      <div className="flex gap-2 mb-4">
-                        {service.featured && (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">
-                            <Star className="h-3 w-3 fill-amber-500" />
-                            Featured
-                          </span>
-                        )}
-                        {service.trending && (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
-                            <TrendingUp className="h-3 w-3" />
-                            Trending
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Icon */}
-                      <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${service.bgColor} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                        <service.icon className="h-8 w-8 text-gray-700" />
-                      </div>
-
-                      {/* Content */}
-                      <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300">
-                        {service.title}
-                      </h3>
-                      <p className="text-gray-700 mb-6 leading-relaxed">
-                        {service.description}
-                      </p>
-
-                      {/* Meta Info */}
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-6">
-                        <div className="flex items-center gap-1">
-                          <BookOpen className="h-4 w-4" />
-                          <span>{service.articleCount} articles</span>
-                        </div>
-                        {service.readTime && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span>~{service.readTime} min read</span>
-                          </div>
-                        )}
-                        {service.students && (
-                          <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            <span>{(service.students / 1000).toFixed(1)}K students</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* CTA */}
-                      <span className={`inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r ${service.color} text-white rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300`}>
-                        Explore Resources
-                        <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                      </span>
-                    </div>
-                  </Link>
-                </motion.div>
+            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+              {filteredDomains.map((domain) => (
+                <DomainCard
+                  key={domain.id}
+                  domain={domain}
+                  services={servicesByDomain[domain.slug] ?? []}
+                />
               ))}
             </div>
           )}
         </section>
 
-        {/* CTA Section */}
-        <section className="max-w-7xl mx-auto px-4 pb-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-purple-600 p-12 text-center"
-          >
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 right-0 h-64 w-64 bg-white rounded-full filter blur-3xl" />
-              <div className="absolute bottom-0 left-0 h-64 w-64 bg-white rounded-full filter blur-3xl" />
-            </div>
-
-            <div className="relative">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Can't find what you're looking for?
-              </h2>
-              <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-                Our support team is here to help you find the perfect resources for your academic needs.
-              </p>
+        {/* CTA */}
+        <section className="mx-auto max-w-5xl px-4 pb-20">
+          <div className="rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 p-10 text-white">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-3xl font-semibold">Need a custom service?</h2>
+                <p className="mt-2 text-white/80">
+                  Tell us the domain and we will match you with a specialist team.
+                </p>
+              </div>
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-600 rounded-xl font-semibold hover:bg-gray-100 transition-colors shadow-xl"
+                className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-700 transition-transform hover:-translate-y-0.5"
               >
-                Contact Support
-                <ChevronRight className="h-5 w-5" />
+                Request a quote
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </div>
-          </motion.div>
+          </div>
         </section>
       </div>
-
-      <style>{`
-        @keyframes blob {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
     </>
   );
 }

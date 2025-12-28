@@ -20,6 +20,7 @@ import { cmsClient, uploadMedia } from '@/lib/cms-client';
 import type { Article, ContentBlock } from '@/types/publishing';
 import { DOMAIN_TAGS, TYPE_TAGS } from '@/config/taxonomy';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { toast } from 'react-hot-toast';
 
 const ARTICLE_STATUSES = [
@@ -54,6 +55,7 @@ export const ArticleEditor: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isAdmin, isEditor } = useAuth();
+  const { getToken } = useClerkAuth();
 
   const isEditing = Boolean(id && id !== 'new');
   const initialDomain = searchParams.get('domain') || '';
@@ -95,13 +97,23 @@ export const ArticleEditor: React.FC = () => {
       .trim();
   }, []);
 
+  const getAdminToken = useCallback(async () => {
+    const token = await getToken();
+    if (!token) {
+      toast.error('Authentication required');
+      throw new Error('Missing auth token');
+    }
+    return token;
+  }, [getToken]);
+
   // Load existing article if editing
   useEffect(() => {
     if (isEditing && id) {
       const loadArticle = async () => {
         setLoading(true);
         try {
-          const article = await cmsClient.getArticle(id);
+          const authToken = await getAdminToken();
+          const article = await cmsClient.getArticle(id, authToken);
           if (article) {
             const attrs = article.attributes;
             setFormData({
@@ -194,10 +206,11 @@ export const ArticleEditor: React.FC = () => {
 
   const handleImageUpload = async (file: File, field: 'heroImage' | 'ogImage') => {
     try {
+      const authToken = await getAdminToken();
       const result = await uploadMedia(file, {
         alt: formData.title,
         folder: `articles/${formData.domain}`,
-      });
+      }, authToken);
 
       if (result && result[0]) {
         const imageUrl = result[0].url;
@@ -237,11 +250,12 @@ export const ArticleEditor: React.FC = () => {
         authorId: user?.id || '',
       };
 
+      const authToken = await getAdminToken();
       let result;
       if (isEditing && id) {
-        result = await cmsClient.updateArticle(id, articleData);
+        result = await cmsClient.updateArticle(id, articleData, authToken);
       } else {
-        result = await cmsClient.createArticle(articleData);
+        result = await cmsClient.createArticle(articleData, authToken);
       }
 
       if (result) {
@@ -276,7 +290,8 @@ export const ArticleEditor: React.FC = () => {
 
       // Then publish it
       if (isEditing && id) {
-        await cmsClient.publishArticle(id, formData.scheduledAt || undefined);
+        const authToken = await getAdminToken();
+        await cmsClient.publishArticle(id, formData.scheduledAt || undefined, authToken);
         setFormData(prev => ({ ...prev, status: 'published' }));
         toast.success('Article published successfully');
       }

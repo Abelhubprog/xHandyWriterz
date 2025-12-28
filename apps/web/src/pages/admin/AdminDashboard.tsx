@@ -12,12 +12,17 @@ import {
   ArrowRight,
   Loader2,
   RefreshCw,
-  ClipboardList
+  ClipboardList,
+  Users,
+  BookOpen,
+  Zap,
+  Code
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuth as useClerkAuth } from "@clerk/clerk-react";
 import { fetchArticles, fetchServices } from "@/lib/cms-client";
 import { formatDate } from "@/lib/utils";
 
@@ -52,6 +57,7 @@ const apiRootUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBa
 
 export const AdminDashboard: React.FC = () => {
   const { user, isEditor } = useAuth();
+  const { getToken } = useClerkAuth();
   const [summary, setSummary] = useState<ContentSummary>({ published: 0, drafts: 0, services: 0 });
   const [recentDrafts, setRecentDrafts] = useState<DraftSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -83,10 +89,11 @@ export const AdminDashboard: React.FC = () => {
   const loadDashboard = async () => {
     setLoading(true);
     try {
+      const authToken = await getToken();
       const [publishedRes, draftRes, servicesRes] = await Promise.all([
-        fetchArticles({ status: "published", limit: 50 }),
-        fetchArticles({ status: "draft", limit: 50 }),
-        fetchServices(),
+        fetchArticles({ status: "published", limit: 50 }, authToken || undefined),
+        fetchArticles({ status: "draft", limit: 50 }, authToken || undefined),
+        fetchServices(undefined, authToken || undefined),
       ]);
 
       const publishedArticles = (publishedRes as any)?.articles?.data ?? [];
@@ -117,7 +124,7 @@ export const AdminDashboard: React.FC = () => {
       setError(null);
     } catch (err) {
       console.error("[admin] Failed to load dashboard", err);
-      setError("Unable to load CMS metrics. Verify VITE_CMS_URL and VITE_CMS_TOKEN.");
+      setError("Unable to load CMS metrics. Verify API access and STRAPI_URL/STRAPI_TOKEN.");
     } finally {
       setLoading(false);
     }
@@ -300,6 +307,99 @@ export const AdminDashboard: React.FC = () => {
                 Turnitin reviews
                 <ArrowRight className="h-4 w-4" />
               </Link>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* View Live Content Section */}
+        <section className="grid gap-4 lg:grid-cols-2">
+          <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-indigo-100 dark:border-indigo-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm font-medium text-indigo-700 dark:text-indigo-300">
+                <BookOpen className="h-4 w-4" /> View Live Content
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-gray-600 dark:text-slate-300 mb-4">
+                Preview published content on the live site
+              </p>
+              <Link
+                to="/articles"
+                className="flex items-center justify-between rounded-md border border-indigo-200 bg-white/80 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-slate-800/50 dark:text-indigo-300 dark:hover:bg-indigo-900/40"
+              >
+                <span className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Published Articles
+                </span>
+                <ExternalLink className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/authors"
+                className="flex items-center justify-between rounded-md border border-indigo-200 bg-white/80 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-slate-800/50 dark:text-indigo-300 dark:hover:bg-indigo-900/40"
+              >
+                <span className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Authors Directory
+                </span>
+                <ExternalLink className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/services"
+                className="flex items-center justify-between rounded-md border border-indigo-200 bg-white/80 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-slate-800/50 dark:text-indigo-300 dark:hover:bg-indigo-900/40"
+              >
+                <span className="flex items-center gap-2">
+                  <LayoutDashboard className="h-4 w-4" />
+                  Services Pages
+                </span>
+                <ExternalLink className="h-4 w-4" />
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-emerald-50 to-cyan-50 dark:from-emerald-900/20 dark:to-cyan-900/20 border-emerald-100 dark:border-emerald-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                <Code className="h-4 w-4" /> Developer Resources
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-gray-600 dark:text-slate-300 mb-4">
+                API documentation and integration guides
+              </p>
+              <Link
+                to="/api"
+                className="flex items-center justify-between rounded-md border border-emerald-200 bg-white/80 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-slate-800/50 dark:text-emerald-300 dark:hover:bg-emerald-900/40"
+              >
+                <span className="flex items-center gap-2">
+                  <Code className="h-4 w-4" />
+                  API Documentation
+                </span>
+                <ExternalLink className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/docs/x402"
+                className="flex items-center justify-between rounded-md border border-emerald-200 bg-white/80 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-slate-800/50 dark:text-emerald-300 dark:hover:bg-emerald-900/40"
+              >
+                <span className="flex items-center gap-2">
+                  <Zap className="h-4 w-4" />
+                  x402 Protocol Guide
+                </span>
+                <ExternalLink className="h-4 w-4" />
+              </Link>
+              {import.meta.env.VITE_CMS_URL && (
+                <a
+                  href={`${import.meta.env.VITE_CMS_URL}/admin`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between rounded-md border border-emerald-200 bg-white/80 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-slate-800/50 dark:text-emerald-300 dark:hover:bg-emerald-900/40"
+                >
+                  <span className="flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4" />
+                    Strapi CMS Admin
+                  </span>
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              )}
             </CardContent>
           </Card>
         </section>

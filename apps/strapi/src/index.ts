@@ -1,5 +1,16 @@
 // import type { Core } from '@strapi/strapi';
 
+const PUBLIC_READ_ACTIONS = [
+  'api::service.service.find',
+  'api::service.service.findOne',
+  'api::article.article.find',
+  'api::article.article.findOne',
+  'api::landing-section.landing-section.find',
+  'api::landing-section.landing-section.findOne',
+  'api::domain-page.domain-page.find',
+  'api::domain-page.domain-page.findOne',
+];
+
 export default {
   /**
    * An asynchronous register function that runs before
@@ -16,5 +27,42 @@ export default {
    * This gives you an opportunity to set up your data model,
    * run jobs, or perform some special logic.
    */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
+  async bootstrap({ strapi }: { strapi: any }) {
+    try {
+      const publicRole = await strapi.db
+        .query('plugin::users-permissions.role')
+        .findOne({ where: { type: 'public' } });
+
+      if (!publicRole) {
+        strapi.log.warn('[bootstrap] Public role not found');
+        return;
+      }
+
+      const permissions = await strapi.db
+        .query('plugin::users-permissions.permission')
+        .findMany({
+          where: {
+            role: publicRole.id,
+            action: { $in: PUBLIC_READ_ACTIONS },
+          },
+        });
+
+      const disabled = permissions.filter((permission: any) => !permission.enabled);
+
+      await Promise.all(
+        disabled.map((permission: any) =>
+          strapi.db.query('plugin::users-permissions.permission').update({
+            where: { id: permission.id },
+            data: { enabled: true },
+          })
+        )
+      );
+
+      if (disabled.length > 0) {
+        strapi.log.info(`[bootstrap] Enabled ${disabled.length} public permissions`);
+      }
+    } catch (error) {
+      strapi.log.error('[bootstrap] Failed to update public permissions', error);
+    }
+  },
 };

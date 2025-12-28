@@ -4,7 +4,8 @@
   "info": {
     "singularName": "article",
     "pluralName": "articles",
-    "displayName": "Article"
+    "displayName": "Article",
+    "description": "Long-form content articles"
   },
   "options": {
     "draftAndPublish": true
@@ -23,26 +24,40 @@
       "required": true
     },
     "summary": {
-      "type": "text"
+      "type": "text",
+      "maxLength": 500
     },
     "excerpt": {
-      "type": "text"
+      "type": "text",
+      "maxLength": 300
     },
     "content": {
-      "type": "text"
+      "type": "richtext"
     },
     "body": {
-      "type": "text"
+      "type": "richtext"
     },
     "author": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::author.author",
+      "inversedBy": "articles"
+    },
+    "authorName": {
       "type": "string",
       "required": false
     },
-    "category": {
-      "type": "string"
-    },
     "categories": {
-      "type": "json"
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::category.category",
+      "inversedBy": "articles"
+    },
+    "tagsList": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::tag.tag",
+      "inversedBy": "articles"
     },
     "tags": {
       "type": "json"
@@ -60,12 +75,15 @@
         "crypto",
         "enterprise",
         "general"
-      ]
+      ],
+      "default": "general"
     },
     "status": {
       "type": "enumeration",
       "enum": [
         "draft",
+        "review",
+        "scheduled",
         "published"
       ],
       "default": "draft"
@@ -73,19 +91,13 @@
     "heroImage": {
       "type": "media",
       "multiple": false,
-      "allowedTypes": [
-        "images",
-        "files"
-      ]
+      "allowedTypes": ["images"]
     },
     "images": {
       "type": "media",
       "multiple": true,
       "required": false,
-      "allowedTypes": [
-        "images",
-        "files"
-      ]
+      "allowedTypes": ["images"]
     },
     "typeTags": {
       "type": "json"
@@ -97,6 +109,41 @@
     },
     "datePublished": {
       "type": "datetime"
+    },
+    "scheduledAt": {
+      "type": "datetime"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "readingTime": {
+      "type": "integer",
+      "default": 5
+    },
+    "viewCount": {
+      "type": "integer",
+      "default": 0
+    },
+    "likeCount": {
+      "type": "integer",
+      "default": 0
+    },
+    "relatedArticles": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::article.article"
+    },
+    "x402Price": {
+      "type": "decimal",
+      "default": 0.001
+    },
+    "x402Enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "previewToken": {
+      "type": "string"
     }
   }
 }

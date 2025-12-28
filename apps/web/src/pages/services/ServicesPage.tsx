@@ -74,6 +74,10 @@ const DetailSkeleton: React.FC = () => (
 );
 
 const DOMAINS: Record<string, { name: string; description: string }> = {
+  'adult-nursing': {
+    name: 'Adult Nursing',
+    description: 'Clinical practice updates, care plans, and evidence-based research.',
+  },
   'adult-health': {
     name: 'Adult Health Nursing',
     description: 'Clinical practice updates, care plans, and evidence-based research.',

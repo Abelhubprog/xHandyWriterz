@@ -21,10 +21,17 @@ const Navbar: React.FC<NavbarProps> = ({ serviceLinks }) => {
 
   const mainNavLinks = [
     { path: '/', label: 'Home' },
-    { path: '/services', label: 'Services' },
+    { path: '/domains', label: 'Domains' },
+    { path: '/articles', label: 'Articles' },
     { path: '/pricing', label: 'Pricing' },
     { path: '/about', label: 'About Us' },
     { path: '/contact', label: 'Contact' },
+  ];
+
+  const resourceLinks = [
+    { path: '/authors', label: 'Our Authors' },
+    { path: '/docs/x402', label: 'x402 Protocol' },
+    { path: '/api', label: 'API Docs' },
   ];
 
   return (
@@ -40,7 +47,7 @@ const Navbar: React.FC<NavbarProps> = ({ serviceLinks }) => {
           <div className="hidden sm:flex sm:items-center sm:space-x-4">
             {/* Public Links */}
             {mainNavLinks.map((link) => (
-              link.path === '/services' ? (
+              link.path === '/domains' ? (
                 <div key={link.path} className="relative group">
                   <button className={`text-gray-700 group-hover:text-indigo-600 px-3 py-2 text-sm font-medium flex items-center ${
                     location.pathname.startsWith(link.path) ? 'text-indigo-600' : ''
@@ -60,14 +67,24 @@ const Navbar: React.FC<NavbarProps> = ({ serviceLinks }) => {
                         </Link>
                       ))}
                       <Link
-                        to="/services"
+                        to="/domains"
                         className="block px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 rounded-md mx-1 border-t border-gray-100 mt-2"
                       >
-                        View All Services
+                        View All Domains
                       </Link>
                     </div>
                   </div>
                 </div>
+              ) : link.path === '/articles' ? (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium ${
+                    location.pathname.startsWith('/articles') || location.pathname.startsWith('/article/') ? 'text-indigo-600' : ''
+                  }`}
+                >
+                  {link.label}
+                </Link>
               ) : (
                 <Link
                   key={link.path}
@@ -80,6 +97,29 @@ const Navbar: React.FC<NavbarProps> = ({ serviceLinks }) => {
                 </Link>
               )
             ))}
+
+            {/* Resources Dropdown */}
+            <div className="relative group">
+              <button className={`text-gray-700 group-hover:text-indigo-600 px-3 py-2 text-sm font-medium flex items-center ${
+                location.pathname.startsWith('/docs') || location.pathname.startsWith('/api') || location.pathname.startsWith('/authors') ? 'text-indigo-600' : ''
+              }`}>
+                Resources
+                <ChevronDown className="ml-1 h-4 w-4" />
+              </button>
+              <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-xl bg-white ring-1 ring-black/5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="py-2">
+                  {resourceLinks.map((resource) => (
+                    <Link
+                      key={resource.path}
+                      to={resource.path}
+                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50/70 hover:text-indigo-700 rounded-md mx-1"
+                    >
+                      {resource.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {/* Authenticated Links */}
             <SignedIn>
@@ -153,11 +193,28 @@ const Navbar: React.FC<NavbarProps> = ({ serviceLinks }) => {
             </Link>
           ))}
           
-          {/* Services Dropdown */}
+          {/* Domains Dropdown */}
           <div className="px-3 py-2">
-            <span className="block text-base font-medium text-gray-700">Services</span>
+            <span className="block text-base font-medium text-gray-700">Domains</span>
             <div className="mt-2 space-y-1">
               {serviceLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className="block pl-3 pr-4 py-2 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Resources Dropdown */}
+          <div className="px-3 py-2">
+            <span className="block text-base font-medium text-gray-700">Resources</span>
+            <div className="mt-2 space-y-1">
+              {resourceLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}

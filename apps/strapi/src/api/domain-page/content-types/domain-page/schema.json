@@ -4,73 +4,156 @@
   "info": {
     "singularName": "domain-page",
     "pluralName": "domain-pages",
-    "displayName": "Domain Page"
+    "displayName": "Domain Page",
+    "description": "CMS-managed domain landing pages (Adult Nursing, AI, Crypto, etc.)"
   },
   "options": {
     "draftAndPublish": true
   },
+  "pluginOptions": {},
   "attributes": {
-    "domain": {
-      "type": "enumeration",
-      "required": true,
-      "enum": [
-        "adult-health",
-        "mental-health",
-        "child-nursing",
-        "social-work",
-        "technology",
-        "ai",
-        "crypto",
-        "enterprise",
-        "general"
-      ]
-    },
-    "title": {
+    "name": {
       "type": "string",
       "required": true
     },
-    "heroEyebrow": {
-      "type": "string"
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "tagline": {
+      "type": "string",
+      "description": "Short tagline for the domain (e.g., 'Expert Healthcare Writing Services')"
+    },
+    "description": {
+      "type": "text",
+      "description": "Brief description of the domain for listings and SEO"
     },
     "heroTitle": {
-      "type": "string"
+      "type": "string",
+      "required": true,
+      "description": "Main headline for the hero section"
     },
-    "heroDescription": {
-      "type": "text"
+    "heroSubtitle": {
+      "type": "text",
+      "description": "Supporting text below the hero title"
     },
     "heroImage": {
       "type": "media",
       "multiple": false,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos"
-      ]
+      "allowedTypes": ["images"],
+      "description": "Hero background image"
     },
-    "ctaLabel": {
-      "type": "string"
+    "heroVideo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["videos"],
+      "description": "Optional hero background video"
     },
-    "ctaUrl": {
-      "type": "string"
+    "themeColor": {
+      "type": "string",
+      "default": "#6366f1",
+      "description": "Primary theme color (hex code)"
+    },
+    "gradient": {
+      "type": "string",
+      "default": "from-indigo-500 to-purple-600",
+      "description": "Tailwind gradient classes"
+    },
+    "iconKey": {
+      "type": "string",
+      "description": "Lucide icon key (e.g., 'Heart', 'Brain', 'Code')"
     },
     "highlights": {
       "type": "component",
       "component": "domain.domain-highlight",
-      "repeatable": true
+      "repeatable": true,
+      "description": "Key stats and features to display"
     },
-    "spotlight": {
+    "features": {
       "type": "component",
-      "component": "landing.landing-item",
-      "repeatable": true
+      "component": "domain.domain-feature",
+      "repeatable": true,
+      "description": "Detailed feature cards"
     },
-    "serviceSlugs": {
-      "type": "json"
+    "faqs": {
+      "type": "component",
+      "component": "domain.domain-faq",
+      "repeatable": true,
+      "description": "Frequently asked questions"
     },
-    "articleSlugs": {
-      "type": "json"
+    "featuredServices": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::service.service",
+      "description": "Services to feature on this domain page"
     },
-    "metaDescription": {
-      "type": "text"
+    "featuredArticles": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::article.article",
+      "description": "Articles to feature on this domain page"
+    },
+    "testimonials": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::testimonial.testimonial",
+      "description": "Testimonials specific to this domain"
+    },
+    "ctaLabel": {
+      "type": "string",
+      "default": "Get Started",
+      "description": "Primary CTA button text"
+    },
+    "ctaUrl": {
+      "type": "string",
+      "description": "Primary CTA button link"
+    },
+    "secondaryCtaLabel": {
+      "type": "string",
+      "description": "Secondary CTA button text"
+    },
+    "secondaryCtaUrl": {
+      "type": "string",
+      "description": "Secondary CTA button link"
+    },
+    "seoTitle": {
+      "type": "string",
+      "description": "SEO meta title"
+    },
+    "seoDescription": {
+      "type": "text",
+      "description": "SEO meta description"
+    },
+    "seoImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"],
+      "description": "Open Graph image for social sharing"
+    },
+    "keywords": {
+      "type": "text",
+      "description": "Comma-separated keywords for SEO"
+    },
+    "order": {
+      "type": "integer",
+      "default": 0,
+      "description": "Display order in domain listings"
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this domain is visible in navigation"
+    },
+    "showInNav": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show in main navigation dropdown"
+    },
+    "showInFooter": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show in footer links"
     }
   }
 }

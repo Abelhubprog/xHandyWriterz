@@ -1,11 +1,32 @@
 import React from 'react';
-import { createBrowserRouter, RouteObject } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouteObject, useParams } from 'react-router-dom';
 import RootLayout from './components/layouts/RootLayout';
 import DashboardLayout from './components/layouts/DashboardLayout';
 import AdminLayout from './components/layouts/AdminLayout';
 
-// Pages
-const Homepage = React.lazy(() => import('./pages/Homepage'));
+// Legacy /d/:domain redirect to /domains/:domain for backward compatibility
+function LegacyDomainRedirect() {
+  const { domain, '*': rest } = useParams();
+  const newPath = rest ? `/domains/${domain}/${rest}` : `/domains/${domain}`;
+  return <Navigate to={newPath} replace />;
+}
+
+// Pages - New CMS-integrated pages
+const HomepageNew = React.lazy(() => import('./pages/HomepageNew'));
+const ArticlePage = React.lazy(() => import('./pages/ArticlePage'));
+const ArticlesPage = React.lazy(() => import('./pages/ArticlesPage'));
+const AuthorsPage = React.lazy(() => import('./pages/AuthorsPage'));
+const AuthorPage = React.lazy(() => import('./pages/AuthorPage'));
+const ServicePageNew = React.lazy(() => import('./pages/ServicePage'));
+const X402DocsPage = React.lazy(() => import('./pages/docs/X402DocsPage'));
+const ApiDocsPage = React.lazy(() => import('./pages/docs/ApiDocsPage'));
+
+// Domain pages - CMS-driven domain landing pages
+const DomainsHub = React.lazy(() => import('./pages/domains/DomainsHub'));
+const DomainPage = React.lazy(() => import('./pages/domains/DomainPage'));
+
+// Legacy pages (keeping for fallback)
+const HomepageLegacy = React.lazy(() => import('./pages/Homepage'));
 const LearningHub = React.lazy(() => import('./pages/learning-hub'));
 const NotFound = React.lazy(() => import('./pages/not-found'));
 const AdminLogin = React.lazy(() => import('./pages/auth/admin-login'));
@@ -44,15 +65,20 @@ const PreviewPage = React.lazy(() => import('./pages/admin/PreviewPage'));
 const ContentPublisher = React.lazy(() => import('./pages/admin/ContentPublisher'));
 const AdminMessaging = React.lazy(() => import('./pages/admin/AdminMessaging'));
 const TurnitinReports = React.lazy(() => import('./pages/admin/TurnitinReports'));
-const EnterpriseDomainPage = React.lazy(() => import('./pages/domains/EnterpriseDomainPage'));
 
 // Route contract:
-// - '/' homepage stays in apps/web
-// - '/learning-hub' entry to the legacy content site (to be replaced).
-// - '/services/*' now served by Strapi via the web app; worker proxy retired.
+// - '/' homepage now uses new CMS-integrated HomepageNew
+// - '/learning-hub' entry to the legacy content site (to be replaced)
+// - '/services/*' served by Strapi via the web app
+// - '/articles/*' new article pages with CMS integration
+// - '/domains' hub listing all published domains
+// - '/domains/:slug' CMS-driven domain landing pages (Adult Nursing, AI, Crypto, etc.)
+// - '/domains/:slug/articles/:articleSlug' domain article
+// - '/domains/:slug/services/:serviceSlug' domain service
 
 const childRoutes: RouteObject[] = [
-  { index: true, element: <Homepage /> },
+  { index: true, element: <HomepageNew /> },
+  { path: 'legacy', element: <HomepageLegacy /> }, // Keep legacy homepage accessible
   { path: 'learning-hub', element: <LearningHub /> },
   { path: 'auth/admin-login', element: <AdminLogin /> },
   { path: 'sign-in', element: <Login /> },
@@ -67,11 +93,26 @@ const childRoutes: RouteObject[] = [
   { path: 'payment/gateway', element: <PaymentGateway /> },
   { path: 'check-turnitin', element: <TurnitinCheck /> },
   { path: 'turnitin/submit', element: <TurnitinSubmission /> },
-  { path: 'services', element: <ServicesHub /> }, // NEW: Services Hub (catalogue)
-  { path: 'services/:domain', element: <ServicesPage /> }, // Legacy support
-  { path: 'services/:domain/:slug', element: <ServicesPage /> }, // Legacy support
-  { path: 'd/:domain', element: <EnterpriseDomainPage /> }, // Domain detail page
-  { path: 'd/:domain/:slug', element: <ServicesPage /> }, // Article detail page
+  
+  // NEW: CMS-integrated content routes
+  { path: 'articles', element: <ArticlesPage /> },  // Article listing
+  { path: 'articles/:slug', element: <ArticlePage /> },  // Single article
+  { path: 'authors', element: <AuthorsPage /> },  // Authors listing
+  { path: 'authors/:slug', element: <AuthorPage /> },  // Single author profile
+  { path: 'services', element: <ServicesHub /> },  // Services Hub (domain directory + service CTAs)
+  { path: 'services/:domain', element: <ServicesPage /> },  // Domain services listing
+  { path: 'services/:domain/:slug', element: <ServicePageNew /> },  // Single service detail
+  
+  // Domain-based content routes (CMS-driven)
+  { path: 'domains', element: <DomainsHub /> },  // All domains hub page
+  { path: 'domains/:slug', element: <DomainPage /> },  // Domain landing page
+  { path: 'domains/:slug/articles/:articleSlug', element: <ArticlePage /> },  // Domain article
+  { path: 'domains/:slug/services/:serviceSlug', element: <ServicePageNew /> },  // Domain service
+  
+  // Legacy /d/* redirects → /domains/* for backward compatibility (SEO)
+  { path: 'd/:domain/*', element: <LegacyDomainRedirect /> },
+  { path: 'd/:domain', element: <LegacyDomainRedirect /> },
+  
   // Marketing & static routes
   { path: 'pricing', element: <Pricing /> },
   { path: 'about', element: <About /> },
@@ -80,6 +121,11 @@ const childRoutes: RouteObject[] = [
   { path: 'how-it-works', element: <HowItWorks /> },
   { path: 'support', element: <Support /> },
   { path: 'preview', element: <PreviewPage /> },
+  
+  // Documentation routes
+  { path: 'docs/x402', element: <X402DocsPage /> },
+  { path: 'api', element: <ApiDocsPage /> },
+  
   // Dashboard routes moved out of RootLayout to avoid duplicate site navbar in app shell
   { path: '*', element: <NotFound /> },
 ];
@@ -129,4 +175,3 @@ const routes: RouteObject[] = [
 ];
 
 export const router = createBrowserRouter(routes);
-

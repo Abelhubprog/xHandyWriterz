@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useUser, useAuth } from '@clerk/clerk-react';
 // database import disabled pending data layer unification
 // import database from '@/lib/d1Client';
@@ -28,6 +28,9 @@ import {
   Send,
   Clock4,
   Upload,
+  BookOpen,
+  Users,
+  Zap,
   X
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -905,6 +908,44 @@ const Dashboard = () => {
             <Settings className="h-5 w-5" />
             <span>Settings</span>
           </button>
+          
+          {/* Quick Resources Section */}
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
+              Quick Resources
+            </h3>
+            <div className="space-y-1">
+              <Link
+                to="/articles"
+                className="w-full flex items-center gap-2 p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm"
+              >
+                <BookOpen className="h-4 w-4" />
+                <span>Articles</span>
+              </Link>
+              <Link
+                to="/authors"
+                className="w-full flex items-center gap-2 p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm"
+              >
+                <Users className="h-4 w-4" />
+                <span>Authors</span>
+              </Link>
+              <Link
+                to="/docs/x402"
+                className="w-full flex items-center gap-2 p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm"
+              >
+                <Zap className="h-4 w-4" />
+                <span>x402 Protocol</span>
+              </Link>
+              <Link
+                to="/services"
+                className="w-full flex items-center gap-2 p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm"
+              >
+                <FileText className="h-4 w-4" />
+                <span>All Services</span>
+              </Link>
+            </div>
+          </div>
+          
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}

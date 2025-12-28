@@ -7,6 +7,7 @@ import { webhooksRouter } from './routes/webhooks.js';
 import { paymentsRouter } from './routes/payments.js';
 import { messagingRouter } from './routes/messaging.js';
 import { turnitinRouter } from './routes/turnitin.js';
+import { cmsRouter } from './routes/cms.js';
 import { errorHandler, notFoundHandler } from './middleware/error.js';
 import { requestLogger, rateLimiter } from './middleware/logger.js';
 
@@ -46,6 +47,7 @@ app.use('/health', healthRouter);
 app.use('/api/uploads', uploadRouter);
 app.use('/s3', uploadRouter);
 app.use('/api', uploadCompatRouter);
+app.use('/api/cms', cmsRouter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/messaging', messagingRouter);
 app.use('/api/turnitin', turnitinRouter);
@@ -64,6 +66,7 @@ app.get('/', (_req, res) => {
     endpoints: {
       health: '/health',
       uploads: '/api/uploads/*',
+      cms: '/api/cms/*',
       payments: '/api/payments/*',
       messaging: '/api/messaging/*',
       webhooks: '/api/webhooks/*',
@@ -86,6 +89,7 @@ app.listen(PORT, () => {
   console.log(`\n📍 Endpoints:`);
   console.log(`   GET  /health           - Health check`);
   console.log(`   POST /api/uploads/*    - File upload presigning`);
+  console.log(`   POST /api/cms/*        - Admin CMS proxy`);
   console.log(`   POST /api/payments/*   - Payment processing`);
   console.log(`   POST /api/messaging/*  - Mattermost auth`);
   console.log(`   POST /api/webhooks/*   - Webhook handlers`);

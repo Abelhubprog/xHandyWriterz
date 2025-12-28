@@ -20,6 +20,7 @@ import { HelmetProvider } from 'react-helmet-async';
 // Removed SupabaseProvider - using Cloudflare instead
 import { ThemeProvider } from './theme/ThemeContext';
 import Web3Provider from './providers/Web3Provider';
+import { CMSProvider } from './hooks';
 import { logEnvironmentStatus } from './utils/checkEnv';
 import { initSentry } from './lib/sentry';
 import './index.css';
@@ -68,12 +69,14 @@ try {
             routerReplace={(to) => router.navigate(to, { replace: true })}
           >
             <QueryClientProvider client={queryClient}>
-              <Toaster />
-              <ErrorBoundary>
-                <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-200 bg-slate-950">Loadingâ€¦</div>}>
-                  <RouterProvider router={router} />
-                </Suspense>
-              </ErrorBoundary>
+              <CMSProvider>
+                <Toaster />
+                <ErrorBoundary>
+                  <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-200 bg-slate-950">Loading…</div>}>
+                    <RouterProvider router={router} />
+                  </Suspense>
+                </ErrorBoundary>
+              </CMSProvider>
             </QueryClientProvider>
           </ClerkProvider>
         </ThemeProvider>

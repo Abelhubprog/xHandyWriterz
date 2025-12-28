@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Shield, CheckCircle, Lock } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { DOMAIN_TAGS } from '@/config/taxonomy';
 import HandyWriterzLogo from '@/components/HandyWriterzLogo';
+import { fetchFooterDomains } from '@/lib/cms';
 
 // Helper function to scroll to top of page
 const scrollToTop = () => {
@@ -12,7 +14,8 @@ const scrollToTop = () => {
 const Footer: React.FC = () => {
   const quickLinks = [
     { label: 'Check Turnitin', path: '/check-turnitin' },
-    { label: 'Services', path: '/services' },
+    { label: 'Domains', path: '/domains' },
+    { label: 'Articles', path: '/articles' },
     { label: 'Payment', path: '/payment' },
   ];
 
@@ -23,16 +26,38 @@ const Footer: React.FC = () => {
     { label: '24/7 Support', path: '/support' },
   ];
 
+  const developerLinks = [
+    { label: 'API Documentation', path: '/api' },
+    { label: 'x402 Protocol', path: '/docs/x402' },
+    { label: 'Our Authors', path: '/authors' },
+  ];
+
   const companyLinks = [
     { label: 'About Us', path: '/about' },
     { label: 'Terms of Service', path: '/terms' },
     { label: 'Privacy Policy', path: '/privacy' },
   ];
 
-  const serviceLinks = DOMAIN_TAGS.map((domain) => ({
-    label: domain.label,
-    path: `/d/${domain.slug}`,
-  }));
+  // Fetch domains marked for footer display
+  const { data: footerDomainsData } = useQuery({
+    queryKey: ['footer-domains'],
+    queryFn: fetchFooterDomains,
+    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
+  });
+
+  const serviceLinks = useMemo(() => {
+    if (footerDomainsData && footerDomainsData.length > 0) {
+      return footerDomainsData.map((domain) => ({
+        label: domain.name,
+        path: `/domains/${domain.slug}`,
+      }));
+    }
+    // Fallback to static taxonomy if no domains from CMS
+    return DOMAIN_TAGS.map((domain) => ({
+      label: domain.label,
+      path: `/domains/${domain.slug}`,
+    }));
+  }, [footerDomainsData]);
 
   const currentYear = new Date().getFullYear();
 
@@ -102,9 +127,9 @@ const Footer: React.FC = () => {
 
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          {/* Services Column - Spans 2 columns on larger screens */}
+          {/* Domains Column - Spans 2 columns on larger screens */}
           <div className="lg:col-span-2">
-            <h3 className="text-lg font-semibold mb-6 text-primary-light">Our Services</h3>
+            <h3 className="text-lg font-semibold mb-6 text-primary-light">Domains</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {serviceLinks.map(link => (
                 <Link
@@ -120,11 +145,11 @@ const Footer: React.FC = () => {
               ))}
               <div className="sm:col-span-2 mt-4">
                 <Link
-                  to="/services"
+                  to="/domains"
                   onClick={scrollToTop}
                   className="inline-flex items-center text-primary-light hover:text-white transition-colors text-sm font-medium group"
                 >
-                  <span>View All Services</span>
+                  <span>View All Domains</span>
                   <svg
                     className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-200"
                     fill="none"
@@ -177,6 +202,24 @@ const Footer: React.FC = () => {
               <h3 className="text-lg font-semibold mb-6 text-primary-light">Support</h3>
               <ul className="space-y-4">
                 {supportLinks.map(link => (
+                  <li key={link.path}>
+                    <Link
+                      to={link.path}
+                      onClick={scrollToTop}
+                      className="text-gray-400 hover:text-white transition-colors text-sm flex items-center group"
+                    >
+                      <span className="group-hover:translate-x-1 transition-transform duration-200">
+                        {link.label}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-6 text-primary-light">Developers</h3>
+              <ul className="space-y-4">
+                {developerLinks.map(link => (
                   <li key={link.path}>
                     <Link
                       to={link.path}
@@ -249,6 +292,4 @@ const Footer: React.FC = () => {
 };
 
 export default Footer;
-
-
 

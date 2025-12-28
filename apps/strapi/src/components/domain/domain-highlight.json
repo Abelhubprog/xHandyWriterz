@@ -2,20 +2,31 @@
   "collectionName": "components_domain_highlights",
   "info": {
     "displayName": "Domain Highlight",
-    "icon": "star"
+    "icon": "star",
+    "description": "Key stats and metrics for domain pages"
   },
   "attributes": {
     "label": {
-      "type": "string"
+      "type": "string",
+      "required": true,
+      "description": "Stat label (e.g., 'Expert Writers')"
     },
     "value": {
-      "type": "string"
+      "type": "string",
+      "required": true,
+      "description": "Stat value (e.g., '500+')"
     },
     "description": {
-      "type": "text"
+      "type": "text",
+      "description": "Optional description text"
     },
     "iconKey": {
-      "type": "string"
+      "type": "string",
+      "description": "Lucide icon key (e.g., 'Users', 'Star', 'Clock')"
+    },
+    "color": {
+      "type": "string",
+      "description": "Icon/accent color (tailwind class or hex)"
     }
   }
 }

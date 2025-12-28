@@ -1,20 +1,42 @@
 import { GraphQLClient } from 'graphql-request';
+import { resolveApiUrl } from '@/lib/api-base';
 import type { Article, Service, ContentBlock } from '@/types/publishing';
 
 class CMSClient {
-  private client: GraphQLClient;
-  private baseUrl: string;
+  private publicClient: GraphQLClient;
+  private adminClient: GraphQLClient;
+  private publicUrl: string;
+  private adminUrl: string;
   private token: string | null;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_CMS_URL || 'http://localhost:1337';
+    this.publicUrl = import.meta.env.VITE_CMS_URL || 'http://localhost:1337';
+    this.adminUrl = resolveApiUrl('/api/cms');
     this.token = import.meta.env.VITE_CMS_TOKEN || null;
 
-    this.client = new GraphQLClient(`${this.baseUrl}/graphql`, {
-      headers: this.token ? {
-        Authorization: `Bearer ${this.token}`,
-      } : {},
-    });
+    this.publicClient = new GraphQLClient(`${this.publicUrl}/graphql`);
+    this.adminClient = new GraphQLClient(`${this.adminUrl}/graphql`);
+  }
+
+  private getAdminHeaders(authToken?: string) {
+    const token = authToken || this.token;
+    if (!token) {
+      throw new Error('Missing admin auth token');
+    }
+    return {
+      Authorization: `Bearer ${token}`,
+    };
+  }
+
+  private async request<T>(
+    query: string,
+    variables?: Record<string, any>,
+    authToken?: string,
+    requireAdmin = false
+  ): Promise<T> {
+    const client = authToken ? this.adminClient : this.publicClient;
+    const headers = requireAdmin ? this.getAdminHeaders(authToken) : undefined;
+    return client.request<T>(query, variables, headers);
   }
 
   // Articles
@@ -24,7 +46,7 @@ class CMSClient {
     limit?: number;
     offset?: number;
     search?: string;
-  }) {
+  }, authToken?: string) {
     const query = `
       query GetArticles(
         $filters: ArticleFiltersInput
@@ -95,7 +117,7 @@ class CMSClient {
       }
     `;
 
-    return this.client.request(query, {
+    return this.request(query, {
       filters: {
         ...(filters?.domain && { domain: { eq: filters.domain } }),
         ...(filters?.status && { status: { eq: filters.status } }),
@@ -113,10 +135,10 @@ class CMSClient {
         start: filters?.offset || 0,
       },
       sort: ['publishedAt:desc', 'createdAt:desc']
-    });
+    }, authToken, Boolean(authToken));
   }
 
-  async getArticle(slugOrId: string) {
+  async getArticle(slugOrId: string, authToken?: string) {
     const query = `
       query GetArticle($slug: String, $id: ID) {
         articles(
@@ -178,15 +200,15 @@ class CMSClient {
       }
     `;
 
-    const result = await this.client.request(query, {
+    const result = await this.request<any>(query, {
       slug: slugOrId,
       id: !isNaN(Number(slugOrId)) ? slugOrId : null,
-    });
+    }, authToken, Boolean(authToken));
 
     return (result as any).articles?.data?.[0] || null;
   }
 
-  async createArticle(article: Partial<Article>) {
+  async createArticle(article: Partial<Article>, authToken?: string) {
     const mutation = `
       mutation CreateArticle($data: ArticleInput!) {
         createArticle(data: $data) {
@@ -203,7 +225,7 @@ class CMSClient {
       }
     `;
 
-    return this.client.request(mutation, {
+    return this.request(mutation, {
       data: {
         title: article.title,
         slug: article.slug,
@@ -216,10 +238,10 @@ class CMSClient {
         seo: article.seo,
         publishAt: article.scheduledAt,
       }
-    });
+    }, authToken, true);
   }
 
-  async updateArticle(id: string, updates: Partial<Article>) {
+  async updateArticle(id: string, updates: Partial<Article>, authToken?: string) {
     const mutation = `
       mutation UpdateArticle($id: ID!, $data: ArticleInput!) {
         updateArticle(id: $id, data: $data) {
@@ -236,7 +258,7 @@ class CMSClient {
       }
     `;
 
-    return this.client.request(mutation, {
+    return this.request(mutation, {
       id,
       data: {
         ...(updates.title && { title: updates.title }),
@@ -250,17 +272,17 @@ class CMSClient {
         ...(updates.seo && { seo: updates.seo }),
         ...(updates.scheduledAt && { publishAt: updates.scheduledAt }),
       }
-    });
+    }, authToken, true);
   }
 
-  async publishArticle(id: string, publishAt?: string) {
+  async publishArticle(id: string, publishAt?: string, authToken?: string) {
     return this.updateArticle(id, {
       status: 'published',
       publishedAt: publishAt || new Date().toISOString(),
-    });
+    }, authToken);
   }
 
-  async deleteArticle(id: string) {
+  async deleteArticle(id: string, authToken?: string) {
     const mutation = `
       mutation DeleteArticle($id: ID!) {
         deleteArticle(id: $id) {
@@ -271,11 +293,11 @@ class CMSClient {
       }
     `;
 
-    return this.client.request(mutation, { id });
+    return this.request(mutation, { id }, authToken, true);
   }
 
   // Services
-  async getServices(domain?: string) {
+  async getServices(domain?: string, authToken?: string) {
     const query = `
       query GetServices($filters: ServiceFiltersInput) {
         services(
@@ -318,12 +340,12 @@ class CMSClient {
       }
     `;
 
-    return this.client.request(query, {
+    return this.request(query, {
       filters: domain ? { domain: { eq: domain } } : undefined,
-    });
+    }, authToken, Boolean(authToken));
   }
 
-  async getService(slugOrId: string) {
+  async getService(slugOrId: string, authToken?: string) {
     const query = `
       query GetService($slug: String, $id: ID) {
         services(
@@ -371,10 +393,10 @@ class CMSClient {
       }
     `;
 
-    const result = await this.client.request(query, {
+    const result = await this.request<any>(query, {
       slug: slugOrId,
       id: !isNaN(Number(slugOrId)) ? slugOrId : null,
-    });
+    }, authToken, Boolean(authToken));
 
     return (result as any).services?.data?.[0] || null;
   }
@@ -384,7 +406,7 @@ class CMSClient {
     alt?: string;
     caption?: string;
     folder?: string;
-  }) {
+  }, authToken?: string) {
     const formData = new FormData();
     formData.append('files', file);
 
@@ -396,11 +418,17 @@ class CMSClient {
       }));
     }
 
-    const response = await fetch(`${this.baseUrl}/api/upload`, {
+    const token = authToken || this.token;
+    if (!token) {
+      throw new Error('Missing admin auth token');
+    }
+
+    const uploadUrl = authToken ? resolveApiUrl('/api/cms/upload') : `${this.publicUrl}/api/upload`;
+    const response = await fetch(uploadUrl, {
       method: 'POST',
-      headers: this.token ? {
-        Authorization: `Bearer ${this.token}`,
-      } : {},
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       body: formData,
     });
 
@@ -414,7 +442,7 @@ class CMSClient {
   // Analytics & Engagement
   async incrementViewCount(articleId: string) {
     // Implement view tracking
-    return this.client.request(`
+    return this.request(`
       mutation IncrementView($id: ID!) {
         updateArticle(id: $id, data: { viewCount: increment }) {
           data {
@@ -430,7 +458,7 @@ class CMSClient {
   async toggleLike(articleId: string, userId: string) {
     // Implementation would depend on your like tracking strategy
     // This is a simplified version
-    return this.client.request(`
+    return this.request(`
       mutation ToggleLike($articleId: ID!, $userId: String!) {
         # Custom resolver for like toggling
       }
@@ -442,19 +470,24 @@ class CMSClient {
 export const cmsClient = new CMSClient();
 
 // Convenience functions
-export const fetchArticles = (filters?: Parameters<CMSClient['getArticles']>[0]) =>
-  cmsClient.getArticles(filters);
+export const fetchArticles = (
+  filters?: Parameters<CMSClient['getArticles']>[0],
+  authToken?: string
+) => cmsClient.getArticles(filters, authToken);
 
 export const fetchArticle = (slugOrId: string) =>
   cmsClient.getArticle(slugOrId);
 
-export const fetchServices = (domain?: string) =>
-  cmsClient.getServices(domain);
+export const fetchServices = (domain?: string, authToken?: string) =>
+  cmsClient.getServices(domain, authToken);
 
 export const fetchService = (slugOrId: string) =>
   cmsClient.getService(slugOrId);
 
-export const uploadMedia = (file: File, metadata?: Parameters<CMSClient['uploadMedia']>[1]) =>
-  cmsClient.uploadMedia(file, metadata);
+export const uploadMedia = (
+  file: File,
+  metadata?: Parameters<CMSClient['uploadMedia']>[1],
+  authToken?: string
+) => cmsClient.uploadMedia(file, metadata, authToken);
 
 export default cmsClient;

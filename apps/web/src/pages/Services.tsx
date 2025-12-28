@@ -84,7 +84,7 @@ const serviceCategories = DOMAIN_TAGS.map((domain) => {
   return {
     icon: presentation.icon,
     title: presentation.title,
-    path: `/d/${domain.slug}`,
+    path: `/domains/${domain.slug}`,
     description: presentation.description,
   };
 });

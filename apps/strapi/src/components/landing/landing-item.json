@@ -5,6 +5,9 @@
     "icon": "grid"
   },
   "attributes": {
+    "eyebrow": {
+      "type": "string"
+    },
     "title": {
       "type": "string"
     },
@@ -14,7 +17,35 @@
     "description": {
       "type": "text"
     },
+    "metricValue": {
+      "type": "string"
+    },
+    "metricLabel": {
+      "type": "string"
+    },
     "iconKey": {
+      "type": "string"
+    },
+    "media": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "quote": {
+      "type": "text"
+    },
+    "authorName": {
+      "type": "string"
+    },
+    "authorRole": {
+      "type": "string"
+    },
+    "rating": {
+      "type": "integer"
+    },
+    "tag": {
       "type": "string"
     },
     "linkLabel": {
