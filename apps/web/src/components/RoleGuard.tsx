@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '@/providers/AuthProvider';
+import { useUser } from '@clerk/clerk-react';
 import { Navigate } from 'react-router-dom';
 
 interface RoleGuardProps {
@@ -8,10 +8,12 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ children, requiredRole }: RoleGuardProps) {
-  const { user } = useAuth();
+  const { user, isLoaded } = useUser();
 
-  // Assuming Clerk user has a 'role' claim or metadata
-  const userRole = user?.publicMetadata?.role || 'user';
+  if (!isLoaded) return null;
+
+  // Get role from Clerk user's public metadata
+  const userRole = (user?.publicMetadata?.role as string) || 'user';
 
   if (userRole !== requiredRole) {
     // Redirect to unauthorized page or home

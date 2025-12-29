@@ -1,11 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import { healthRouter } from './routes/health.js';
-import { uploadsRouter as uploadRouter } from './routes/uploads.js';
+import { uploadRouter, uploadCompatRouter } from './routes/uploads.js';
 import { sitemapRouter } from './routes/sitemap.js';
 import { webhooksRouter } from './routes/webhooks.js';
 import { paymentsRouter } from './routes/payments.js';
 import { messagingRouter } from './routes/messaging.js';
+import { turnitinRouter } from './routes/turnitin.js';
+import { cmsRouter } from './routes/cms.js';
+import { ordersRouter } from './routes/orders.js';
 import { errorHandler, notFoundHandler } from './middleware/error.js';
 import { requestLogger, rateLimiter } from './middleware/logger.js';
 const app = express();
@@ -33,12 +36,18 @@ app.use(requestLogger);
 app.use('/api/uploads', rateLimiter);
 app.use('/api/payments', rateLimiter);
 app.use('/api/messaging', rateLimiter);
+app.use('/api/orders', rateLimiter);
 // Routes - API
 app.use('/health', healthRouter);
 app.use('/api/uploads', uploadRouter);
+app.use('/s3', uploadRouter);
+app.use('/api', uploadCompatRouter);
+app.use('/api/cms', cmsRouter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/messaging', messagingRouter);
+app.use('/api/turnitin', turnitinRouter);
 app.use('/api/webhooks', webhooksRouter);
+app.use('/api/orders', ordersRouter);
 // Routes - SEO (handles /sitemap.xml and /robots.txt)
 app.use('/', sitemapRouter);
 // Root endpoint
@@ -51,8 +60,10 @@ app.get('/', (_req, res) => {
         endpoints: {
             health: '/health',
             uploads: '/api/uploads/*',
+            cms: '/api/cms/*',
             payments: '/api/payments/*',
             messaging: '/api/messaging/*',
+            orders: '/api/orders/*',
             webhooks: '/api/webhooks/*',
             sitemap: '/sitemap.xml',
             robots: '/robots.txt',
@@ -70,6 +81,7 @@ app.listen(PORT, () => {
     console.log(`\n📍 Endpoints:`);
     console.log(`   GET  /health           - Health check`);
     console.log(`   POST /api/uploads/*    - File upload presigning`);
+    console.log(`   POST /api/cms/*        - Admin CMS proxy`);
     console.log(`   POST /api/payments/*   - Payment processing`);
     console.log(`   POST /api/messaging/*  - Mattermost auth`);
     console.log(`   POST /api/webhooks/*   - Webhook handlers`);

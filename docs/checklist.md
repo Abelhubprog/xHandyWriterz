@@ -370,7 +370,7 @@
 - **Description:** Render hero with dynamic CTA based on auth state; smooth scroll to services.
 - **Status:** ✅ fully implemented
 - **Evidence:** `[FRONTEND-01][FRONTEND-02][FRONTEND-62]`
-- **Dependencies:** `Homepage.tsx`.
+- **Dependencies:** `HomepageNew.tsx`.
 - **Outstanding Work:** Hook hero list to Strapi (see F-055).
 
 ### Feature F-050: Homepage feature list animations
@@ -405,14 +405,14 @@
 - **Description:** Render service cards using `fetchServicesList` with skeleton states.
 - **Status:** ✅ fully implemented
 - **Evidence:** `[PUBLISH-03][PUBLISH-10][FRONTEND-63]`
-- **Dependencies:** `ServicesPage.tsx`.
+- **Dependencies:** `ServicesHub.tsx`.
 - **Outstanding Work:** Expand filtering UI.
 
 ### Feature F-055: Services domain view
 - **Description:** Filter services by domain parameter, show metadata.
 - **Status:** ✅ fully implemented
 - **Evidence:** `[PUBLISH-15][FRONTEND-63][FRONTEND-67]`
-- **Dependencies:** `ServicesPage` domain logic.
+- **Dependencies:** `DomainPage.tsx` and `ServicesHub.tsx`.
 - **Outstanding Work:** Replace static homepage service list with domain data.
 
 ### Feature F-056: Service detail attachments

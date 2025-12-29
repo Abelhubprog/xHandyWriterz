@@ -4,20 +4,8 @@
     "noEmit": true
   },
   "include": [
-    // Minimal app surface for initial green build
-    "src/main.tsx",
-    "src/router.tsx",
-    "src/polyfills.ts",
-    "src/env.d.ts",
-    "src/providers/ClerkProvider.tsx",
-    "src/providers/Web3Provider.tsx",
-    "src/theme/ThemeContext.tsx",
-    "src/components/common/ErrorBoundary.tsx",
-      "src/types/**/*.d.ts",
-    "src/pages/Homepage.tsx",
-    "src/pages/learning-hub.tsx",
-    "src/pages/not-found.tsx",
-    // Config files
+    "src/**/*.ts",
+    "src/**/*.tsx",
     "vite.config.ts",
     "postcss.config.cjs",
     "tailwind.config.cjs"
@@ -27,35 +15,23 @@
     "dist",
     "build",
     "archive/**",
+    // Legacy/deprecated folders that no longer exist or are not used
     "src/api/**",
-    // Exclude domain pages and heavy legacy dashboards for initial green build
-    "src/pages/auth/**",
-    "src/pages/dashboard/**",
-    "src/pages/deepresearch/**",
-    "src/pages/domains/**",
+    "src/routes/**",
     "src/pages/posts/**",
     "src/pages/profile/**",
     "src/pages/support/**",
     "src/pages/tools/**",
-    "src/routes/**",
+    "src/pages/deepresearch/**",
     "src/components/Comments/**",
-    "src/components/CommentSection.tsx",
     "src/components/Editor/**",
     "src/components/Documents/**",
     "src/components/contents/**",
-    "src/components/Dashboard/**",
-    // Legacy/Next.js or mixed-UI components to exclude during migration
-    "src/components/layouts/Breadcrumbs.tsx",
-    "src/components/layouts/Header.tsx",
     "src/components/navigation/**",
-    "src/components/Navbar.tsx",
-    "src/components/MDXRenderer.tsx",
-    "src/components/Messages/**",
-    "src/components/Payments/**",
     "src/components/transitions/**",
-    "src/components/interactions/Comments.tsx",
-    "src/components/common/Button.tsx",
-    "src/components/common/Loader.tsx",
-    "src/components/common/PageHeader.tsx"
+    "src/components/interactions/**",
+    // Files with known issues being addressed
+    "src/components/layouts/Breadcrumbs.tsx",
+    "src/components/layouts/Header.tsx"
   ]
 }

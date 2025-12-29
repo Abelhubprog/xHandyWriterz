@@ -1,6 +1,8 @@
 ﻿import { env } from '@/env';
 import type {
   ArticleSummary,
+  DomainFaq,
+  DomainFeature,
   DomainHighlight,
   DomainListItem,
   DomainPage,
@@ -25,6 +27,17 @@ function buildParams(base: FetchParams): string {
     params.append(key, String(value));
   });
   return params.toString();
+}
+
+function applyDomainFilter(params: FetchParams, domain?: string | string[] | null) {
+  if (!domain) return;
+  if (Array.isArray(domain)) {
+    domain.filter(Boolean).forEach((value, index) => {
+      params[`filters[domain][$in][${index}]`] = value;
+    });
+    return;
+  }
+  params['filters[domain][$eq]'] = domain;
 }
 
 async function request<T>(path: string, params: FetchParams = {}, init: RequestInit = {}): Promise<T | null> {
@@ -397,7 +410,7 @@ function mapTestimonialEntry(entry: any): TestimonialEntry | null {
 }
 
 export async function fetchServicesList(options: {
-  domain?: string | null;
+  domain?: string | string[] | null;
   type?: string | null;
   page?: number;
   pageSize?: number;
@@ -422,9 +435,7 @@ export async function fetchServicesList(options: {
     populate: 'heroImage,seo',
   };
 
-  if (domain) {
-    filters['filters[domain][$eq]'] = domain;
-  }
+  applyDomainFilter(filters, domain);
   if (type) {
     filters['filters[typeTags][$contains]'] = type;
   }
@@ -631,15 +642,16 @@ export async function fetchArticlesBySlugs(
 }
 
 export async function fetchArticlesList(
-  options: { limit?: number; includeDraft?: boolean } = {},
+  options: { limit?: number; includeDraft?: boolean; domain?: string | string[] | null } = {},
 ): Promise<ArticleSummary[]> {
-  const { limit = 6, includeDraft = false } = options;
+  const { limit = 6, includeDraft = false, domain = null } = options;
   const params: FetchParams = {
     'pagination[pageSize]': limit,
     'sort[0]': 'publishedAt:desc',
     populate: 'images,heroImage,author,categories',
     publicationState: includeDraft ? 'preview' : 'live',
   };
+  applyDomainFilter(params, domain);
 
   const data = await request<any>('/api/articles', params);
   if (!data) return [];
@@ -650,7 +662,7 @@ export async function fetchArticlesList(
 }
 
 export async function fetchTestimonialsList(options: {
-  domain?: string | null;
+  domain?: string | string[] | null;
   limit?: number;
   includeDraft?: boolean;
 } = {}): Promise<TestimonialEntry[]> {
@@ -662,9 +674,7 @@ export async function fetchTestimonialsList(options: {
     populate: 'authorAvatar',
   };
 
-  if (domain) {
-    params['filters[domain][$eq]'] = domain;
-  }
+  applyDomainFilter(params, domain);
 
   const data = await request<any>('/api/testimonials', params);
   if (!data) return [];
@@ -678,4 +688,103 @@ function estimateReadingTime(content: string): number {
   const words = content.split(/\s+/).filter(Boolean).length;
   if (!words) return 0;
   return Math.max(1, Math.round(words / 200));
+}
+
+// ============================================================================
+// CMS Client & Admin Functions
+// ============================================================================
+
+/**
+ * CMS Client for direct API access (admin use)
+ */
+export const cmsClient = {
+  async get<T>(path: string, params: FetchParams = {}): Promise<T | null> {
+    return request<T>(path, params);
+  },
+
+  async post<T>(path: string, data: unknown): Promise<T | null> {
+    return request<T>(path, {}, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data }),
+    });
+  },
+
+  async put<T>(path: string, data: unknown): Promise<T | null> {
+    return request<T>(path, {}, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data }),
+    });
+  },
+
+  async delete(path: string): Promise<boolean> {
+    const result = await request(path, {}, { method: 'DELETE' });
+    return result !== null;
+  },
+};
+
+/**
+ * Upload media to CMS
+ */
+export async function uploadMedia(file: File, refId?: string, ref?: string, field?: string): Promise<{ id: number; url: string } | null> {
+  const formData = new FormData();
+  formData.append('files', file);
+  
+  if (refId) formData.append('refId', refId);
+  if (ref) formData.append('ref', ref);
+  if (field) formData.append('field', field);
+
+  const url = new URL('/api/upload', CMS_URL);
+  const headers = new Headers();
+  if (CMS_TOKEN) {
+    headers.set('Authorization', `Bearer ${CMS_TOKEN}`);
+  }
+
+  try {
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      console.error('[cms] upload failed', response.status);
+      return null;
+    }
+
+    const result = await response.json();
+    const uploaded = Array.isArray(result) ? result[0] : result;
+    
+    return {
+      id: uploaded.id,
+      url: resolveMediaUrl(uploaded.url) || uploaded.url,
+    };
+  } catch (error) {
+    console.error('[cms] upload error', error);
+    return null;
+  }
+}
+
+/**
+ * Fetch articles (alias for fetchArticlesList for admin)
+ */
+export async function fetchArticles(options: {
+  domain?: string | string[] | null;
+  limit?: number;
+  start?: number;
+  sort?: string;
+} = {}): Promise<ArticleSummary[]> {
+  return fetchArticlesList(options);
+}
+
+/**
+ * Fetch services (alias for fetchServicesList for admin)
+ */
+export async function fetchServices(options: {
+  domain?: string | string[] | null;
+  limit?: number;
+  start?: number;
+} = {}): Promise<ServiceListItem[]> {
+  return fetchServicesList(options);
 }

@@ -1,14 +1,22 @@
 import { cn } from '@/lib/utils';
+import { forwardRef, ElementType, ComponentPropsWithoutRef } from 'react';
 
-interface BoxProps extends React.HTMLAttributes<HTMLDivElement> {
-  as?: keyof JSX.IntrinsicElements;
-}
+type BoxProps<T extends ElementType = 'div'> = {
+  as?: T;
+  className?: string;
+} & Omit<ComponentPropsWithoutRef<T>, 'as' | 'className'>;
 
-export function Box({ as: Component = 'div', className, ...props }: BoxProps) {
-  return (
-    <Component 
-      className={cn('', className)}
-      {...props}
-    />
-  );
-}
+export const Box = forwardRef<HTMLDivElement, BoxProps>(
+  ({ as, className, ...props }, ref) => {
+    const Component = as || 'div';
+    return (
+      <Component
+        ref={ref}
+        className={cn('', className)}
+        {...(props as any)}
+      />
+    );
+  }
+);
+
+Box.displayName = 'Box';

@@ -2,7 +2,6 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser, useAuth } from '@clerk/clerk-react';
 // database import disabled pending data layer unification
-// import database from '@/lib/d1Client';
 import {
   Phone,
   MessageSquare,
@@ -65,7 +64,7 @@ const Dashboard = () => {
   const { user } = useUser();
   const { isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = (user?.publicMetadata as any)?.role === 'admin';
   const [activeTab, setActiveTab] = useState('orders');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -129,29 +128,6 @@ const Dashboard = () => {
     { id: 'turnitin', title: 'Turnitin Check', icon: 'ðŸ”', desc: 'Plagiarism detection & originality report' }
   ];
 
-  const mockOrders = [
-    {
-      id: '1',
-      title: 'Adult Health Essay',
-      status: 'in-progress',
-      dueDate: '2024-03-15',
-      wordCount: 2750,
-      price: 150.00,
-      service: 'essays',
-      area: 'adult'
-    },
-    {
-      id: '2',
-      title: 'Mental Health Dissertation',
-      status: 'completed',
-      dueDate: '2024-02-28',
-      wordCount: 12000,
-      price: 785.45,
-      service: 'dissertation',
-      area: 'mental'
-    }
-  ];
-
   const calculatePrice = (words: number, service: string, level: string, date: string) => {
     if (words < 100 || words > 100000) {
       return null;
@@ -178,17 +154,6 @@ const Dashboard = () => {
       }
     }
   }, [isLoaded, isSignedIn, user, navigate]);
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) return;
-      // Simple heuristic: admin email domain
-      const adminEmail = (user?.primaryEmailAddress?.emailAddress || '').toLowerCase();
-      setIsAdmin(!!adminEmail && adminEmail.endsWith('@handywriterz.com'));
-    };
-
-    checkAdminStatus();
-  }, [user]);
 
   useEffect(() => {
     if (wordCount && studyLevel && dueDate && selectedService) {
@@ -765,7 +730,7 @@ const Dashboard = () => {
 
     if (activeTab === 'messages') {
       fetchMessages();
-      // TODO: Add Cloudflare Worker WebSocket/SSE for real-time updates
+      // TODO: Add WebSocket/SSE for real-time message updates via Railway API
     }
   }, [user, activeTab]);
 

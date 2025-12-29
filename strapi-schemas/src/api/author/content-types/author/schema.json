@@ -5,25 +5,31 @@
     "singularName": "author",
     "pluralName": "authors",
     "displayName": "Author",
-    "description": "Content creators and writers"
+    "description": "Content authors and expert contributors"
   },
   "options": {
-    "draftAndPublish": false
+    "draftAndPublish": true
   },
   "pluginOptions": {},
   "attributes": {
-    "displayName": {
+    "name": {
       "type": "string",
-      "required": true,
-      "maxLength": 100
+      "required": true
     },
     "slug": {
       "type": "uid",
-      "targetField": "displayName",
+      "targetField": "name",
       "required": true
+    },
+    "email": {
+      "type": "email"
     },
     "bio": {
       "type": "text"
+    },
+    "shortBio": {
+      "type": "string",
+      "maxLength": 200
     },
     "avatar": {
       "type": "media",
@@ -31,14 +37,48 @@
       "required": false,
       "allowedTypes": ["images"]
     },
-    "socials": {
+    "role": {
+      "type": "string",
+      "default": "Author"
+    },
+    "credentials": {
+      "type": "text"
+    },
+    "expertise": {
       "type": "json"
+    },
+    "socialLinks": {
+      "type": "json",
+      "default": {}
+    },
+    "website": {
+      "type": "string"
+    },
+    "twitter": {
+      "type": "string"
+    },
+    "linkedin": {
+      "type": "string"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
     },
     "articles": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::article.article",
       "mappedBy": "author"
+    },
+    "services": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::service.service",
+      "mappedBy": "authorProfile"
     }
   }
 }

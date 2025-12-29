@@ -1,0 +1,42 @@
+{
+  "collectionName": "components_domain_features",
+  "info": {
+    "displayName": "Domain Feature",
+    "icon": "puzzle",
+    "description": "Feature cards for domain pages"
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "description": "Feature title"
+    },
+    "description": {
+      "type": "text",
+      "required": true,
+      "description": "Feature description"
+    },
+    "iconKey": {
+      "type": "string",
+      "description": "Lucide icon key"
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"],
+      "description": "Optional feature image"
+    },
+    "linkUrl": {
+      "type": "string",
+      "description": "Optional link URL"
+    },
+    "linkLabel": {
+      "type": "string",
+      "description": "Optional link text"
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

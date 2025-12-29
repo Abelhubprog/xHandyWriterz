@@ -8,8 +8,22 @@
 - [x] Add `adult-nursing` alias mappings in `apps/web/src/components/landing/ServiceCard.tsx`.
 - [x] Route service cards through `/domains/:domain/services/:slug` for domain-first navigation.
 - [x] Add `adult-nursing` fallback support in `apps/web/src/pages/services/ServicesHub.tsx`.
-- [x] Add `adult-nursing` metadata in `apps/web/src/pages/services/ServicesPage.tsx`.
+- [x] Add `adult-nursing` metadata in `apps/web/src/pages/services/ServicesHub.tsx`.
 - [x] Rebuild `/services` to list CMS domains with service CTA buttons (no placeholder content).
+- [x] Support `/domains/:domain/services/:slug` and `/domains/:domain/articles/:slug` links in `CmsSectionRenderer`.
+- [x] Add domain fallback fetch in `DomainPage` when featured services/articles are missing.
+- [x] Remove legacy pages (`Homepage.tsx`, `Services.tsx`, `LearningHub*`) and redirect `/services/:domain/*` to `/domains/:domain/*`.
+- [x] Populate article domain filters from Strapi domains instead of static taxonomy.
+- [x] Render homepage sections from Strapi `landing-section` entries with CMS-driven fallback content.
+- [x] Add `adult-nursing` to Strapi domain enums and taxonomy fallbacks for services/articles/categories/testimonials.
+- [x] Redesign `ServicePage`, `ArticlePage`, `ArticlesPage`, `AuthorsPage`, and `AuthorPage` to CMS-first editorial layouts with conditional sections (no placeholders).
+
+## Active Fixes (Platform Hardening)
+- [x] Use Clerk `publicMetadata.role` for admin gating in `Dashboard.tsx`.
+- [x] Add `enterprise` + `general` domain entries to taxonomy fallbacks.
+- [x] Support legacy `adult-health` content on canonical `adult-nursing` pages.
+- [x] Centralize domain alias normalization for routing and CMS filters.
+- [x] Remove mock order payloads from dashboard UI.
 
 ## Phase 1: Strapi Content Models ✓ COMPLETE
 
@@ -69,24 +83,26 @@
 - [x] CTA sections
 
 ### Article Page ✓
-- [x] Create `ArticlePage.tsx` (~550 lines)
+- [x] CMS-first hero with domain/category + x402 indicator
 - [x] Table of contents with scroll tracking
 - [x] Social share buttons (Twitter, Facebook, LinkedIn, Copy)
-- [x] Author card with bio and social links
-- [x] Related articles grid
-- [x] x402 AI-Ready badge with price
+- [x] Author bio panel and related articles grid
 - [x] SEO meta tags via Helmet
 - [x] View count increment on load
 
+### Articles Index ✓
+- [x] Editorial hero with search + domain/category filters
+- [x] Featured layout with hero + horizontal cards
+- [x] Grid/list toggle with CMS data
+
 ### Service Page ✓
-- [x] Create `ServicePage.tsx` (~550 lines)
-- [x] Domain-specific gradient hero
-- [x] Features grid with icons
-- [x] Pricing tiers (Basic/Standard/Premium)
-- [x] Testimonials integration
-- [x] Related services section
-- [x] x402 AI-Ready badge
-- [x] Final CTA with domain gradient
+- [x] CMS-first hero with domain navigation
+- [x] Conditional features, pricing, attachments, testimonials, related services
+- [x] x402 indicator and CTA flow to order
+
+### Author Pages ✓
+- [x] Authors index with search + featured toggle
+- [x] Author profile with social links and published articles
 
 ---
 
@@ -137,7 +153,7 @@
 - [x] Create `components/landing/DomainShowcase.tsx`
 - [x] Create `components/landing/TestimonialSection.tsx`
 - [ ] Create `components/landing/NewsletterCTA.tsx`
-- [x] Redesign `pages/Homepage.tsx` (CMS section renderer wired)
+- [x] Redesign `pages/HomepageNew.tsx` (CMS section renderer wired)
 
 ### Article Pages
 - [ ] Create `components/content/ArticleHero.tsx`

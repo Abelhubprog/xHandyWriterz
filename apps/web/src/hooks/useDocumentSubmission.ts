@@ -1,5 +1,4 @@
 ﻿import { useCallback, useMemo, useRef, useState } from 'react';
-import { env } from '@/env';
 import { resolveApiUrl } from '@/lib/api-base';
 
 export type SubmissionStatus =
@@ -78,10 +77,7 @@ export function useDocumentSubmission(options: UseDocumentSubmissionOptions = {}
       const uploaded: UploadedAttachment[] = [];
 
       try {
-        const brokerUrl = env.VITE_UPLOAD_BROKER_URL?.replace(/\/$/, '') ?? '';
-        const presignEndpoint = brokerUrl
-          ? `${brokerUrl}/s3/presign-put`
-          : resolveApiUrl('/api/uploads/presign-put');
+        const presignEndpoint = resolveApiUrl('/api/uploads/presign-put');
 
         for (const file of files) {
           if (isCancelledRef.current) {

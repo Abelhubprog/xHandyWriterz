@@ -1,32 +1,14 @@
-/**
- * AuthorsPage Component
- * 
- * Authors listing page with:
- * - Featured authors
- * - Domain expertise filtering
- * - Author cards with stats
- */
-
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import {
-  Search,
-  BookOpen,
-  Award,
-  Users,
-  ChevronDown,
-  X,
-  Star,
-} from 'lucide-react';
+import { Search, Star, X } from 'lucide-react';
 
 import { useAuthors, type StrapiAuthor } from '@/hooks/useCMS';
-import { useCMSContext, DOMAINS } from '@/contexts/CMSContext';
+import { useCMSContext } from '@/contexts/CMSContext';
 
-// Animation variants
 const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 16 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
@@ -38,89 +20,57 @@ const stagger = {
   },
 };
 
-// Author card component
 function AuthorCard({ author }: { author: StrapiAuthor }) {
   const { resolveMediaUrl: resolveCmsMedia } = useCMSContext();
 
   return (
     <motion.div
       variants={fadeInUp}
-      className="group bg-white dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-xl transition-all duration-300"
+      className="group rounded-2xl border border-slate-200 bg-white p-6 text-center transition hover:border-slate-300"
     >
       <Link to={`/authors/${author.slug}`} className="block">
-        {/* Avatar & Featured Badge */}
-        <div className="relative mb-4">
-          <div className="w-24 h-24 mx-auto rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600">
+        <div className="relative mb-6">
+          <div className="mx-auto h-24 w-24 overflow-hidden rounded-2xl bg-slate-900 text-white">
             {author.avatar ? (
               <img
                 src={resolveCmsMedia(author.avatar.url)}
                 alt={author.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white">
+              <div className="flex h-full w-full items-center justify-center text-3xl font-semibold">
                 {author.name.charAt(0)}
               </div>
             )}
           </div>
           {author.featured && (
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center shadow-lg">
-              <Star className="w-4 h-4 text-amber-900" fill="currentColor" />
-            </div>
+            <span className="absolute -right-2 -top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-amber-900 shadow">
+              <Star className="h-4 w-4" />
+            </span>
           )}
         </div>
 
-        {/* Name & Credentials */}
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        <h3 className="text-xl font-semibold text-slate-900 transition group-hover:text-slate-700">
           {author.name}
         </h3>
         {author.credentials && (
-          <p className="text-sm text-blue-600 dark:text-blue-400 text-center mb-3">
-            {author.credentials}
-          </p>
+          <p className="mt-1 text-sm text-slate-500">{author.credentials}</p>
         )}
-
-        {/* Bio */}
         {author.bio && (
-          <p className="text-gray-600 dark:text-gray-400 text-sm text-center line-clamp-3 mb-4">
-            {author.bio}
-          </p>
+          <p className="mt-4 text-sm text-slate-600 line-clamp-3">{author.bio}</p>
         )}
 
-        {/* Stats */}
-        <div className="flex items-center justify-center gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-          <div className="text-center">
-            <div className="text-lg font-bold text-gray-900 dark:text-white">
-              {author.articleCount || 0}
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Articles</div>
-          </div>
-          {author.totalViews && (
-            <div className="text-center">
-              <div className="text-lg font-bold text-gray-900 dark:text-white">
-                {author.totalViews >= 1000 
-                  ? `${(author.totalViews / 1000).toFixed(1)}k` 
-                  : author.totalViews}
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">Views</div>
-            </div>
-          )}
-        </div>
-
-        {/* Social Links */}
         {author.socialLinks && Object.keys(author.socialLinks).length > 0 && (
-          <div className="flex items-center justify-center gap-2 mt-4">
+          <div className="mt-5 flex justify-center gap-2">
             {author.socialLinks.twitter && (
               <a
                 href={author.socialLinks.twitter}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                onClick={(event) => event.stopPropagation()}
+                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
+                Twitter
               </a>
             )}
             {author.socialLinks.linkedin && (
@@ -128,12 +78,21 @@ function AuthorCard({ author }: { author: StrapiAuthor }) {
                 href={author.socialLinks.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="p-2 text-gray-400 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                onClick={(event) => event.stopPropagation()}
+                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                </svg>
+                LinkedIn
+              </a>
+            )}
+            {author.socialLinks.website && (
+              <a
+                href={author.socialLinks.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) => event.stopPropagation()}
+                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300"
+              >
+                Website
               </a>
             )}
           </div>
@@ -146,13 +105,11 @@ function AuthorCard({ author }: { author: StrapiAuthor }) {
 export default function AuthorsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [featuredOnly, setFeaturedOnly] = useState(searchParams.get('featured') === '1');
 
-  // Fetch authors
   const { data: authorsData, isLoading } = useAuthors();
   const authors = authorsData?.data || [];
 
-  // Filter authors
   const filteredAuthors = useMemo(() => {
     let result = authors;
 
@@ -173,10 +130,19 @@ export default function AuthorsPage() {
     return result;
   }, [authors, searchQuery, featuredOnly]);
 
-  const featuredAuthors = useMemo(
-    () => authors.filter((a) => a.featured),
-    [authors]
-  );
+  const featuredAuthors = useMemo(() => authors.filter((author) => author.featured), [authors]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('q', searchQuery);
+    if (featuredOnly) params.set('featured', '1');
+    setSearchParams(params, { replace: true });
+  }, [searchQuery, featuredOnly, setSearchParams]);
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setFeaturedOnly(false);
+  };
 
   return (
     <>
@@ -185,141 +151,118 @@ export default function AuthorsPage() {
         <meta name="description" content="Meet our expert authors and contributors across healthcare, technology, and enterprise domains." />
       </Helmet>
 
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-        {/* Hero Header */}
-        <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-center"
-            >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Meet Our Authors
-              </h1>
-              <p className="text-lg md:text-xl text-purple-100 max-w-2xl mx-auto mb-8">
-                Expert contributors sharing knowledge across healthcare, technology, and enterprise domains.
-              </p>
-
-              {/* Stats */}
-              <div className="flex items-center justify-center gap-8">
-                <div className="text-center">
-                  <div className="text-3xl font-bold">{authors.length}</div>
-                  <div className="text-sm text-purple-200">Authors</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold">{featuredAuthors.length}</div>
-                  <div className="text-sm text-purple-200">Featured</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold">
-                    {authors.reduce((sum, a) => sum + (a.articleCount || 0), 0)}
-                  </div>
-                  <div className="text-sm text-purple-200">Articles</div>
-                </div>
-              </div>
-            </motion.div>
+      <div className="min-h-screen bg-white">
+        <section className="relative overflow-hidden bg-slate-950 text-white">
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_60%)]" />
           </div>
-        </div>
 
-        {/* Search & Filters */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search authors..."
-                className="w-full px-4 py-2 pl-10 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              {searchQuery && (
+          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="max-w-3xl space-y-6"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">Our contributors</p>
+              <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
+                Meet the specialists behind the research
+              </h1>
+              <p className="text-lg text-white/70">
+                Each author brings domain expertise to the HandyWriterz library, from clinical practice to enterprise strategy.
+              </p>
+            </motion.div>
+
+            <div className="mt-10 grid gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur sm:grid-cols-2">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-white/50" />
+                <input
+                  type="text"
+                  placeholder="Search authors"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-full border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white placeholder:text-white/50 focus:border-white/30 focus:outline-none"
+                />
+              </div>
+              <button
+                onClick={() => setFeaturedOnly((prev) => !prev)}
+                className={`inline-flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition ${
+                  featuredOnly
+                    ? 'border-amber-400 bg-amber-400 text-amber-950'
+                    : 'border-white/20 text-white/80 hover:border-white/40'
+                }`}
+              >
+                <Star className="h-4 w-4" />
+                Featured only
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="px-4 py-12 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="text-sm text-slate-500">
+                {isLoading ? 'Loading authors...' : `${filteredAuthors.length} author${filteredAuthors.length !== 1 ? 's' : ''} found`}
+              </div>
+              {(searchQuery || featuredOnly) && (
                 <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                  onClick={resetFilters}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300"
                 >
-                  <X className="w-4 h-4 text-gray-400" />
+                  <X className="h-4 w-4" />
+                  Reset filters
                 </button>
               )}
             </div>
 
-            {/* Featured Toggle */}
-            <button
-              onClick={() => setFeaturedOnly(!featuredOnly)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
-                featuredOnly
-                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-              } border border-gray-200 dark:border-gray-700`}
-            >
-              <Star className={`w-4 h-4 ${featuredOnly ? 'fill-current' : ''}`} />
-              Featured Only
-            </button>
+            {isLoading ? (
+              <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="h-64 rounded-2xl bg-slate-100" />
+                ))}
+              </div>
+            ) : filteredAuthors.length === 0 ? (
+              <div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center">
+                <h3 className="text-lg font-semibold text-slate-900">No authors found</h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  Try adjusting your search or clearing filters.
+                </p>
+              </div>
+            ) : (
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={stagger}
+                className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+              >
+                {filteredAuthors.map((author) => (
+                  <AuthorCard key={author.id} author={author} />
+                ))}
+              </motion.div>
+            )}
 
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {filteredAuthors.length} author{filteredAuthors.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-
-          {/* Loading State */}
-          {isLoading && (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-2xl p-6">
-                  <div className="w-24 h-24 mx-auto bg-gray-200 dark:bg-gray-700 rounded-2xl mb-4" />
-                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mx-auto mb-2" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mx-auto mb-4" />
-                  <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded" />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Authors Grid */}
-          {!isLoading && (
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={stagger}
-            >
-              {filteredAuthors.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                    <Users className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    No authors found
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    {searchQuery || featuredOnly
-                      ? 'Try adjusting your search or filters.'
-                      : 'Check back soon for new contributors.'}
-                  </p>
-                  {(searchQuery || featuredOnly) && (
-                    <button
-                      onClick={() => {
-                        setSearchQuery('');
-                        setFeaturedOnly(false);
-                      }}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+            {featuredAuthors.length > 0 && (
+              <div className="mt-16 rounded-3xl border border-slate-200 bg-slate-50/80 p-10">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Featured</p>
+                <h3 className="mt-3 text-2xl font-semibold text-slate-900">Highlighted contributors</h3>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {featuredAuthors.map((author) => (
+                    <Link
+                      key={author.id}
+                      to={`/authors/${author.slug}`}
+                      className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300"
                     >
-                      Clear filters
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredAuthors.map((author) => (
-                    <AuthorCard key={author.id} author={author} />
+                      {author.name}
+                    </Link>
                   ))}
                 </div>
-              )}
-            </motion.div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
     </>
   );

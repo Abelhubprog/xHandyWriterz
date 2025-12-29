@@ -18,9 +18,8 @@ const TurnitinCheckPage: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
-  const brokerUrl = useMemo(() => env.VITE_UPLOAD_BROKER_URL?.replace(/\/$/, '') ?? '', []);
   const apiUrl = useMemo(() => env.VITE_API_URL?.replace(/\/$/, '') ?? '', []);
-  const presignEndpoint = brokerUrl ? `${brokerUrl}/s3/presign-put` : resolveApiUrl('/api/uploads/presign-put');
+  const presignEndpoint = resolveApiUrl('/api/uploads/presign-put');
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -47,7 +46,7 @@ const TurnitinCheckPage: React.FC = () => {
     try {
       setUploading(true);
       const uploaded: UploadedFile[] = [];
-      if (!brokerUrl && !apiUrl) throw new Error('Upload API is not configured. Set VITE_API_URL or VITE_UPLOAD_BROKER_URL');
+      if (!apiUrl) throw new Error('Upload API is not configured. Set VITE_API_URL');
       for (const file of files) {
         const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
         const key = `turnitin/${Date.now()}-${safeName}`;

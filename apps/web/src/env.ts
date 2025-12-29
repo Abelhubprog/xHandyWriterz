@@ -8,8 +8,7 @@ const envSchema = z.object({
   VITE_CMS_URL: z.string().url().default('http://localhost:1337'),
   VITE_CMS_TOKEN: z.string().optional(),
 
-  // Integrations
-  VITE_UPLOAD_BROKER_URL: z.string().url().optional(),
+  // Mattermost Integration
   VITE_MATTERMOST_URL: z.string().url().optional(),
   VITE_MATTERMOST_API_URL: z.string().url().optional(),
   VITE_MM_AUTH_URL: z.string().url().optional(),
@@ -20,12 +19,6 @@ const envSchema = z.object({
   VITE_APP_NAME: z.string().min(1).default('HandyWriterz'),
   VITE_APP_URL: z.string().url().default('http://localhost:5173'),
   VITE_APP_DESCRIPTION: z.string().default('Professional academic services platform'),
-
-  // Cloudflare Database (optional for development)
-  VITE_CLOUDFLARE_DATABASE_URL: z.string().optional(),
-  VITE_CLOUDFLARE_API_TOKEN: z.string().optional(),
-  VITE_CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
-  VITE_CLOUDFLARE_DATABASE_ID: z.string().optional(),
 
   // Clerk
   VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1).default('pk_test_default'),
@@ -76,18 +69,11 @@ function getEnvVars() {
     // CMS
     VITE_CMS_URL: import.meta.env.VITE_CMS_URL || 'http://localhost:1337',
     VITE_CMS_TOKEN: import.meta.env.VITE_CMS_TOKEN || '',
-    VITE_UPLOAD_BROKER_URL: import.meta.env.VITE_UPLOAD_BROKER_URL,
 
     // Application Settings
     VITE_APP_NAME: import.meta.env.VITE_APP_NAME || 'HandyWriterz',
     VITE_APP_URL: import.meta.env.VITE_APP_URL || 'http://localhost:5173',
     VITE_APP_DESCRIPTION: import.meta.env.VITE_APP_DESCRIPTION || 'Professional academic services platform',
-
-    // Cloudflare Database
-    VITE_CLOUDFLARE_DATABASE_URL: import.meta.env.VITE_CLOUDFLARE_DATABASE_URL,
-    VITE_CLOUDFLARE_API_TOKEN: import.meta.env.VITE_CLOUDFLARE_API_TOKEN,
-    VITE_CLOUDFLARE_ACCOUNT_ID: import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID,
-    VITE_CLOUDFLARE_DATABASE_ID: import.meta.env.VITE_CLOUDFLARE_DATABASE_ID,
 
     // Clerk
     VITE_CLERK_PUBLISHABLE_KEY: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_default',

@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuth as useClerkAuth } from '@clerk/clerk-react';
-import { uploadMedia } from '@/lib/cms-client';
+import { uploadMedia } from '@/lib/cms';
 import { resolveApiUrl } from '@/lib/api-base';
 import { DOMAIN_TAGS, TYPE_TAGS } from '@/config/taxonomy';
 import { generatePreviewToken, encodePreviewToken, type PreviewToken } from '@/lib/preview-tokens';

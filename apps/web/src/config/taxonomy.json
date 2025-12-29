@@ -1,10 +1,16 @@
 {
   "domains": [
     {
+      "tag": "domain:adult-nursing",
+      "slug": "adult-nursing",
+      "label": "Adult Nursing",
+      "description": "Clinical practice updates, care plans, and evidence-based research for adult nursing specialists."
+    },
+    {
       "tag": "domain:adult-health",
       "slug": "adult-health",
       "label": "Adult Health Nursing",
-      "description": "Clinical practice updates, care plans, and evidence-based research for adult health specialists."
+      "description": "Legacy domain slug retained for compatibility."
     },
     {
       "tag": "domain:mental-health",
@@ -41,6 +47,18 @@
       "slug": "crypto",
       "label": "Blockchain & Crypto",
       "description": "Cryptocurrency applications in healthcare, blockchain security, and decentralized health records."
+    },
+    {
+      "tag": "domain:enterprise",
+      "slug": "enterprise",
+      "label": "Enterprise",
+      "description": "Enterprise transformation, strategy, and operational excellence for large organizations."
+    },
+    {
+      "tag": "domain:general",
+      "slug": "general",
+      "label": "General",
+      "description": "General purpose resources and interdisciplinary guidance across the HandyWriterz platform."
     }
   ],
   "types": [

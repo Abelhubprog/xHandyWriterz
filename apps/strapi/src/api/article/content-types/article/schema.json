@@ -66,6 +66,7 @@
       "type": "enumeration",
       "required": false,
       "enum": [
+        "adult-nursing",
         "adult-health",
         "mental-health",
         "child-nursing",

@@ -1,6 +1,6 @@
 /**
  * File Upload Service
- * Handles file uploads to Cloudflare R2 via upload broker worker
+ * Handles file uploads to Cloudflare R2 via Railway API presigned URLs
  * Integrates with presigned URL generation and multipart uploads
  */
 
@@ -54,9 +54,9 @@ export class FileUploadService {
   private brokerUrl: string;
 
   constructor(brokerUrl?: string) {
-    const fallbackBase = resolveApiUrl('/').replace(/\/$/, '');
-    const fallbackRoot = fallbackBase.endsWith('/api') ? fallbackBase.slice(0, -4) : fallbackBase;
-    const resolved = brokerUrl || import.meta.env.VITE_UPLOAD_BROKER_URL || fallbackRoot;
+    // Use API URL for uploads - no separate broker needed
+    const apiBase = resolveApiUrl('/').replace(//$/, '');
+    const resolved = brokerUrl || apiBase;
     const normalized = resolved ? resolved.replace(/\/$/, '') : '';
     this.brokerUrl = normalized.endsWith('/s3') ? normalized.slice(0, -3) : normalized;
   }

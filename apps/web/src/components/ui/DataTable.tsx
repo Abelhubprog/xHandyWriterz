@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LoadingSpinner } from '@/apps/main/components/ui/LoadingSpinner';
 
 interface DataTableProps<T> {
   data: T[];
@@ -37,7 +36,7 @@ export function DataTable<T extends { id: string | number }>({
     <div className="bg-white rounded-xl shadow-sm border border-gray-100">
       {isLoading ? (
         <div className="flex items-center justify-center p-12">
-          <LoadingSpinner size="lg" />
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
         </div>
       ) : (
         <>
@@ -115,8 +114,8 @@ function TablePagination({
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          startIcon={<ChevronLeft className="h-4 w-4" />}
         >
+          <ChevronLeft className="h-4 w-4 mr-1" />
           Previous
         </Button>
         <Button
@@ -124,9 +123,9 @@ function TablePagination({
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          endIcon={<ChevronRight className="h-4 w-4" />}
         >
           Next
+          <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
     </div>

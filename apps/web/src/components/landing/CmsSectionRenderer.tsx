@@ -7,13 +7,14 @@ import { DomainShowcase, type Domain } from './DomainShowcase';
 import { ServiceGrid, type Service } from './ServiceCard';
 import { TestimonialSection, type Testimonial } from './TestimonialSection';
 import type { ArticleCardProps } from './ArticleCard';
-import type { ArticleSummary, LandingSection, LandingSectionItem, ServiceListItem, TestimonialEntry } from '@/types/cms';
+import type { ArticleSummary, LandingSection, LandingSectionItem, ServiceListItem, TestimonialEntry, DomainListItem } from '@/types/cms';
 
 export interface CmsSectionRendererProps {
   section: LandingSection;
   articles?: ArticleSummary[];
   services?: ServiceListItem[];
   testimonials?: TestimonialEntry[];
+  domains?: DomainListItem[];
   className?: string;
 }
 
@@ -50,6 +51,20 @@ const extractSlug = (path?: string | null, prefix?: string) => {
   return trimmed || null;
 };
 
+const parseDomainLink = (path?: string | null) => {
+  if (!path) return null;
+  const domainPath = extractSlug(path, '/domains/');
+  if (!domainPath) return null;
+  const parts = domainPath.split('/').filter(Boolean);
+  if (parts.length === 0) return null;
+  const [domain, section, ...rest] = parts;
+  return {
+    domain,
+    section: section ?? null,
+    slug: rest.length > 0 ? rest.join('/') : null,
+  };
+};
+
 const mapArticleSummary = (article: ArticleSummary): ArticleCardProps => ({
   id: article.id,
   slug: article.slug,
@@ -62,12 +77,14 @@ const mapArticleSummary = (article: ArticleSummary): ArticleCardProps => ({
 });
 
 const mapArticleItem = (item: LandingSectionItem): ArticleCardProps | null => {
+  const domainLink = parseDomainLink(item.linkUrl);
+  const domainSlug = domainLink?.section === 'articles' ? domainLink.slug : null;
   const slug = extractSlug(item.linkUrl, '/articles/') ?? extractSlug(item.linkUrl, 'articles/');
   const title = item.title?.trim();
   if (!title) return null;
   return {
     id: item.id,
-    slug: slug ?? slugify(title),
+    slug: domainSlug ?? slug ?? slugify(title),
     title,
     excerpt: item.description ?? item.subtitle ?? undefined,
     coverImage: item.mediaUrl ?? undefined,
@@ -94,15 +111,18 @@ const mapServiceSummary = (service: ServiceListItem): Service => ({
 const mapServiceItem = (item: LandingSectionItem): Service | null => {
   const title = item.title?.trim();
   if (!title) return null;
+  const domainLink = parseDomainLink(item.linkUrl);
+  const domainFromDomainLink = domainLink?.section === 'services' ? domainLink.domain : null;
+  const slugFromDomainLink = domainLink?.section === 'services' ? domainLink.slug : null;
   const rawServicePath = extractSlug(item.linkUrl, '/services/') ?? extractSlug(item.linkUrl, 'services/');
   const serviceParts = rawServicePath ? rawServicePath.split('/') : [];
   const domainFromLink = serviceParts.length > 1 ? serviceParts[0] : null;
   const slugFromLink = serviceParts.length > 1 ? serviceParts.slice(1).join('/') : rawServicePath;
-  const domain = domainFromLink ?? extractSlug(item.linkUrl, '/domains/') ?? item.tag ?? 'general';
+  const domain = domainFromDomainLink ?? domainFromLink ?? item.tag ?? 'general';
   return {
     id: item.id,
     title,
-    slug: slugFromLink ?? slugify(title),
+    slug: slugFromDomainLink ?? slugFromLink ?? slugify(title),
     excerpt: item.description ?? item.subtitle ?? '',
     description: item.description ?? item.subtitle ?? undefined,
     domain,
@@ -130,6 +150,17 @@ const mapDomainItem = (item: LandingSectionItem): Domain | null => {
     featured: Boolean(item.badge),
   };
 };
+
+const mapDomainListEntry = (domain: DomainListItem): Domain => ({
+  id: domain.id,
+  name: domain.name,
+  slug: domain.slug,
+  description: domain.description ?? '',
+  iconKey: domain.iconKey ?? undefined,
+  themeColor: domain.themeColor ?? undefined,
+  gradient: domain.gradient ?? undefined,
+  heroImageUrl: domain.heroImageUrl ?? undefined,
+});
 
 const mapTestimonialEntry = (entry: TestimonialEntry): Testimonial => ({
   id: entry.id,
@@ -187,6 +218,7 @@ export const CmsSectionRenderer: React.FC<CmsSectionRendererProps> = ({
   articles = [],
   services = [],
   testimonials = [],
+  domains = [],
   className,
 }) => {
   const sectionId = section.anchorId ?? section.sectionKey;
@@ -296,13 +328,15 @@ export const CmsSectionRenderer: React.FC<CmsSectionRendererProps> = ({
 
   if (section.sectionKey === 'domains') {
     const variant = getVariant(section.theme, ['cards', 'grid', 'minimal', 'featured'], 'featured');
-    const domains = section.items
-      .map(mapDomainItem)
-      .filter((item): item is Domain => Boolean(item));
+    const domainItems = domains.length
+      ? domains.map(mapDomainListEntry)
+      : section.items
+          .map(mapDomainItem)
+          .filter((item): item is Domain => Boolean(item));
 
     return (
       <DomainShowcase
-        domains={domains}
+        domains={domainItems}
         title={section.heading ?? undefined}
         subtitle={section.subheading ?? undefined}
         variant={variant}

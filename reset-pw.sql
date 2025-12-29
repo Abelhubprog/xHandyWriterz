@@ -1,1 +1,0 @@
-UPDATE admin_users SET password = '$2b$10$GWbEGx4edLkt1enf03WwZOZPVqilSrS2Eg7KxxVxjjgnouStrfMQy', is_active = true, blocked = false WHERE email = 'abelngeno1@gmail.com'; SELECT id, firstname, lastname, email, is_active FROM admin_users WHERE email = 'abelngeno1@gmail.com';

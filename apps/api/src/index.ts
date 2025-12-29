@@ -8,6 +8,7 @@ import { paymentsRouter } from './routes/payments.js';
 import { messagingRouter } from './routes/messaging.js';
 import { turnitinRouter } from './routes/turnitin.js';
 import { cmsRouter } from './routes/cms.js';
+import { ordersRouter } from './routes/orders.js';
 import { errorHandler, notFoundHandler } from './middleware/error.js';
 import { requestLogger, rateLimiter } from './middleware/logger.js';
 
@@ -41,6 +42,7 @@ app.use(requestLogger);
 app.use('/api/uploads', rateLimiter);
 app.use('/api/payments', rateLimiter);
 app.use('/api/messaging', rateLimiter);
+app.use('/api/orders', rateLimiter);
 
 // Routes - API
 app.use('/health', healthRouter);
@@ -52,6 +54,7 @@ app.use('/api/payments', paymentsRouter);
 app.use('/api/messaging', messagingRouter);
 app.use('/api/turnitin', turnitinRouter);
 app.use('/api/webhooks', webhooksRouter);
+app.use('/api/orders', ordersRouter);
 
 // Routes - SEO (handles /sitemap.xml and /robots.txt)
 app.use('/', sitemapRouter);
@@ -69,6 +72,7 @@ app.get('/', (_req, res) => {
       cms: '/api/cms/*',
       payments: '/api/payments/*',
       messaging: '/api/messaging/*',
+      orders: '/api/orders/*',
       webhooks: '/api/webhooks/*',
       sitemap: '/sitemap.xml',
       robots: '/robots.txt',

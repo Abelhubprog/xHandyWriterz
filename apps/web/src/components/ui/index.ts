@@ -33,21 +33,17 @@ export { Label } from './label';
 export type { LabelProps } from './label';
 export { labelVariants } from './label';
 
-// Form Components
-export { FormField } from './form-field';
-export type { FormFieldProps } from './form-field';
 
 // Loading & Feedback
 export { Loader } from './Loader';
 export { LoadingSpinner } from './LoadingSpinner';
-export { LoadingState } from './LoadingState';
 export { Skeleton } from './skeleton';
 export { Spinner } from './spinner';
 
 // Utility Components
 export { Badge } from './badge';
 export { Avatar } from './avatar';
-export { IconButton } from './IconButton';
+export { default as IconButton } from './IconButton';
 export { StatusBadge } from './StatusBadge';
 export { RoleBadge } from './RoleBadge';
 export { Separator } from './separator';
@@ -58,11 +54,8 @@ export * from './command';
 export * from './popover';
 
 // Layout Components
-export { Stack } from './stack';
+export { VStack, HStack } from './stack';
 export { Box } from './box';
-
-// Examples
-export { FormExample } from '../examples/FormExample';
 
 // Types
 export type {

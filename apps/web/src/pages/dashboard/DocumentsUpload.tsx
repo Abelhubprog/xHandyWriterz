@@ -1,10 +1,9 @@
-﻿import React, { useCallback, useMemo, useState } from 'react';
+﻿import React, { useCallback, useState } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'react-hot-toast';
 import { Upload, Trash2, Download, Copy, Info } from 'lucide-react';
-import { env } from '@/env';
 import { resolveApiUrl } from '@/lib/api-base';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,13 +31,8 @@ const DocumentsUpload: React.FC = () => {
   const [uploads, setUploads] = useState<UploadedItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const brokerUrl = useMemo(() => env.VITE_UPLOAD_BROKER_URL?.replace(/\/$/, '') ?? '', []);
-  const presignPutEndpoint = brokerUrl
-    ? `${brokerUrl}/s3/presign-put`
-    : resolveApiUrl('/api/uploads/presign-put');
-  const presignGetEndpoint = brokerUrl
-    ? `${brokerUrl}/s3/presign`
-    : resolveApiUrl('/api/uploads/presign-get');
+  const presignPutEndpoint = resolveApiUrl('/api/uploads/presign-put');
+  const presignGetEndpoint = resolveApiUrl('/api/uploads/presign-get');
 
   React.useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -113,8 +107,8 @@ const DocumentsUpload: React.FC = () => {
   }, []);
 
   const uploadFiles = useCallback(async () => {
-    if (!brokerUrl) {
-      toast.error('Upload API is not configured. Set VITE_API_URL or VITE_UPLOAD_BROKER_URL.');
+    if (!presignPutEndpoint) {
+      toast.error('Upload API is not configured. Set VITE_API_URL.');
       return;
     }
     if (!selectedFiles.length) {
@@ -230,11 +224,11 @@ const DocumentsUpload: React.FC = () => {
           </p>
         </header>
 
-        {!brokerUrl && (
+        {!presignPutEndpoint && (
           <Alert className="border-yellow-400 bg-yellow-50 text-yellow-800">
-            <AlertTitle>Upload broker unavailable</AlertTitle>
+            <AlertTitle>Upload API unavailable</AlertTitle>
             <AlertDescription>
-              Set <code>VITE_API_URL</code> (or <code>VITE_UPLOAD_BROKER_URL</code>) so the dashboard can request presigned upload URLs.
+              Set <code>VITE_API_URL</code> so the dashboard can request presigned upload URLs.
             </AlertDescription>
           </Alert>
         )}

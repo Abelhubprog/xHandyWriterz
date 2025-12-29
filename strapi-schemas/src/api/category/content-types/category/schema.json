@@ -5,7 +5,7 @@
     "singularName": "category",
     "pluralName": "categories",
     "displayName": "Category",
-    "description": "Content grouping by category"
+    "description": "Content categories for organization"
   },
   "options": {
     "draftAndPublish": false
@@ -15,7 +15,7 @@
     "name": {
       "type": "string",
       "required": true,
-      "maxLength": 100
+      "unique": true
     },
     "slug": {
       "type": "uid",
@@ -25,17 +25,54 @@
     "description": {
       "type": "text"
     },
-    "heroImage": {
-      "type": "media",
-      "multiple": false,
-      "required": false,
-      "allowedTypes": ["images"]
+    "icon": {
+      "type": "string"
+    },
+    "color": {
+      "type": "string",
+      "default": "#6366f1"
+    },
+    "domain": {
+      "type": "enumeration",
+      "enum": [
+        "adult-nursing",
+        "adult-health",
+        "mental-health",
+        "child-nursing",
+        "social-work",
+        "technology",
+        "ai",
+        "crypto",
+        "enterprise",
+        "general"
+      ],
+      "default": "general"
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
     },
     "articles": {
       "type": "relation",
-      "relation": "oneToMany",
+      "relation": "manyToMany",
       "target": "api::article.article",
-      "mappedBy": "category"
+      "mappedBy": "categories"
+    },
+    "parent": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::category.category",
+      "inversedBy": "children"
+    },
+    "children": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::category.category",
+      "mappedBy": "parent"
     }
   }
 }

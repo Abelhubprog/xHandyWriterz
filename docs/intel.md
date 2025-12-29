@@ -70,8 +70,8 @@
 - [OVERVIEW-53] Error boundaries in `ErrorBoundary` component capture runtime faults and display fallback UI.
 - [OVERVIEW-54] Clerk’s `routerPush` integration ensures programmatic navigation remains consistent within the SPA router.
 - [OVERVIEW-55] Home hero call-to-actions connect the marketing funnel to services explore and Turnitin tools.
-- [OVERVIEW-56] Domain pages (`/d/:domain`) display curated content via Strapi filtered queries when available.
-- [OVERVIEW-57] Legacy content accessible through `LearningHub` page ensures Microfeed-based experiences remain reachable.
+- [OVERVIEW-56] Domain pages live at `/domains/:domain`, with `/d/:domain` redirecting for backward compatibility.
+- [OVERVIEW-57] Legacy Microfeed surfaces removed; public content is fully Strapi-driven.
 - [OVERVIEW-58] Admin login page persists for enterprise flows though Clerk handles mainstream authentication.
 - [OVERVIEW-59] Payment result pages remain for Stripe or other payment integrations, unaffected by CMS migration.
 - [OVERVIEW-60] Document upload history currently session-scoped; future plan to persist metadata via backend API.
@@ -103,9 +103,9 @@
 - [COMP-14] Web SPA root `apps/web` contains Vite configuration for the front-end app.
 - [COMP-15] Web SPA entry `apps/web/src/main.tsx` sets up providers (Clerk, React Query, Helmet, Theme, Web3).
 - [COMP-16] Router definitions `apps/web/src/router.tsx` detail navigation structure for marketing, dashboard, admin, and legacy routes.
-- [COMP-17] Homepage component `apps/web/src/pages/Homepage.tsx` implements marketing hero and call-to-actions.
+- [COMP-17] Homepage component `apps/web/src/pages/HomepageNew.tsx` implements CMS-first hero and call-to-actions.
 - [COMP-18] Domain pages under `apps/web/src/pages/domains` present specialized content experiences.
-- [COMP-19] Services page `apps/web/src/pages/services/ServicesPage.tsx` fetches from Strapi via helper functions.
+- [COMP-19] Services hub `apps/web/src/pages/services/ServicesHub.tsx` lists domains with service CTAs from Strapi.
 - [COMP-20] Admin dashboard page `apps/web/src/pages/admin/AdminDashboard.tsx` drives management interface.
 - [COMP-21] Message center component `apps/web/src/components/Messaging/MessageCenter.tsx` manages Mattermost embed.
 - [COMP-22] Dashboard wrapper `apps/web/src/components/Dashboard/DashboardWrapper.tsx` enforces auth gating.
@@ -321,7 +321,7 @@
 - [PUBLISH-16] `serviceLinks` in `RootLayout` ensures navigation stays consistent with Strapi-managed domain list.
 - [PUBLISH-17] `EnterpriseDomainPage` (React component) uses Strapi data to power enterprise-specific landing pages.
 - [PUBLISH-18] Marketing pages like `/about`, `/pricing` remain statically authored but can embed Strapi components.
-- [PUBLISH-19] `LearningHub` page continues to redirect to Microfeed until Strapi-based content ready.
+- [PUBLISH-19] Legacy Microfeed redirect removed; Strapi is the single source of truth.
 - [PUBLISH-20] `Apps/web/src/hooks/useDocumentSubmission.ts` integrates with Strapi or backend to tag uploads.
 - [PUBLISH-21] `Apps/web/src/components/MDXRenderer.tsx` ensures legacy content still renders with MDX pipeline.
 - [PUBLISH-22] React Query invalidates caches when mutated data requires fresh fetch, as seen in `useDocumentSubmission` (future integration).
@@ -375,7 +375,7 @@
 - [PUBLISH-70] Content pipeline ensures unstoppable workflows by aligning Strapi, web SPA, and fallback systems.
 
 ## 6. Front-end consumption surfaces
-- [FRONTEND-01] Homepage `Homepage.tsx` orchestrates hero, features, services, testimonials, and call-to-action sections.
+- [FRONTEND-01] Homepage `HomepageNew.tsx` orchestrates hero, features, services, testimonials, and call-to-action sections.
 - [FRONTEND-02] Homepage uses `useAuth` to route authenticated users to `/dashboard` when clicking primary CTAs.
 - [FRONTEND-03] Homepage `services` array currently static but aligned with domain slugs; future data to be Strapi-driven.
 - [FRONTEND-04] Homepage uses `framer-motion` for animations and dynamic features display.

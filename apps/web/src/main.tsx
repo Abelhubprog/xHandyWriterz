@@ -89,11 +89,10 @@ try {
   const rootElement = document.getElementById('root');
   if (rootElement) {
     rootElement.innerHTML = `
-      <div style="padding: 20px; text-align: center; font-family: system-ui, sans-serif;">
+      <div style="padding: 20px; text-align: center; font-family: Manrope, sans-serif;">
         <h1 style="color: #0369a1;">HandyWriterz</h1>
         <p>We're experiencing technical difficulties. Please try again later.</p>
       </div>
     `;
   }
 }
-

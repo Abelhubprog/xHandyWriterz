@@ -5,7 +5,7 @@
     "singularName": "tag",
     "pluralName": "tags",
     "displayName": "Tag",
-    "description": "Content taxonomy and classification tags"
+    "description": "Tags for cross-domain content tagging"
   },
   "options": {
     "draftAndPublish": false
@@ -15,8 +15,7 @@
     "name": {
       "type": "string",
       "required": true,
-      "unique": true,
-      "maxLength": 50
+      "unique": true
     },
     "slug": {
       "type": "uid",
@@ -25,16 +24,13 @@
     },
     "color": {
       "type": "string",
-      "regex": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-    },
-    "description": {
-      "type": "text"
+      "default": "#6366f1"
     },
     "articles": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::article.article",
-      "mappedBy": "tags"
+      "mappedBy": "tagsList"
     }
   }
 }

@@ -13,6 +13,7 @@ import { validatePreviewToken, fetchPreviewContent, type PreviewToken } from '@/
 import RichContentRenderer from '@/components/Services/RichContentRenderer';
 import { Info, Lock, Clock } from 'lucide-react';
 import type { ServiceDetail } from '@/types/cms';
+import { normalizeDomainSlug } from '@/lib/domain-utils';
 
 export default function PreviewPage() {
   const [searchParams] = useSearchParams();
@@ -175,7 +176,7 @@ export default function PreviewPage() {
         <a href="/admin">
           <Button variant="outline">Back to Admin</Button>
         </a>
-        <a href={`/services/${content.domain}/${content.slug}`}>
+        <a href={`/domains/${normalizeDomainSlug(content.domain) ?? content.domain}/services/${content.slug}`}>
           <Button>View Published (if available)</Button>
         </a>
       </div>

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchDomainsList, fetchServicesList } from '@/lib/cms';
+import { normalizeDomainSlug } from '@/lib/domain-utils';
 import type { DomainListItem, ServiceListItem } from '@/types/cms';
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -28,10 +29,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
   sparkles: Sparkles,
   book: BookOpen,
   'book-open': BookOpen,
-};
-
-const DOMAIN_ALIASES: Record<string, string> = {
-  'adult-health': 'adult-nursing',
 };
 
 const getDomainIcon = (iconKey?: string | null) => {
@@ -186,7 +183,7 @@ export default function ServicesHub() {
     const items = servicesData?.items ?? [];
     items.forEach((item) => {
       const rawDomain = item.domain ?? 'general';
-      const domainKey = DOMAIN_ALIASES[rawDomain] ?? rawDomain;
+      const domainKey = normalizeDomainSlug(rawDomain) ?? rawDomain;
       if (!map[domainKey]) {
         map[domainKey] = [];
       }
@@ -284,13 +281,16 @@ export default function ServicesHub() {
             </div>
           ) : (
             <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-              {filteredDomains.map((domain) => (
-                <DomainCard
-                  key={domain.id}
-                  domain={domain}
-                  services={servicesByDomain[domain.slug] ?? []}
-                />
-              ))}
+              {filteredDomains.map((domain) => {
+                const domainKey = normalizeDomainSlug(domain.slug) ?? domain.slug;
+                return (
+                  <DomainCard
+                    key={domain.id}
+                    domain={domain}
+                    services={servicesByDomain[domainKey] ?? []}
+                  />
+                );
+              })}
             </div>
           )}
         </section>

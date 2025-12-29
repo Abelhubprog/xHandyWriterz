@@ -5,7 +5,7 @@
     "singularName": "article",
     "pluralName": "articles",
     "displayName": "Article",
-    "description": "Primary content type for news articles"
+    "description": "Long-form content articles"
   },
   "options": {
     "draftAndPublish": true
@@ -14,39 +14,28 @@
   "attributes": {
     "title": {
       "type": "string",
+      "maxLength": 255,
       "required": true,
-      "maxLength": 255
+      "unique": true
     },
     "slug": {
       "type": "uid",
       "targetField": "title",
       "required": true
     },
+    "summary": {
+      "type": "text",
+      "maxLength": 500
+    },
     "excerpt": {
       "type": "text",
-      "maxLength": 160
-    },
-    "readingTime": {
-      "type": "integer",
-      "default": 0
+      "maxLength": 300
     },
     "content": {
-      "type": "dynamiczone",
-      "components": [
-        "blocks.rich-text",
-        "blocks.image",
-        "blocks.gallery",
-        "blocks.video-embed",
-        "blocks.quote",
-        "blocks.code",
-        "blocks.callout"
-      ]
+      "type": "richtext"
     },
-    "category": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::category.category",
-      "inversedBy": "articles"
+    "body": {
+      "type": "richtext"
     },
     "author": {
       "type": "relation",
@@ -54,15 +43,103 @@
       "target": "api::author.author",
       "inversedBy": "articles"
     },
-    "tags": {
+    "authorName": {
+      "type": "string",
+      "required": false
+    },
+    "categories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::category.category",
+      "inversedBy": "articles"
+    },
+    "tagsList": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::tag.tag",
-      "mappedBy": "articles"
+      "inversedBy": "articles"
+    },
+    "tags": {
+      "type": "json"
+    },
+    "domain": {
+      "type": "enumeration",
+      "required": false,
+      "enum": [
+        "adult-nursing",
+        "adult-health",
+        "mental-health",
+        "child-nursing",
+        "social-work",
+        "technology",
+        "ai",
+        "crypto",
+        "enterprise",
+        "general"
+      ],
+      "default": "general"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["draft", "review", "scheduled", "published"],
+      "default": "draft"
+    },
+    "heroImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "images": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "typeTags": {
+      "type": "json"
     },
     "seo": {
       "type": "component",
-      "component": "meta.seo"
+      "component": "seo.seo",
+      "repeatable": false
+    },
+    "datePublished": {
+      "type": "datetime"
+    },
+    "scheduledAt": {
+      "type": "datetime"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "readingTime": {
+      "type": "integer",
+      "default": 5
+    },
+    "viewCount": {
+      "type": "integer",
+      "default": 0
+    },
+    "likeCount": {
+      "type": "integer",
+      "default": 0
+    },
+    "relatedArticles": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::article.article"
+    },
+    "x402Price": {
+      "type": "decimal",
+      "default": 0.001
+    },
+    "x402Enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "previewToken": {
+      "type": "string"
     }
   }
 }

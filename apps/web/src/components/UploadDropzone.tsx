@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader } from '@/components/ui/Loader';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'react-hot-toast';
 import { resolveApiUrl } from '@/lib/api-base';
 
 // Uploads flow uses the presign service that issues R2 uploads.
@@ -13,18 +13,12 @@ interface UploadDropzoneProps {
 
 export function UploadDropzone({ onUpload }: UploadDropzoneProps) {
   const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
-
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     setUploading(true);
     try {
       for (const file of acceptedFiles) {
         if (file.size > 200 * 1024 * 1024) {
-          toast({
-            title: 'File too large',
-            description: 'Maximum file size is 200MB for video and 20MB for other formats.',
-            variant: 'destructive',
-          });
+          toast.error('File too large. Maximum file size is 200MB for video and 20MB for other formats.');
           continue;
         }
 
@@ -39,17 +33,13 @@ export function UploadDropzone({ onUpload }: UploadDropzoneProps) {
         const putRes = await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'content-type': file.type } });
         if (putRes.ok) {
           onUpload();
-          toast({ title: 'Success', description: `${file.name} uploaded successfully.` });
+          toast.success(`${file.name} uploaded successfully.`);
         } else {
-          toast({ title: 'Upload failed', description: 'Failed to upload file.', variant: 'destructive' });
+          toast.error('Failed to upload file.');
         }
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: (error as Error).message,
-        variant: 'destructive',
-      });
+      toast.error(error instanceof Error ? error.message : 'Upload failed.');
     } finally {
       setUploading(false);
     }

@@ -7,7 +7,7 @@ Transform HandyWriterz into a **premium content platform** comparable to Medium,
 1. **Beautiful Public Content Pages** - Magazine-quality reading experience
 2. **Powerful Admin CMS** - Strapi 5 with custom publishing workflows
 3. **AI Agent Economy** - x402 protocol for monetizing AI access to content
-4. **Domain-Specific Excellence** - Healthcare, Technology, Crypto, Enterprise verticals
+4. **Domain-Specific Excellence** - Healthcare, Technology, AI, Crypto, Enterprise verticals
 
 ---
 
@@ -23,17 +23,20 @@ Transform HandyWriterz into a **premium content platform** comparable to Medium,
 │  HOMEPAGE (Landing)                                             │
 │  ├── Hero Section (dynamic from CMS)                           │
 │  ├── Featured Content (curated articles/services)              │
-│  ├── Domain Showcase (6 verticals)                             │
+│  ├── Domain Showcase (9+ verticals)                            │
 │  ├── Social Proof (testimonials, stats)                        │
 │  └── CTA Sections                                              │
 │                                                                 │
-│  DOMAINS (6 Verticals)                                         │
-│  ├── Adult Health Nursing                                      │
-│  ├── Mental Health Nursing                                     │
+│  DOMAINS (9+ Verticals)                                        │
+│  ├── Adult Nursing                                             │
+│  ├── Mental Health                                             │
 │  ├── Child Nursing                                             │
 │  ├── Social Work                                               │
-│  ├── Technology & AI                                           │
-│  └── Crypto & Web3                                             │
+│  ├── Technology                                                │
+│  ├── AI                                                        │
+│  ├── Crypto                                                    │
+│  ├── Enterprise                                                │
+│  └── General                                                   │
 │                                                                 │
 │  CONTENT (Per Domain)                                          │
 │  ├── Articles (research, guides, insights)                     │
@@ -121,7 +124,8 @@ Transform HandyWriterz into a **premium content platform** comparable to Medium,
 ├────────────────────────────────────────────────────────────────┤
 │                                                                │
 │  DOMAIN SHOWCASE (Icon grid)                                  │
-│  [Adult Health] [Mental Health] [Child] [Social] [Tech] [Crypto]│
+│  [Adult Nursing] [Mental Health] [Child] [Social] [Tech] [AI]  │
+│  [Crypto] [Enterprise] [General]                               │
 │                                                                │
 ├────────────────────────────────────────────────────────────────┤
 │                                                                │
@@ -411,7 +415,7 @@ apps/web/src/
 │       ├── AnalyticsDashboard/
 │       └── PublishingWorkflow/
 ├── pages/
-│   ├── Homepage.tsx (redesigned)
+│   ├── HomepageNew.tsx (redesigned)
 │   ├── articles/
 │   │   ├── [slug].tsx
 │   │   └── index.tsx

@@ -30,9 +30,8 @@ const TurnitinSubmission: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [currentStep, setCurrentStep] = useState<'form' | 'confirm'>('form');
   
-  const brokerUrl = useMemo(() => env.VITE_UPLOAD_BROKER_URL?.replace(/\/$/, '') ?? '', []);
   const apiUrl = useMemo(() => env.VITE_API_URL?.replace(/\/$/, '') ?? '', []);
-  const presignEndpoint = brokerUrl ? `${brokerUrl}/s3/presign-put` : resolveApiUrl('/api/uploads/presign-put');
+  const presignEndpoint = resolveApiUrl('/api/uploads/presign-put');
 
   // Validation
   const isEmailValid = useMemo(() => {
@@ -95,8 +94,8 @@ const TurnitinSubmission: React.FC = () => {
 
   // Upload files to R2
   const uploadFiles = async (): Promise<UploadedFile[]> => {
-    if (!brokerUrl && !apiUrl) {
-      throw new Error('Upload API is not configured. Set VITE_API_URL or VITE_UPLOAD_BROKER_URL.');
+    if (!apiUrl) {
+      throw new Error('Upload API is not configured. Set VITE_API_URL.');
     }
 
     const uploaded: UploadedFile[] = [];

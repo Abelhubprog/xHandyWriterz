@@ -3,8 +3,8 @@
 ## Overview
 
 The domain pages are now fully CMS-managed via Strapi 5. Admins can create, publish, and manage domain landing pages for:
-- Adult Nursing, Mental Health, Pediatric Nursing
-- AI, Cryptocurrency, Real Estate
+- Adult Nursing, Mental Health, Child Nursing, Social Work
+- Technology, AI, Crypto, Enterprise, General
 - And any new domains they want to add
 
 ## Architecture
@@ -29,6 +29,8 @@ The domain pages are now fully CMS-managed via Strapi 5. Admins can create, publ
 | `/domains` | `DomainsHub.tsx` | Browse all active domains |
 | `/domains/:slug` | `DomainPage.tsx` | Individual domain landing page |
 | `/services` | `ServicesHub.tsx` | Domain directory with service CTA buttons |
+
+Legacy `/services/:domain/*` URLs redirect to `/domains/:domain/*`.
 
 ### 3. CMS Fields Reference
 
@@ -65,6 +67,8 @@ The domain pages are now fully CMS-managed via Strapi 5. Admins can create, publ
 | `isActive` | boolean | Show in public listings |
 | `showInNav` | boolean | Show in navigation |
 | `showInFooter` | boolean | Show in footer |
+
+Note: if `featuredServices` or `featuredArticles` are empty, the frontend falls back to the latest content in that domain.
 
 #### Highlight Component Fields
 
