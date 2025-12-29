@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { toast } from 'react-hot-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { mattermostClient, type MattermostChannel, type MattermostFileInfo, type MattermostPost } from '@/lib/mm-client';
 import useMMAuth from '@/hooks/mattermost/useMMAuth';
@@ -127,6 +127,8 @@ const MessageComposer: React.FC<ComposerProps> = ({ disabled, onSend, onUpload, 
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { toast } = useToast();
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(event.target.files ?? []);
     if (selected.length) {
@@ -147,7 +149,7 @@ const MessageComposer: React.FC<ComposerProps> = ({ disabled, onSend, onUpload, 
   const handleSubmit = async (event?: React.FormEvent) => {
     event?.preventDefault();
     if (!message.trim() && files.length === 0) {
-      toast.error('Message required. Add a message or at least one attachment.');
+      toast({ variant: 'destructive', title: 'Message required', description: 'Add a message or at least one attachment.' });
       return;
     }
     try {
@@ -160,7 +162,7 @@ const MessageComposer: React.FC<ComposerProps> = ({ disabled, onSend, onUpload, 
       setFiles([]);
       resetFileInput();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to send message.');
+      toast({ variant: 'destructive', title: 'Unable to send message', description: error instanceof Error ? error.message : 'Unknown error' });
     }
   };
 
@@ -230,6 +232,7 @@ const EmptyState: React.FC<{ message: string; action?: React.ReactNode }> = ({ m
 
 const MessageCenter: React.FC = () => {
   const auth = useMMAuth();
+  const { toast } = useToast();
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const { channels, isLoading: channelsLoading, error: channelsError, refresh: refreshChannels } = useMattermostChannels({ enabled: auth.status === 'ready' });
 
@@ -270,11 +273,15 @@ const MessageCenter: React.FC = () => {
       try {
         await timeline.sendMessage(body, { fileIds });
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Unable to send message.');
+        toast({
+          variant: 'destructive',
+          title: 'Message failed',
+          description: error instanceof Error ? error.message : 'Unknown error sending message.',
+        });
         throw error;
       }
     },
-    [timeline],
+    [timeline, toast],
   );
 
   const handleUpload = useCallback(
@@ -282,11 +289,15 @@ const MessageCenter: React.FC = () => {
       try {
         return await timeline.uploadFiles(files);
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Upload failed.');
+        toast({
+          variant: 'destructive',
+          title: 'Upload failed',
+          description: error instanceof Error ? error.message : 'Unknown error uploading files.',
+        });
         throw error;
       }
     },
-    [timeline],
+    [timeline, toast],
   );
 
   if (auth.status === 'disabled') {

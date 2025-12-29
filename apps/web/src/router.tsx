@@ -3,29 +3,12 @@ import { createBrowserRouter, Navigate, RouteObject, useParams } from 'react-rou
 import RootLayout from './components/layouts/RootLayout';
 import DashboardLayout from './components/layouts/DashboardLayout';
 import AdminLayout from './components/layouts/AdminLayout';
-import { normalizeDomainSlug } from '@/lib/domain-utils';
 
 // Legacy /d/:domain redirect to /domains/:domain for backward compatibility
 function LegacyDomainRedirect() {
   const { domain, '*': rest } = useParams();
-  const normalizedDomain = normalizeDomainSlug(domain) ?? domain;
-  const newPath = rest
-    ? `/domains/${normalizedDomain}/${rest}`
-    : `/domains/${normalizedDomain}`;
+  const newPath = rest ? `/domains/${domain}/${rest}` : `/domains/${domain}`;
   return <Navigate to={newPath} replace />;
-}
-
-// Legacy /services/:domain(/:slug) redirect to domain-first service routes
-function LegacyServicesRedirect() {
-  const { domain, slug } = useParams();
-  const normalizedDomain = normalizeDomainSlug(domain) ?? domain;
-  if (normalizedDomain && slug) {
-    return <Navigate to={`/domains/${normalizedDomain}/services/${slug}`} replace />;
-  }
-  if (normalizedDomain) {
-    return <Navigate to={`/domains/${normalizedDomain}`} replace />;
-  }
-  return <Navigate to="/services" replace />;
 }
 
 // Pages - New CMS-integrated pages
@@ -42,7 +25,9 @@ const ApiDocsPage = React.lazy(() => import('./pages/docs/ApiDocsPage'));
 const DomainsHub = React.lazy(() => import('./pages/domains/DomainsHub'));
 const DomainPage = React.lazy(() => import('./pages/domains/DomainPage'));
 
-// Legacy pages removed in favor of CMS-first public experience
+// Legacy pages (keeping for fallback)
+const HomepageLegacy = React.lazy(() => import('./pages/Homepage'));
+const LearningHub = React.lazy(() => import('./pages/learning-hub'));
 const NotFound = React.lazy(() => import('./pages/not-found'));
 const AdminLogin = React.lazy(() => import('./pages/auth/admin-login'));
 const Login = React.lazy(() => import('./pages/auth/login'));
@@ -54,6 +39,7 @@ const PaymentOptions = React.lazy(() => import('./pages/payment/options'));
 const PaymentGateway = React.lazy(() => import('./pages/payment/PaymentGateway'));
 const TurnitinCheck = React.lazy(() => import('./pages/turnitin-check'));
 const TurnitinSubmission = React.lazy(() => import('./pages/TurnitinSubmission'));
+const ServicesPage = React.lazy(() => import('./pages/services/ServicesPage'));
 const ServicesHub = React.lazy(() => import('./pages/services/ServicesHub'));
 const Pricing = React.lazy(() => import('./pages/Pricing'));
 const About = React.lazy(() => import('./pages/About'));
@@ -81,8 +67,9 @@ const AdminMessaging = React.lazy(() => import('./pages/admin/AdminMessaging'));
 const TurnitinReports = React.lazy(() => import('./pages/admin/TurnitinReports'));
 
 // Route contract:
-// - '/' homepage uses CMS-integrated HomepageNew
-// - '/services' is the domain directory with service CTAs
+// - '/' homepage now uses new CMS-integrated HomepageNew
+// - '/learning-hub' entry to the legacy content site (to be replaced)
+// - '/services/*' served by Strapi via the web app
 // - '/articles/*' new article pages with CMS integration
 // - '/domains' hub listing all published domains
 // - '/domains/:slug' CMS-driven domain landing pages (Adult Nursing, AI, Crypto, etc.)
@@ -91,6 +78,8 @@ const TurnitinReports = React.lazy(() => import('./pages/admin/TurnitinReports')
 
 const childRoutes: RouteObject[] = [
   { index: true, element: <HomepageNew /> },
+  { path: 'legacy', element: <HomepageLegacy /> }, // Keep legacy homepage accessible
+  { path: 'learning-hub', element: <LearningHub /> },
   { path: 'auth/admin-login', element: <AdminLogin /> },
   { path: 'sign-in', element: <Login /> },
   { path: 'sign-up', element: <SignUp /> },
@@ -111,8 +100,8 @@ const childRoutes: RouteObject[] = [
   { path: 'authors', element: <AuthorsPage /> },  // Authors listing
   { path: 'authors/:slug', element: <AuthorPage /> },  // Single author profile
   { path: 'services', element: <ServicesHub /> },  // Services Hub (domain directory + service CTAs)
-  { path: 'services/:domain', element: <LegacyServicesRedirect /> },  // Legacy redirect
-  { path: 'services/:domain/:slug', element: <LegacyServicesRedirect /> },  // Legacy redirect
+  { path: 'services/:domain', element: <ServicesPage /> },  // Domain services listing
+  { path: 'services/:domain/:slug', element: <ServicePageNew /> },  // Single service detail
   
   // Domain-based content routes (CMS-driven)
   { path: 'domains', element: <DomainsHub /> },  // All domains hub page

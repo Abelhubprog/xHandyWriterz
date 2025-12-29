@@ -2,7 +2,7 @@ import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/utils/cn';
 
-export const cardVariants = cva(
+const cardVariants = cva(
   'rounded-lg bg-white border transition-shadow',
   {
     variants: {

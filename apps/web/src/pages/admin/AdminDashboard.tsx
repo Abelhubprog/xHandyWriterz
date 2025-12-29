@@ -23,7 +23,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuth as useClerkAuth } from "@clerk/clerk-react";
-import { fetchArticles, fetchServices } from '@/lib/cms';
+import { fetchArticles, fetchServices } from "@/lib/cms-client";
 import { formatDate } from "@/lib/utils";
 
 interface DraftSummary {
@@ -51,6 +51,7 @@ const buildUrl = (base?: string, suffix?: string) => {
 const cmsBaseUrl = import.meta.env.VITE_CMS_URL || "";
 const cmsAdminUrl = buildUrl(cmsBaseUrl, "/admin");
 const mattermostUrl = buildUrl(import.meta.env.VITE_MATTERMOST_URL);
+const uploadBrokerUrl = buildUrl(import.meta.env.VITE_UPLOAD_BROKER_URL);
 const apiBaseUrl = buildUrl(import.meta.env.VITE_API_URL);
 const apiRootUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
 
@@ -76,10 +77,12 @@ export const AdminDashboard: React.FC = () => {
       present: Boolean(mattermostUrl),
     },
     {
-      label: "Upload API",
-      description: "Railway API for presigned uploads to R2 storage.",
-      href: apiRootUrl,
-      present: Boolean(apiRootUrl),
+      label: uploadBrokerUrl ? "Upload Broker" : "Upload API",
+      description: uploadBrokerUrl
+        ? "Presigned uploads + antivirus pipeline for R2."
+        : "Railway API fallback for presigned uploads.",
+      href: uploadBrokerUrl || apiRootUrl,
+      present: Boolean(uploadBrokerUrl || apiRootUrl),
     },
   ], []);
 

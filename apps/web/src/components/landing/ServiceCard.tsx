@@ -19,7 +19,6 @@ import {
   Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { normalizeDomainSlug } from '@/lib/domain-utils';
 
 export interface Service {
   id: string;
@@ -132,10 +131,9 @@ export function ServiceCard({
   showRating = true,
   className
 }: ServiceCardProps) {
-  const rawDomain = service.domain || 'general';
-  const canonicalDomain = normalizeDomainSlug(rawDomain) || rawDomain;
-  const DomainIcon = DOMAIN_ICONS[canonicalDomain] || BookOpen;
-  const gradient = DOMAIN_GRADIENTS[canonicalDomain] || DOMAIN_GRADIENTS['general'];
+  const domainSlug = service.domain || 'general';
+  const DomainIcon = DOMAIN_ICONS[domainSlug] || BookOpen;
+  const gradient = DOMAIN_GRADIENTS[domainSlug] || DOMAIN_GRADIENTS['general'];
 
   if (variant === 'horizontal') {
     return (
@@ -172,7 +170,7 @@ export function ServiceCard({
         <div className="flex flex-1 flex-col p-6">
           <div className="mb-2 flex items-center gap-2">
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 capitalize">
-              {canonicalDomain.replace('-', ' ')}
+              {domainSlug.replace('-', ' ')}
             </span>
             {service.x402Enabled && (
               <span className="flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-700">
@@ -183,7 +181,7 @@ export function ServiceCard({
           </div>
 
           <h3 className="mb-2 text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-            <Link to={`/domains/${canonicalDomain}/services/${service.slug}`} className="hover:underline">
+            <Link to={`/domains/${domainSlug}/services/${service.slug}`} className="hover:underline">
               {service.title}
             </Link>
           </h3>
@@ -266,7 +264,7 @@ export function ServiceCard({
           {/* Domain & x402 */}
           <div className="mb-4 flex items-center gap-2">
             <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-medium capitalize">
-              {canonicalDomain.replace('-', ' ')}
+              {domainSlug.replace('-', ' ')}
             </span>
             {service.x402Enabled && (
               <span className="flex items-center gap-1 rounded-full bg-violet-500/20 px-3 py-1 text-sm font-medium text-violet-300">
@@ -278,7 +276,7 @@ export function ServiceCard({
 
           {/* Title & Description */}
           <h3 className="mb-3 text-2xl font-bold">
-            <Link to={`/domains/${canonicalDomain}/services/${service.slug}`} className="hover:underline">
+            <Link to={`/domains/${domainSlug}/services/${service.slug}`} className="hover:underline">
               {service.title}
             </Link>
           </h3>
@@ -307,7 +305,7 @@ export function ServiceCard({
               )}
             </div>
             <Link
-              to={`/domains/${canonicalDomain}/services/${service.slug}`}
+              to={`/domains/${domainSlug}/services/${service.slug}`}
               className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 font-semibold text-slate-900 transition-all hover:bg-slate-100"
             >
               View Service
@@ -337,12 +335,12 @@ export function ServiceCard({
 
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
-            <Link to={`/domains/${canonicalDomain}/services/${service.slug}`}>
+            <Link to={`/domains/${domainSlug}/services/${service.slug}`}>
               {service.title}
             </Link>
           </h3>
           <div className="flex items-center gap-2 text-sm text-slate-500">
-            <span className="capitalize">{canonicalDomain.replace('-', ' ')}</span>
+            <span className="capitalize">{domainSlug.replace('-', ' ')}</span>
             {service.rating && (
               <>
                 <span>•</span>
@@ -410,13 +408,13 @@ export function ServiceCard({
         {/* Domain */}
         <div className="mb-3">
           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 capitalize">
-            {canonicalDomain.replace('-', ' ')}
+            {domainSlug.replace('-', ' ')}
           </span>
         </div>
 
         {/* Title & Excerpt */}
         <h3 className="mb-2 text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-          <Link to={`/domains/${canonicalDomain}/services/${service.slug}`} className="hover:underline">
+          <Link to={`/domains/${domainSlug}/services/${service.slug}`} className="hover:underline">
             {service.title}
           </Link>
         </h3>

@@ -23,7 +23,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 };
 
 function DomainCard({ domain, index }: { domain: DomainListItem; index: number }) {
-  const Icon = ICON_MAP[domain.iconKey ?? ''] ?? BookOpen;
+  const Icon = domain.iconKey ? ICON_MAP[domain.iconKey] : BookOpen;
   
   return (
     <motion.div

@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import emailService from '@/services/emailService';
 import { toast } from 'sonner';
-import { resolveApiUrl } from '@/lib/api-base';
 
 const PaymentSuccess: React.FC = () => {
   const [params] = useSearchParams();

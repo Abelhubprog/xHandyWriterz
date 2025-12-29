@@ -98,7 +98,7 @@ const Login: React.FC = () => {
                   colorInputBackground: 'rgba(55, 65, 81, 0.8)',
                   colorInputText: '#f9fafb',
                   colorText: '#f9fafb',
-                  fontFamily: 'Manrope, sans-serif',
+                  fontFamily: 'Inter, system-ui, sans-serif',
                   borderRadius: '12px'
                 },
                 elements: {

@@ -25,6 +25,11 @@ interface AccessibleButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> 
    * Whether the button should be rendered with a round shape (for icon buttons)
    */
   isRound?: boolean;
+  
+  /**
+   * Optional onClick handler
+   */
+  onClick?: () => void;
 }
 
 /**

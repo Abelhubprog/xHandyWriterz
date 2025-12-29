@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import RichEditor from '@/components/editor/RichEditor';
-import { cmsClient, uploadMedia } from '@/lib/cms';
+import { cmsClient, uploadMedia } from '@/lib/cms-client';
 import type { Article, ContentBlock } from '@/types/publishing';
 import { DOMAIN_TAGS, TYPE_TAGS } from '@/config/taxonomy';
 import { useAuth } from '@/hooks/useAuth';

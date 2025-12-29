@@ -1,7 +1,7 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Breadcrumbs as MuiBreadcrumbs, Link, Typography } from '@mui/material';
+import NextLink from 'next/link';
+import { useRouter } from 'next/router';
 import { useMemo } from 'react';
-import { ChevronRight, Home } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface BreadcrumbItem {
   label: string;
@@ -9,10 +9,10 @@ interface BreadcrumbItem {
 }
 
 export default function Breadcrumbs() {
-  const location = useLocation();
+  const router = useRouter();
 
   const breadcrumbs = useMemo(() => {
-    const paths = location.pathname.split('/').filter(Boolean);
+    const paths = router.asPath.split('/').filter(Boolean);
     const items: BreadcrumbItem[] = [
       { label: 'Home', href: '/' }
     ];
@@ -26,7 +26,7 @@ export default function Breadcrumbs() {
         .join(' ');
 
       // Skip dynamic route parameters
-      if (path.startsWith(':')) {
+      if (path.startsWith('[') && path.endsWith(']')) {
         return;
       }
 
@@ -44,40 +44,39 @@ export default function Breadcrumbs() {
     }
 
     return items;
-  }, [location.pathname]);
+  }, [router.asPath]);
 
   if (breadcrumbs.length <= 1) return null;
 
   return (
-    <nav aria-label="breadcrumb" className="mb-4">
-      <ol className="flex items-center gap-2 text-sm">
-        {breadcrumbs.map((item, index) => {
-          const isLast = index === breadcrumbs.length - 1;
-          const isFirst = index === 0;
+    <MuiBreadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
+      {breadcrumbs.map((item, index) => {
+        const isLast = index === breadcrumbs.length - 1;
 
+        if (isLast) {
           return (
-            <li key={item.label} className="flex items-center gap-2">
-              {index > 0 && (
-                <ChevronRight className="h-4 w-4 text-gray-400" />
-              )}
-              {isLast ? (
-                <span className="font-medium text-gray-900">{item.label}</span>
-              ) : (
-                <Link
-                  to={item.href || '/'}
-                  className={cn(
-                    "text-gray-500 hover:text-gray-700 transition-colors",
-                    "flex items-center gap-1"
-                  )}
-                >
-                  {isFirst && <Home className="h-4 w-4" />}
-                  {item.label}
-                </Link>
-              )}
-            </li>
+            <Typography
+              key={item.label}
+              color="text.primary"
+              sx={{ fontWeight: 'medium' }}
+            >
+              {item.label}
+            </Typography>
           );
-        })}
-      </ol>
-    </nav>
+        }
+
+        return (
+          <Link
+            key={item.label}
+            component={NextLink}
+            href={item.href || '#'}
+            underline="hover"
+            color="inherit"
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </MuiBreadcrumbs>
   );
 }

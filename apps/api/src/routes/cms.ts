@@ -1,8 +1,8 @@
-import { Router, IRouter } from 'express';
+import { Router } from 'express';
 import fetch from 'node-fetch';
 import { requireAdmin } from '../lib/clerk.js';
 
-export const cmsRouter: IRouter = Router();
+export const cmsRouter = Router();
 
 const STRAPI_URL = (process.env.STRAPI_URL || process.env.CMS_URL || '').replace(/\/$/, '');
 const STRAPI_TOKEN = process.env.STRAPI_TOKEN || process.env.CMS_TOKEN || '';

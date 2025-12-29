@@ -197,7 +197,7 @@ export function ComplianceChecklist({
     });
   };
 
-  const status: ComplianceStatus = COMPLIANCE_CHECKS.reduce<ComplianceStatus>(
+  const status: ComplianceStatus = COMPLIANCE_CHECKS.reduce(
     (acc, check) => {
       const passed = checkStatus(check);
       return {

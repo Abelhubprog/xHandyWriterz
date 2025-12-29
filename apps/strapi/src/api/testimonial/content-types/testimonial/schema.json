@@ -41,7 +41,6 @@
     "domain": {
       "type": "enumeration",
       "enum": [
-        "adult-nursing",
         "adult-health",
         "mental-health",
         "child-nursing",

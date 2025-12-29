@@ -1,3 +1,15 @@
+/**
+ * ArticlePage Component
+ * 
+ * Full article reading experience with:
+ * - Rich content rendering
+ * - Author information
+ * - Related articles
+ * - x402 badge for AI-accessible content
+ * - Social sharing
+ * - Table of contents
+ */
+
 import React, { useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, Link, useNavigate } from 'react-router-dom';
@@ -7,50 +19,62 @@ import {
   Calendar,
   Clock,
   Eye,
+  Share2,
+  Bookmark,
+  BookmarkCheck,
   Twitter,
   Facebook,
   Linkedin,
-  Copy,
-  Check,
+  Link as LinkIcon,
+  Bot,
+  Coins,
+  ChevronRight,
   Tag,
   User,
-  ChevronRight,
+  Copy,
+  Check,
 } from 'lucide-react';
 
+// Import hooks
 import {
   useArticle,
   useRelatedArticles,
   useIncrementViewCount,
 } from '@/hooks';
+
 import { useCMSContext, useDomain } from '@/contexts/CMSContext';
-import { normalizeDomainSlug } from '@/lib/domain-utils';
-import { ArticleCard } from '@/components/landing';
+
+// Import components
+import { ArticleCard, AuthorCard } from '@/components/landing';
+
+// Animation variants
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.4 } },
+};
 
 const fadeInUp = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
+// Table of contents extractor
 function extractHeadings(content: string): { id: string; text: string; level: number }[] {
   const headingRegex = /<h([2-4])[^>]*(?:id="([^"]*)")?[^>]*>([^<]+)<\/h[2-4]>/gi;
   const headings: { id: string; text: string; level: number }[] = [];
   let match;
-
+  
   while ((match = headingRegex.exec(content)) !== null) {
-    const level = parseInt(match[1], 10);
-    const id =
-      match[2] ||
-      match[3]
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w-]/g, '');
+    const level = parseInt(match[1]);
+    const id = match[2] || match[3].toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
     const text = match[3];
     headings.push({ id, text, level });
   }
-
+  
   return headings;
 }
 
+// Share component
 function ShareButtons({ title, url }: { title: string; url: string }) {
   const [copied, setCopied] = React.useState(false);
 
@@ -71,46 +95,47 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Share</span>
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">Share:</span>
       <a
         href={shareLinks.twitter}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:text-slate-900"
+        className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
         aria-label="Share on Twitter"
       >
-        <Twitter className="h-4 w-4" />
+        <Twitter className="w-4 h-4" />
       </a>
       <a
         href={shareLinks.facebook}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:text-slate-900"
+        className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
         aria-label="Share on Facebook"
       >
-        <Facebook className="h-4 w-4" />
+        <Facebook className="w-4 h-4" />
       </a>
       <a
         href={shareLinks.linkedin}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:text-slate-900"
+        className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
         aria-label="Share on LinkedIn"
       >
-        <Linkedin className="h-4 w-4" />
+        <Linkedin className="w-4 h-4" />
       </a>
       <button
         onClick={copyToClipboard}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:text-slate-900"
+        className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
         aria-label="Copy link"
       >
-        {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+        {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
       </button>
     </div>
   );
 }
 
+// Table of Contents component
 function TableOfContents({ headings }: { headings: { id: string; text: string; level: number }[] }) {
   const [activeId, setActiveId] = React.useState<string>('');
 
@@ -123,7 +148,7 @@ function TableOfContents({ headings }: { headings: { id: string; text: string; l
           }
         });
       },
-      { rootMargin: '-80px 0px -70% 0px' }
+      { rootMargin: '-100px 0px -80% 0px' }
     );
 
     headings.forEach(({ id }) => {
@@ -137,18 +162,20 @@ function TableOfContents({ headings }: { headings: { id: string; text: string; l
   if (headings.length === 0) return null;
 
   return (
-    <nav className="sticky top-24 space-y-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Contents</h3>
+    <nav className="sticky top-24 space-y-1">
+      <h3 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wider">
+        Table of Contents
+      </h3>
       {headings.map((heading) => (
         <a
           key={heading.id}
           href={`#${heading.id}`}
-          className={`block text-sm transition-colors ${
+          className={`block text-sm py-1 transition-colors ${
             heading.level === 2 ? 'pl-0' : heading.level === 3 ? 'pl-3' : 'pl-6'
           } ${
             activeId === heading.id
-              ? 'text-slate-900 font-semibold'
-              : 'text-slate-500 hover:text-slate-900'
+              ? 'text-blue-600 dark:text-blue-400 font-medium'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           {heading.text}
@@ -158,318 +185,347 @@ function TableOfContents({ headings }: { headings: { id: string; text: string; l
   );
 }
 
+// x402 Badge component
+function X402Badge({ price }: { price?: number }) {
+  return (
+    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20">
+      <Bot className="w-4 h-4 text-purple-500" />
+      <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+        AI-Ready
+      </span>
+      {price && (
+        <>
+          <span className="text-gray-400">•</span>
+          <Coins className="w-4 h-4 text-amber-500" />
+          <span className="text-sm text-amber-600 dark:text-amber-400">
+            ${price.toFixed(3)}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function ArticlePage() {
   const { slug, articleSlug } = useParams<{ slug?: string; articleSlug?: string }>();
   const resolvedSlug = articleSlug || slug || '';
   const navigate = useNavigate();
   const { resolveMediaUrl: resolveCmsMedia } = useCMSContext();
-
+  
+  // Fetch article data
   const { data: article, isLoading, error } = useArticle(resolvedSlug);
   const { mutate: incrementView } = useIncrementViewCount();
+  
+  // Fetch related articles
   const { data: relatedData } = useRelatedArticles(
     article?.id || 0,
     article?.domain || '',
     4
   );
 
-  const canonicalDomain = normalizeDomainSlug(article?.domain) ?? article?.domain ?? 'general';
-  const domainInfo = useDomain(canonicalDomain as any);
+  // Domain info
+  const domainInfo = useDomain(article?.domain as any || 'general');
 
+  // Extract table of contents
   const headings = useMemo(() => {
     if (!article?.content) return [];
     return extractHeadings(article.content);
   }, [article?.content]);
 
+  // Increment view count on load
   useEffect(() => {
     if (article?.id) {
       incrementView({ articleId: article.id, currentCount: article.viewCount || 0 });
     }
-  }, [article?.id, incrementView]);
+  }, [article?.id]);
 
-  const related = relatedData?.data || [];
+  // Format date
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  // Current URL for sharing
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
 
+  // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="animate-pulse space-y-6">
-            <div className="h-6 w-32 rounded bg-slate-200" />
-            <div className="h-10 w-2/3 rounded bg-slate-200" />
-            <div className="h-4 w-1/2 rounded bg-slate-200" />
-            <div className="h-64 rounded-3xl bg-slate-200" />
+      <div className="min-h-screen bg-white dark:bg-gray-950">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-4" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2 mb-8" />
+            <div className="h-96 bg-gray-200 dark:bg-gray-800 rounded-2xl mb-8" />
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-full" />
+              ))}
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  // Error state
   if (error || !article) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="mx-auto flex max-w-3xl flex-col items-center justify-center px-4 py-24 text-center">
-          <h1 className="text-2xl font-semibold text-slate-900">Article not found</h1>
-          <p className="mt-3 text-slate-600">
-            The article you are looking for does not exist or has been removed.
+      <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Article Not Found
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">
+            The article you're looking for doesn't exist or has been removed.
           </p>
           <Link
             to="/articles"
-            className="mt-8 inline-flex items-center gap-2 rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Browse articles
+            <ArrowLeft className="w-5 h-5" />
+            Browse Articles
           </Link>
         </div>
       </div>
     );
   }
 
-  const heroImage = article.coverImage || article.heroImage;
-  const summary = article.excerpt || article.summary || '';
+  const related = relatedData?.data || [];
 
   return (
     <>
       <Helmet>
         <title>{article.title} - HandyWriterz</title>
-        <meta name="description" content={summary || article.title} />
-        <meta property="og:title" content={`${article.title} - HandyWriterz`} />
-        <meta property="og:description" content={summary || article.title} />
-        {heroImage && (
-          <meta property="og:image" content={resolveCmsMedia(heroImage.url)} />
+        <meta name="description" content={article.excerpt || article.title} />
+        <meta property="og:title" content={article.title} />
+        <meta property="og:description" content={article.excerpt || article.title} />
+        <meta property="og:type" content="article" />
+        {article.coverImage && (
+          <meta property="og:image" content={resolveCmsMedia(article.coverImage.url)} />
+        )}
+        <meta property="article:published_time" content={article.publishedAt} />
+        {article.author && (
+          <meta property="article:author" content={article.author.name} />
         )}
       </Helmet>
 
-      <div className="min-h-screen bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+      <article className="min-h-screen bg-white dark:bg-gray-950">
+        {/* Back navigation */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-slate-900"
+            className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="w-4 h-4" />
             Back
           </button>
         </div>
 
-        <section className="relative overflow-hidden bg-slate-950 text-white">
-          <div className="absolute inset-0">
-            <div className={`absolute inset-0 bg-gradient-to-br ${domainInfo.gradient} opacity-70`} />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_60%)]" />
+        {/* Header */}
+        <motion.header
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
+        >
+          {/* Domain & Category */}
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <Link
+              to={`/domains/${article.domain}`}
+              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r ${domainInfo.gradient} text-white`}
+            >
+              {domainInfo.name}
+            </Link>
+            {article.category && (
+              <Link
+                to={`/categories/${article.category.slug}`}
+                className="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+              >
+                <ChevronRight className="w-4 h-4" />
+                {article.category.name}
+              </Link>
+            )}
+            {article.x402Enabled && (
+              <X402Badge price={article.x402Price} />
+            )}
           </div>
 
-          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-            <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="space-y-6"
+          {/* Title */}
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+            {article.title}
+          </h1>
+
+          {/* Excerpt */}
+          {article.excerpt && (
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+              {article.excerpt}
+            </p>
+          )}
+
+          {/* Meta info */}
+          <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 dark:text-gray-400 mb-8">
+            {article.author && (
+              <Link
+                to={`/authors/${article.author.slug}`}
+                className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
-                <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.2em] text-white/70">
-                  <Link to="/articles" className="transition hover:text-white">
-                    Articles
-                  </Link>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                  <Link to={`/domains/${canonicalDomain}`} className="font-semibold text-white">
-                    {domainInfo.name}
-                  </Link>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <span
-                    className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold"
-                    style={{ color: domainInfo.color }}
-                  >
-                    {domainInfo.name}
-                  </span>
-                  {article.category && (
-                    <span className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white/80">
-                      {article.category.name}
-                    </span>
-                  )}
-                  {article.x402Enabled && (
-                    <span className="rounded-full border border-emerald-400/40 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-100">
-                      x402 enabled
-                    </span>
-                  )}
-                </div>
-
-                <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
-                  {article.title}
-                </h1>
-
-                {summary && (
-                  <p className="text-lg text-white/80 leading-relaxed">
-                    {summary}
-                  </p>
-                )}
-
-                <div className="flex flex-wrap items-center gap-6 text-sm text-white/70">
-                  {article.author && (
-                    <span className="flex items-center gap-2">
-                      {article.author.avatar?.url ? (
-                        <img
-                          src={resolveCmsMedia(article.author.avatar.url)}
-                          alt={article.author.name}
-                          className="h-8 w-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
-                          <User className="h-4 w-4" />
-                        </span>
-                      )}
-                      {article.author.name}
-                    </span>
-                  )}
-                  {article.publishedAt && (
-                    <span className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(article.publishedAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </span>
-                  )}
-                  {article.readingTime && (
-                    <span className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      {article.readingTime} min read
-                    </span>
-                  )}
-                  {typeof article.viewCount === 'number' && article.viewCount > 0 && (
-                    <span className="flex items-center gap-2">
-                      <Eye className="h-4 w-4" />
-                      {article.viewCount.toLocaleString()} views
-                    </span>
-                  )}
-                </div>
-
-                <ShareButtons title={article.title} url={currentUrl} />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="relative"
-              >
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-3 shadow-2xl">
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-slate-900">
-                    {heroImage ? (
-                      <img
-                        src={resolveCmsMedia(heroImage.url)}
-                        alt={heroImage.alternativeText || article.title}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/10 to-white/0">
-                        <User className="h-16 w-16 text-white/60" />
-                      </div>
-                    )}
+                {article.author.avatar ? (
+                  <img
+                    src={resolveCmsMedia(article.author.avatar.url)}
+                    alt={article.author.name}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                    <User className="w-4 h-4" />
                   </div>
-                </div>
-              </motion.div>
+                )}
+                <span className="font-medium">{article.author.name}</span>
+              </Link>
+            )}
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              {formatDate(article.publishedAt || article.createdAt)}
             </div>
+            {article.readingTime && (
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                {article.readingTime} min read
+              </div>
+            )}
+            {article.viewCount !== undefined && (
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4" />
+                {article.viewCount.toLocaleString()} views
+              </div>
+            )}
           </div>
-        </section>
 
-        <section className="bg-white px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-6xl">
-            <div className="grid gap-12 lg:grid-cols-[1fr_280px]">
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeInUp}
-                className="min-w-0"
-              >
-                <div
-                  className="prose prose-slate max-w-none prose-headings:font-semibold prose-a:text-slate-900"
-                  dangerouslySetInnerHTML={{ __html: article.content }}
-                />
-
-                {article.tags && article.tags.length > 0 && (
-                  <div className="mt-12 border-t border-slate-200 pt-8">
-                    <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Tags</h3>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {article.tags.map((tag) => (
-                        <Link
-                          key={tag.id}
-                          to={`/tags/${tag.slug}`}
-                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
-                        >
-                          <Tag className="h-3 w-3" />
-                          {tag.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {article.author && (
-                  <div className="mt-12 rounded-2xl border border-slate-200 bg-slate-50/70 p-6">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                      {article.author.avatar?.url ? (
-                        <img
-                          src={resolveCmsMedia(article.author.avatar.url)}
-                          alt={article.author.name}
-                          className="h-16 w-16 rounded-2xl object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-white">
-                          <User className="h-6 w-6" />
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-lg font-semibold text-slate-900">{article.author.name}</p>
-                        {article.author.credentials && (
-                          <p className="text-sm text-slate-500">{article.author.credentials}</p>
-                        )}
-                        {article.author.bio && (
-                          <p className="mt-2 text-sm text-slate-600">{article.author.bio}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-
-              <aside className="hidden lg:block">
-                <TableOfContents headings={headings} />
-              </aside>
-            </div>
+          {/* Share & Bookmark */}
+          <div className="flex items-center justify-between pb-8 border-b border-gray-200 dark:border-gray-800">
+            <ShareButtons title={article.title} url={currentUrl} />
+            <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors">
+              <Bookmark className="w-5 h-5" />
+            </button>
           </div>
-        </section>
+        </motion.header>
 
+        {/* Cover Image */}
+        {article.coverImage && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+          >
+            <img
+              src={resolveCmsMedia(article.coverImage.url)}
+              alt={article.coverImage.alternativeText || article.title}
+              className="w-full h-auto rounded-2xl shadow-lg"
+            />
+          </motion.div>
+        )}
+
+        {/* Content Layout */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid lg:grid-cols-[1fr_250px] gap-12">
+            {/* Main Content */}
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={fadeInUp}
+              className="min-w-0"
+            >
+              <div
+                className="prose prose-lg dark:prose-invert max-w-none
+                  prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-white
+                  prose-p:text-gray-600 dark:prose-p:text-gray-300
+                  prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
+                  prose-img:rounded-xl prose-img:shadow-lg
+                  prose-pre:bg-gray-900 prose-pre:shadow-lg
+                  prose-code:text-pink-600 dark:prose-code:text-pink-400
+                  prose-blockquote:border-l-blue-500 prose-blockquote:bg-blue-50 dark:prose-blockquote:bg-blue-900/20 prose-blockquote:py-1 prose-blockquote:px-6 prose-blockquote:rounded-r-lg"
+                dangerouslySetInnerHTML={{ __html: article.content }}
+              />
+
+              {/* Tags */}
+              {article.tags && article.tags.length > 0 && (
+                <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
+                    Tags
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {article.tags.map((tag) => (
+                      <Link
+                        key={tag.id}
+                        to={`/tags/${tag.slug}`}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <Tag className="w-3 h-3" />
+                        {tag.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Author Card */}
+              {article.author && (
+                <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-6 uppercase tracking-wider">
+                    About the Author
+                  </h3>
+                  <AuthorCard
+                    author={{
+                      id: String(article.author.id),
+                      name: article.author.name,
+                      slug: article.author.slug,
+                      bio: article.author.bio,
+                      avatar: article.author.avatar?.url
+                        ? resolveCmsMedia(article.author.avatar.url)
+                        : undefined,
+                      credentials: article.author.credentials,
+                      socialLinks: article.author.socialLinks,
+                    }}
+                    variant="compact"
+                  />
+                </div>
+              )}
+            </motion.div>
+
+            {/* Sidebar */}
+            <aside className="hidden lg:block">
+              <TableOfContents headings={headings} />
+            </aside>
+          </div>
+        </div>
+
+        {/* Related Articles */}
         {related.length > 0 && (
-          <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-6xl">
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeInUp}
-                className="mb-10"
-              >
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Related reading</p>
-                <h2 className="mt-3 text-3xl font-semibold text-slate-900">Keep exploring</h2>
-              </motion.div>
-
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <section className="bg-gray-50 dark:bg-gray-900/50 py-16 mt-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
+                Related Articles
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {related.map((relatedArticle) => (
                   <ArticleCard
-                    key={relatedArticle.id}
                     id={String(relatedArticle.id)}
                     title={relatedArticle.title}
                     slug={relatedArticle.slug}
-                    excerpt={relatedArticle.excerpt || relatedArticle.summary}
+                    excerpt={relatedArticle.excerpt || ''}
                     coverImage={
                       relatedArticle.coverImage?.url
                         ? resolveCmsMedia(relatedArticle.coverImage.url)
-                        : relatedArticle.heroImage?.url
-                          ? resolveCmsMedia(relatedArticle.heroImage.url)
-                          : undefined
+                        : undefined
                     }
+                    publishedAt={relatedArticle.publishedAt || relatedArticle.createdAt}
+                    readingTime={relatedArticle.readingTime || 5}
                     author={
                       relatedArticle.author
                         ? {
@@ -477,22 +533,44 @@ export default function ArticlePage() {
                             avatar: relatedArticle.author.avatar?.url
                               ? resolveCmsMedia(relatedArticle.author.avatar.url)
                               : undefined,
-                            slug: relatedArticle.author.slug,
                           }
                         : undefined
                     }
-                    publishedAt={relatedArticle.publishedAt}
-                    readingTime={relatedArticle.readingTime}
-                    viewCount={relatedArticle.viewCount}
-                    featured={relatedArticle.featured}
-                    x402Enabled={relatedArticle.x402Enabled}
+                    variant="minimal"
                   />
                 ))}
               </div>
             </div>
           </section>
         )}
-      </div>
+
+        {/* CTA Section */}
+        <section className="py-16">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Need Custom Content?
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
+              Our expert writers can create tailored content for your specific needs.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link
+                to="/services"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+              >
+                View Services
+                <ChevronRight className="w-5 h-5" />
+              </Link>
+              <Link
+                to="/contact"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                Contact Us
+              </Link>
+            </div>
+          </div>
+        </section>
+      </article>
     </>
   );
 }

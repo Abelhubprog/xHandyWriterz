@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { resolveApiUrl } from '@/lib/api-base';
+import { env } from '@/env';
 import { resolveApiUrl } from '@/lib/api-base';
 import emailService from '@/services/emailService';
 
@@ -39,8 +39,10 @@ const TurnitinReports: React.FC = () => {
   const [report2, setReport2] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   
-  const presignPutEndpoint = resolveApiUrl('/api/uploads/presign-put');
-  const presignGetEndpoint = resolveApiUrl('/api/uploads/presign');
+  const brokerUrl = env.VITE_UPLOAD_BROKER_URL?.replace(/\/$/, '') ?? '';
+  const apiUrl = env.VITE_API_URL?.replace(/\/$/, '') ?? '';
+  const presignPutEndpoint = brokerUrl ? `${brokerUrl}/s3/presign-put` : resolveApiUrl('/api/uploads/presign-put');
+  const presignGetEndpoint = brokerUrl ? `${brokerUrl}/s3/presign` : resolveApiUrl('/api/uploads/presign');
 
   useEffect(() => {
     if (!isAdmin) {

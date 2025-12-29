@@ -1,4 +1,4 @@
-import React, { ElementType, ComponentPropsWithoutRef } from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 export type AnimationVariant = 
@@ -11,18 +11,15 @@ export type AnimationVariant =
   | 'scale-in'
   | 'rotate-in';
 
-type AnimatedOwnProps<T extends ElementType = 'div'> = {
+export interface AnimatedProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   variant?: AnimationVariant;
   delay?: number;
   className?: string;
-  as?: T;
+  as?: keyof JSX.IntrinsicElements;
   duration?: 'fast' | 'normal' | 'slow';
   onAnimationComplete?: () => void;
-};
-
-export type AnimatedProps<T extends ElementType = 'div'> = AnimatedOwnProps<T> &
-  Omit<ComponentPropsWithoutRef<T>, keyof AnimatedOwnProps<T>>;
+}
 
 const durationClasses = {
   fast: 'duration-200',
@@ -33,18 +30,16 @@ const durationClasses = {
 /**
  * A component that wraps its children with Tailwind animations
  */
-export function Animated<T extends ElementType = 'div'>({
+export function Animated({
   children,
   variant = 'fade-in',
   delay = 0,
   duration = 'normal',
   className,
-  as,
+  as: Component = 'div',
   onAnimationComplete,
   ...props
-}: AnimatedProps<T>): JSX.Element {
-  const Component = as || 'div';
-  
+}: AnimatedProps): JSX.Element {
   const handleAnimationEnd = (event: React.AnimationEvent) => {
     if (event.target === event.currentTarget) {
       onAnimationComplete?.();
@@ -61,38 +56,33 @@ export function Animated<T extends ElementType = 'div'>({
         className
       )}
       onAnimationEnd={onAnimationComplete ? handleAnimationEnd : undefined}
-      {...(props as any)}
+      {...props}
     >
       {children}
     </Component>
   );
 }
 
-type StaggerContainerOwnProps<T extends ElementType = 'div'> = {
+export interface StaggerContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   staggerDelay?: number;
-  as?: T;
+  as?: keyof JSX.IntrinsicElements;
   childClassName?: string;
   onComplete?: () => void;
-  className?: string;
-};
-
-export type StaggerContainerProps<T extends ElementType = 'div'> = StaggerContainerOwnProps<T> &
-  Omit<ComponentPropsWithoutRef<T>, keyof StaggerContainerOwnProps<T>>;
+}
 
 /**
  * A container that staggers the animation of its Animated children
  */
-export function StaggerContainer<T extends ElementType = 'div'>({
+export function StaggerContainer({
   children,
   staggerDelay = 100,
   className,
   childClassName,
-  as,
+  as: Component = 'div',
   onComplete,
   ...props
-}: StaggerContainerProps<T>): JSX.Element {
-  const Component = as || 'div';
+}: StaggerContainerProps): JSX.Element {
   const childrenArray = React.Children.toArray(children);
   const [completedCount, setCompletedCount] = React.useState(0);
 
@@ -107,18 +97,18 @@ export function StaggerContainer<T extends ElementType = 'div'>({
   };
   
   return (
-    <Component className={className} {...(props as any)}>
+    <Component className={className} {...props}>
       {childrenArray.map((child, index) => {
         if (!React.isValidElement(child)) return child;
         
-        return React.cloneElement(child as React.ReactElement<any>, {
+        return React.cloneElement(child, {
           delay: index * staggerDelay,
-          className: cn((child as React.ReactElement<any>).props.className, childClassName),
+          className: cn(child.props.className, childClassName),
           onAnimationComplete: () => {
             handleChildComplete();
-            (child as React.ReactElement<any>).props.onAnimationComplete?.();
+            child.props.onAnimationComplete?.();
           },
-          ...(child as React.ReactElement<any>).props
+          ...child.props
         });
       })}
     </Component>
