@@ -3,7 +3,7 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "apps/mattermost/Dockerfile",
-    "contextPath": "."
+    "contextPath": "apps/mattermost"
   },
   "deploy": {
     "numReplicas": 1,
