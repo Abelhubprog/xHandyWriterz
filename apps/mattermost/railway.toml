@@ -1,0 +1,11 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/mattermost/Dockerfile"
+contextPath = "."
+
+[deploy]
+numReplicas = 1
+healthcheckPath = "/api/v4/system/ping"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

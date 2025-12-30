@@ -1,0 +1,26 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/web/Dockerfile"
+contextPath = "."
+watchPatterns = ["apps/web/**", "pnpm-lock.yaml", "pnpm-workspace.yaml", "package.json"]
+
+[build.args]
+VITE_API_URL = "${VITE_API_URL}"
+VITE_APP_URL = "${VITE_APP_URL}"
+VITE_CLERK_PUBLISHABLE_KEY = "${VITE_CLERK_PUBLISHABLE_KEY}"
+VITE_CLERK_DOMAIN = "${VITE_CLERK_DOMAIN}"
+VITE_CLERK_SIGN_IN_URL = "${VITE_CLERK_SIGN_IN_URL}"
+VITE_CLERK_SIGN_UP_URL = "${VITE_CLERK_SIGN_UP_URL}"
+VITE_CLERK_AFTER_SIGN_IN_URL = "${VITE_CLERK_AFTER_SIGN_IN_URL}"
+VITE_CLERK_AFTER_SIGN_UP_URL = "${VITE_CLERK_AFTER_SIGN_UP_URL}"
+VITE_CMS_URL = "${VITE_CMS_URL}"
+VITE_CMS_TOKEN = "${VITE_CMS_TOKEN}"
+VITE_UPLOAD_BROKER_URL = "${VITE_UPLOAD_BROKER_URL}"
+VITE_MATTERMOST_URL = "${VITE_MATTERMOST_URL}"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 300
+startCommand = "node scripts/server.mjs"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

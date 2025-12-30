@@ -27,6 +27,7 @@ import './index.css';
 import './styles.css';
 import { router } from './router';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { envValidation } from './env';
 
 // Initialize observability
 initSentry();
@@ -64,21 +65,40 @@ try {
     <HelmetProvider>
       <Web3Provider>
         <ThemeProvider>
-          <ClerkProvider
-            routerPush={(to) => router.navigate(to)}
-            routerReplace={(to) => router.navigate(to, { replace: true })}
-          >
-            <QueryClientProvider client={queryClient}>
-              <CMSProvider>
-                <Toaster />
-                <ErrorBoundary>
-                  <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-200 bg-slate-950">Loading…</div>}>
-                    <RouterProvider router={router} />
-                  </Suspense>
-                </ErrorBoundary>
-              </CMSProvider>
-            </QueryClientProvider>
-          </ClerkProvider>
+          {!envValidation.ok && import.meta.env.PROD ? (
+            <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
+              <div className="max-w-xl w-full">
+                <h1 className="text-2xl font-semibold">Deployment misconfigured</h1>
+                <p className="mt-2 text-slate-300">
+                  This deployment is missing required environment variables.
+                </p>
+                <ul className="mt-4 list-disc pl-5 text-slate-200">
+                  {envValidation.issues.map((issue) => (
+                    <li key={issue}>{issue}</li>
+                  ))}
+                </ul>
+                <p className="mt-6 text-slate-400 text-sm">
+                  Fix the Railway service variables and redeploy.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <ClerkProvider
+              routerPush={(to) => router.navigate(to)}
+              routerReplace={(to) => router.navigate(to, { replace: true })}
+            >
+              <QueryClientProvider client={queryClient}>
+                <CMSProvider>
+                  <Toaster />
+                  <ErrorBoundary>
+                    <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-200 bg-slate-950">Loading…</div>}>
+                      <RouterProvider router={router} />
+                    </Suspense>
+                  </ErrorBoundary>
+                </CMSProvider>
+              </QueryClientProvider>
+            </ClerkProvider>
+          )}
         </ThemeProvider>
       </Web3Provider>
     </HelmetProvider>

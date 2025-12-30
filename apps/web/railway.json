@@ -6,6 +6,8 @@
     "contextPath": ".",
     "watchPatterns": ["apps/web/**", "pnpm-lock.yaml", "pnpm-workspace.yaml", "package.json"],
     "args": {
+      "VITE_API_URL": "${VITE_API_URL}",
+      "VITE_APP_URL": "${VITE_APP_URL}",
       "VITE_CLERK_PUBLISHABLE_KEY": "${VITE_CLERK_PUBLISHABLE_KEY}",
       "VITE_CLERK_DOMAIN": "${VITE_CLERK_DOMAIN}",
       "VITE_CLERK_SIGN_IN_URL": "${VITE_CLERK_SIGN_IN_URL}",

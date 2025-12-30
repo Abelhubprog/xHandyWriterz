@@ -1,5 +1,10 @@
 ﻿import { z } from 'zod';
 
+export type EnvValidation = {
+  ok: boolean;
+  issues: string[];
+};
+
 const envSchema = z.object({
   // API
   VITE_API_URL: z.string().url().default('http://localhost:5173/api'),
@@ -67,7 +72,7 @@ const envSchema = z.object({
   VITE_PREFERRED_WALLET: z.string().optional().default('metamask')
 });
 
-function getEnvVars() {
+function getEnvVars(): { env: z.infer<typeof envSchema>; validation: EnvValidation } {
   const isProd = import.meta.env.PROD;
 
   // Use import.meta.env directly with type safety
@@ -138,40 +143,48 @@ function getEnvVars() {
     VITE_PREFERRED_WALLET: import.meta.env.VITE_PREFERRED_WALLET || 'metamask'
   };
 
-  if (isProd) {
-    const missing: string[] = [];
+  const issues: string[] = [];
 
+  if (isProd) {
     const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-    if (!clerkKey || clerkKey === 'pk_test_default') missing.push('VITE_CLERK_PUBLISHABLE_KEY');
+    if (!clerkKey || clerkKey === 'pk_test_default') issues.push('VITE_CLERK_PUBLISHABLE_KEY is missing');
 
     const apiUrl = import.meta.env.VITE_API_URL;
-    if (!apiUrl) missing.push('VITE_API_URL');
+    if (!apiUrl) issues.push('VITE_API_URL is missing');
     if (apiUrl && /(localhost|127\.0\.0\.1)/i.test(apiUrl)) {
-      throw new Error('[env] VITE_API_URL must not point to localhost in production');
+      issues.push('VITE_API_URL must not point to localhost in production');
     }
 
     const appUrl = import.meta.env.VITE_APP_URL;
-    if (!appUrl) missing.push('VITE_APP_URL');
+    if (!appUrl) issues.push('VITE_APP_URL is missing');
     if (appUrl && /(localhost|127\.0\.0\.1)/i.test(appUrl)) {
-      throw new Error('[env] VITE_APP_URL must not point to localhost in production');
+      issues.push('VITE_APP_URL must not point to localhost in production');
     }
 
     const cmsUrl = import.meta.env.VITE_CMS_URL;
-    if (!cmsUrl) missing.push('VITE_CMS_URL');
-
-    if (missing.length) {
-      throw new Error(`[env] Missing required environment variables for production: ${missing.join(', ')}`);
-    }
+    if (!cmsUrl) issues.push('VITE_CMS_URL is missing');
   }
 
   const result = envSchema.safeParse(envVars);
   if (!result.success) {
     // Dev: keep local bring-up smooth, but surface schema issues in console
     console.warn('[env] Invalid environment variables; falling back to schema defaults', result.error);
-    return envSchema.parse(envVars);
+    return {
+      env: envSchema.parse(envVars),
+      validation: { ok: issues.length === 0, issues },
+    };
   }
 
-  return result.data;
+  if (isProd && issues.length) {
+    console.error('[env] Invalid production configuration:', issues);
+  }
+
+  return {
+    env: result.data,
+    validation: { ok: issues.length === 0, issues },
+  };
 }
 
-export const env = getEnvVars();
+const computed = getEnvVars();
+export const env = computed.env;
+export const envValidation = computed.validation;

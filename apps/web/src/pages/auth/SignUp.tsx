@@ -1,6 +1,6 @@
 
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { SignUp as ClerkSignUp, useClerk, useUser } from '@clerk/clerk-react';
+import { SignUp as ClerkSignUp, useAuth } from '@clerk/clerk-react';
 import HandyWriterzLogo from '@/components/HandyWriterzLogo';
 import React from "react";
 import { Shield, User, ArrowRight, Check, Lock } from 'lucide-react';
@@ -33,13 +33,12 @@ const clerkInputOverrides = `
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { session } = useClerk();
-  const { isLoaded } = useUser();
+  const { isLoaded, isSignedIn } = useAuth();
   const [isRedirecting, setIsRedirecting] = React.useState(false);
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
   React.useEffect(() => {
-    if (isLoaded && session) {
+    if (isLoaded && isSignedIn) {
       setIsRedirecting(true);
       const timer = setTimeout(() => {
         toast.success('Already logged in');
@@ -47,7 +46,7 @@ const SignUp: React.FC = () => {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [session, navigate, from, isLoaded]);
+  }, [isSignedIn, navigate, from, isLoaded]);
 
   return (
     <motion.div

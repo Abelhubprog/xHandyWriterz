@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { SignIn as ClerkSignIn, useClerk, useUser } from '@clerk/clerk-react';
+import { SignIn as ClerkSignIn, useAuth } from '@clerk/clerk-react';
 import HandyWriterzLogo from '@/components/HandyWriterzLogo';
 import { Shield, User, ArrowRight, Check, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -9,8 +9,7 @@ import { toast } from 'react-hot-toast';
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { session } = useClerk();
-  const { isLoaded } = useUser();
+  const { isLoaded, isSignedIn } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Get redirect path from location state or default to dashboard
@@ -18,7 +17,7 @@ const Login: React.FC = () => {
 
   // If already signed in, redirect to dashboard
   useEffect(() => {
-    if (isLoaded && session) {
+    if (isLoaded && isSignedIn) {
       setIsRedirecting(true);
       const timer = setTimeout(() => {
         toast.success('Already logged in');
@@ -27,7 +26,7 @@ const Login: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [session, navigate, from, isLoaded]);
+  }, [isSignedIn, navigate, from, isLoaded]);
 
   return (
     <motion.div
