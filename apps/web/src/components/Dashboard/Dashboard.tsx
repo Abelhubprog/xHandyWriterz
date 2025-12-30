@@ -746,7 +746,7 @@ const Dashboard = () => {
     }
   }, [user, activeTab]);
 
-  // Add useEffect to fetch messages from Supabase
+  // Fetch user messages when the messaging service is wired
   useEffect(() => {
     const fetchMessages = async () => {
       if (!user || activeTab !== 'messages') return;

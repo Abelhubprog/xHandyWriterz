@@ -36,10 +36,28 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   loading?: boolean;
+  loadingText?: string;
+  startIcon?: React.ReactNode;
+  endIcon?: React.ReactNode;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, fullWidth, loading, children, disabled, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      fullWidth,
+      loading,
+      loadingText,
+      startIcon,
+      endIcon,
+      children,
+      disabled,
+      ...props
+    },
+    ref
+  ) => {
     return (
       <button
         className={cn(buttonVariants({ variant, size, fullWidth, className }))}
@@ -48,11 +66,20 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading ? (
-          <div className="mr-2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          </div>
+          <span className="mr-2 inline-flex items-center">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          </span>
+        ) : startIcon ? (
+          <span className="mr-2 inline-flex items-center">{startIcon}</span>
         ) : null}
-        {children}
+
+        <span className="inline-flex items-center">
+          {loading && loadingText ? loadingText : children}
+        </span>
+
+        {!loading && endIcon ? (
+          <span className="ml-2 inline-flex items-center">{endIcon}</span>
+        ) : null}
       </button>
     );
   }

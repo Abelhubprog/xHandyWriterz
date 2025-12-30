@@ -16,7 +16,7 @@ export interface AnimatedProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: AnimationVariant;
   delay?: number;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: 'div' | 'span' | 'section' | 'article' | 'main' | 'header' | 'footer' | 'nav' | 'aside';
   duration?: 'fast' | 'normal' | 'slow';
   onAnimationComplete?: () => void;
 }
@@ -66,7 +66,7 @@ export function Animated({
 export interface StaggerContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   staggerDelay?: number;
-  as?: keyof JSX.IntrinsicElements;
+  as?: 'div' | 'span' | 'section' | 'article' | 'main' | 'header' | 'footer' | 'nav' | 'aside';
   childClassName?: string;
   onComplete?: () => void;
 }

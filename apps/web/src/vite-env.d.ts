@@ -56,10 +56,6 @@ interface ImportMetaEnv {
   readonly VITE_STABLELINK_API_KEY: string;
   readonly VITE_STABLELINK_WEBHOOK_SECRET: string;
   readonly VITE_STABLELINK_ENVIRONMENT: string;
-
-  // Supabase (Legacy)
-  readonly VITE_SUPABASE_URL?: string;
-  readonly VITE_SUPABASE_ANON_KEY?: string;
 }
 
 interface ImportMeta {
@@ -69,11 +65,3 @@ interface ImportMeta {
 // Declare missing modules or types if necessary
 declare module 'some-untyped-module';
 
-declare module '@mui/material/styles' {
-  interface Theme {
-    // Add custom theme properties if any
-  }
-  interface ThemeOptions {
-    // Add custom theme options if any
-  }
-}

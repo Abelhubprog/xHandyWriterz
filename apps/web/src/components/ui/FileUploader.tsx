@@ -176,11 +176,13 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     
     // Update all files to uploading status
     setFiles(prevFiles => {
-      const newFiles = prevFiles.map(file => ({
-        ...file,
-        status: 'uploading',
-        progress: 0
-      }));
+      const newFiles = prevFiles.map((file) =>
+        ({
+          ...file,
+          status: 'uploading',
+          progress: 0,
+        }) as FileWithProgress
+      );
       onFilesChange?.(newFiles);
       return newFiles;
     });
@@ -192,11 +194,13 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         (progress) => {
           // Update progress for all files (simplified for now)
           setFiles(prevFiles => {
-            const newFiles = prevFiles.map(file => ({
-              ...file,
-              progress: Math.min(100, progress),
-              status: progress >= 100 ? 'success' : 'uploading'
-            }));
+            const newFiles = prevFiles.map((file) =>
+              ({
+                ...file,
+                progress: Math.min(100, progress),
+                status: progress >= 100 ? 'success' : 'uploading',
+              }) as FileWithProgress
+            );
             onFilesChange?.(newFiles);
             return newFiles;
           });
@@ -220,14 +224,14 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               ...file,
               status: 'success',
               progress: 100,
-              url: result.url
-            };
+              url: result.url,
+            } as FileWithProgress;
           } else {
             return {
               ...file,
               status: 'error',
-              error: result.error
-            };
+              error: result.error,
+            } as FileWithProgress;
           }
         });
         onFilesChange?.(newFiles);
@@ -249,11 +253,13 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
       
       // Update all files to error status
       setFiles(prevFiles => {
-        const newFiles = prevFiles.map(file => ({
-          ...file,
-          status: 'error',
-          error: error instanceof Error ? error.message : 'Upload failed'
-        }));
+        const newFiles = prevFiles.map((file) =>
+          ({
+            ...file,
+            status: 'error',
+            error: error instanceof Error ? error.message : 'Upload failed',
+          }) as FileWithProgress
+        );
         onFilesChange?.(newFiles);
         return newFiles;
       });

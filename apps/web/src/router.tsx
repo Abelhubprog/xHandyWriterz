@@ -32,11 +32,6 @@ const NotFound = React.lazy(() => import('./pages/not-found'));
 const AdminLogin = React.lazy(() => import('./pages/auth/admin-login'));
 const Login = React.lazy(() => import('./pages/auth/login'));
 const SignUp = React.lazy(() => import('./pages/auth/SignUp'));
-const PaymentSuccess = React.lazy(() => import('./pages/payment/success'));
-const PaymentCancel = React.lazy(() => import('./pages/payment/cancel'));
-const PaymentFailure = React.lazy(() => import('./pages/payment/failure'));
-const PaymentOptions = React.lazy(() => import('./pages/payment/options'));
-const PaymentGateway = React.lazy(() => import('./pages/payment/PaymentGateway'));
 const TurnitinCheck = React.lazy(() => import('./pages/turnitin-check'));
 const TurnitinSubmission = React.lazy(() => import('./pages/TurnitinSubmission'));
 const ServicesPage = React.lazy(() => import('./pages/services/ServicesPage'));
@@ -86,11 +81,6 @@ const childRoutes: RouteObject[] = [
   // Legacy aliases to avoid 404s
   { path: 'auth/login', element: <Login /> },
   { path: 'auth/register', element: <SignUp /> },
-  { path: 'payment/success', element: <PaymentSuccess /> },
-  { path: 'payment/cancel', element: <PaymentCancel /> },
-  { path: 'payment/failure', element: <PaymentFailure /> },
-  { path: 'payment', element: <PaymentOptions /> },
-  { path: 'payment/gateway', element: <PaymentGateway /> },
   { path: 'check-turnitin', element: <TurnitinCheck /> },
   { path: 'turnitin/submit', element: <TurnitinSubmission /> },
   

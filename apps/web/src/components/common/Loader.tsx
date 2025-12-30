@@ -1,16 +1,16 @@
 /**
  * src/components/common/Loader.tsx
- * Enhanced Loader component that uses the Spinner from UI directory
+ * Loader wrapper around the design-system LoadingSpinner
  */
 
 import React from 'react';
-import { Spinner } from '../ui/spinner';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { cn } from '@/lib/utils';
 
 interface LoaderProps {
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   className?: string;
-  color?: 'primary' | 'secondary' | 'accent' | 'white';
+  color?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark' | 'white';
   label?: string;
   showText?: boolean;
 }
@@ -24,10 +24,12 @@ const Loader: React.FC<LoaderProps> = ({
 }) => {
   return (
     <div className={cn('flex items-center justify-center', className)}>
-      <Spinner size={size} color={color} />
-      {showText && (
-        <span className="ml-2 text-sm font-medium">{label}</span>
-      )}
+      <LoadingSpinner
+        size={size}
+        color={color}
+        label={label}
+        showText={showText}
+      />
     </div>
   );
 };

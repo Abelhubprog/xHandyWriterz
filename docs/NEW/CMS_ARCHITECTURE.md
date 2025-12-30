@@ -1,475 +1,336 @@
-# HandyWriterz CMS Architecture - World-Class Content Platform
+# HandyWriterz CMS Architecture
 
-## Executive Vision
-
-Transform HandyWriterz into a **premium content platform** comparable to Medium, Substack, and educational platforms like Coursera/edX, with:
-
-1. **Beautiful Public Content Pages** - Magazine-quality reading experience
-2. **Powerful Admin CMS** - Strapi 5 with custom publishing workflows
-3. **AI Agent Economy** - x402 protocol for monetizing AI access to content
-4. **Domain-Specific Excellence** - Healthcare, Technology, AI, Crypto, Enterprise verticals
-
----
-
-## Part 1: Content Architecture
-
-### 1.1 Content Types Hierarchy
+## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    CONTENT ARCHITECTURE                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  HOMEPAGE (Landing)                                             │
-│  ├── Hero Section (dynamic from CMS)                           │
-│  ├── Featured Content (curated articles/services)              │
-│  ├── Domain Showcase (9+ verticals)                            │
-│  ├── Social Proof (testimonials, stats)                        │
-│  └── CTA Sections                                              │
-│                                                                 │
-│  DOMAINS (9+ Verticals)                                        │
-│  ├── Adult Nursing                                             │
-│  ├── Mental Health                                             │
-│  ├── Child Nursing                                             │
-│  ├── Social Work                                               │
-│  ├── Technology                                                │
-│  ├── AI                                                        │
-│  ├── Crypto                                                    │
-│  ├── Enterprise                                                │
-│  └── General                                                   │
-│                                                                 │
-│  CONTENT (Per Domain)                                          │
-│  ├── Articles (research, guides, insights)                     │
-│  ├── Services (writing, consulting, tools)                     │
-│  ├── Resources (templates, checklists)                         │
-│  └── Case Studies                                              │
-│                                                                 │
-│  AUTHORS & EXPERTS                                             │
-│  ├── Author Profiles                                           │
-│  ├── Expert Credentials                                        │
-│  └── Contribution History                                      │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 1.2 Strapi 5 Content Models
-
-#### Core Collection Types
-
-| Collection | Purpose | Key Fields |
-|------------|---------|------------|
-| `article` | Long-form content | title, slug, content, author, domain, tags, seo |
-| `service` | Service offerings | title, slug, description, pricing, domain, features |
-| `author` | Content creators | name, bio, avatar, credentials, social links |
-| `category` | Content organization | name, slug, domain, description, icon |
-| `tag` | Cross-domain tagging | name, slug, color |
-| `domain-page` | Domain landing pages | hero, highlights, featured content |
-| `landing-section` | Reusable page blocks | section type, content, order |
-| `testimonial` | Social proof | quote, author, role, rating, avatar |
-| `faq` | Frequently asked | question, answer, category |
-
-#### Component Types
-
-| Component | Purpose |
-|-----------|---------|
-| `seo.seo` | SEO metadata (title, description, og:image) |
-| `content.rich-text` | Markdown/HTML content blocks |
-| `content.media-gallery` | Image/video galleries |
-| `content.cta` | Call-to-action blocks |
-| `content.code-block` | Syntax-highlighted code |
-| `content.quote` | Blockquotes with attribution |
-| `pricing.tier` | Service pricing tiers |
-| `author.credentials` | Author qualifications |
-
----
-
-## Part 2: Page Design Philosophy
-
-### 2.1 Design Principles
-
-**Inspired by:** Medium, Notion, Linear, Stripe Documentation
-
-1. **Typography First** - Beautiful, readable text with proper hierarchy
-2. **White Space** - Generous margins and padding for premium feel
-3. **Subtle Animation** - Framer Motion for micro-interactions
-4. **Dark Mode Native** - First-class dark theme support
-5. **Mobile Optimized** - Touch-friendly, responsive layouts
-6. **Performance** - Sub-2s load times, lazy loading, optimistic UI
-
-### 2.2 Page Templates
-
-#### Homepage (Magazine Layout)
-
-```
-┌────────────────────────────────────────────────────────────────┐
-│ NAVIGATION BAR                                                 │
-│ Logo | Domains ▼ | Resources ▼ | Pricing | Sign In | Get Started│
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│         HERO SECTION (Full-width, gradient background)         │
-│  ┌────────────────────────────────────────────────────────┐   │
-│  │  "Expert Healthcare & Technology Writing"               │   │
-│  │  Trusted by 10,000+ professionals worldwide             │   │
-│  │  [Explore Content] [Start Writing]                      │   │
-│  └────────────────────────────────────────────────────────┘   │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  FEATURED CONTENT (Bento grid, 3 columns)                     │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐                       │
-│  │ Article  │ │ Article  │ │ Service  │                       │
-│  │ Card     │ │ Card     │ │ Card     │                       │
-│  └──────────┘ └──────────┘ └──────────┘                       │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  DOMAIN SHOWCASE (Icon grid)                                  │
-│  [Adult Nursing] [Mental Health] [Child] [Social] [Tech] [AI]  │
-│  [Crypto] [Enterprise] [General]                               │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  TESTIMONIALS (Carousel)                                      │
-│  "Best academic writing service..." - Dr. Jane Smith          │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  CTA SECTION (Full-width)                                     │
-│  Ready to elevate your content? [Get Started Free]            │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│ FOOTER                                                         │
-│ Links | Social | Copyright                                     │
-└────────────────────────────────────────────────────────────────┘
-```
-
-#### Article Page (Reader-Optimized)
-
-```
-┌────────────────────────────────────────────────────────────────┐
-│ STICKY HEADER (appears on scroll)                              │
-│ Article Title | Progress Bar | Share | Bookmark                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  ARTICLE HERO                                                  │
-│  ┌────────────────────────────────────────────────────────┐   │
-│  │  Domain Badge | Reading Time | Date                     │   │
-│  │  Article Title (H1)                                     │   │
-│  │  Subtitle/Summary                                       │   │
-│  │  Author Avatar | Author Name | Follow                   │   │
-│  │  Hero Image (Full-width)                                │   │
-│  └────────────────────────────────────────────────────────┘   │
-│                                                                │
-├─────────────────────────────────────┬──────────────────────────┤
-│                                     │                          │
-│  CONTENT (max-width: 720px)         │  SIDEBAR                 │
-│                                     │  - Table of Contents     │
-│  Rich text content...               │  - Author Card           │
-│  Images, code blocks, quotes        │  - Related Articles      │
-│  Embedded media                     │  - Newsletter Signup     │
-│                                     │  - Share Buttons         │
-│                                     │                          │
-├─────────────────────────────────────┴──────────────────────────┤
-│                                                                │
-│  AUTHOR BIO (Full-width)                                      │
-│  Avatar | Bio | Credentials | Social Links | More Articles    │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  RELATED CONTENT (3-column grid)                              │
-│  [Article] [Article] [Article]                                │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  COMMENTS SECTION                                             │
-│  Login prompt | Comment threads | Reactions                   │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
-```
-
-#### Domain Landing Page
-
-```
-┌────────────────────────────────────────────────────────────────┐
-│                                                                │
-│  DOMAIN HERO (Domain-specific gradient)                       │
-│  ┌────────────────────────────────────────────────────────┐   │
-│  │  Domain Icon (large)                                    │   │
-│  │  "Mental Health Nursing Resources"                      │   │
-│  │  Expert content for mental health professionals         │   │
-│  │  [Explore Articles] [View Services]                     │   │
-│  └────────────────────────────────────────────────────────┘   │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  DOMAIN STATS (Highlight cards)                               │
-│  [150+ Articles] [20+ Guides] [5000+ Downloads] [50+ Authors] │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  FEATURED CONTENT (Masonry grid)                              │
-│  Articles + Services mixed, prioritized by engagement         │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  CATEGORIES (Pill navigation)                                 │
-│  [Research] [Guides] [Case Studies] [Tools] [Templates]       │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  CONTENT FEED (Infinite scroll)                               │
-│  Filter by: Category | Date | Popularity                      │
-│  [Article Card] [Article Card] [Article Card] ...             │
-│                                                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  DOMAIN EXPERTS (Author showcase)                             │
-│  Top contributors in this domain                              │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              HandyWriterz Platform                               │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                         PUBLIC LAYER (No Auth)                          │   │
+│  │                                                                         │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │   │
+│  │  │  Homepage   │  │  Domains    │  │  Articles   │  │  Services   │   │   │
+│  │  │     /       │  │ /domains/*  │  │  /articles  │  │  /services  │   │   │
+│  │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘   │   │
+│  │         │                │                │                │          │   │
+│  │         └────────────────┴────────────────┴────────────────┘          │   │
+│  │                                   │                                    │   │
+│  │                          ┌────────▼────────┐                          │   │
+│  │                          │   useCMS Hooks  │                          │   │
+│  │                          │  (React Query)  │                          │   │
+│  │                          └────────┬────────┘                          │   │
+│  │                                   │                                    │   │
+│  │                          PUBLIC REST API                              │   │
+│  │                          (Read-Only Access)                           │   │
+│  └───────────────────────────────────┼───────────────────────────────────┘   │
+│                                      │                                       │
+│  ┌───────────────────────────────────▼───────────────────────────────────┐   │
+│  │                                                                       │   │
+│  │                    STRAPI 5 CMS (Railway/Self-hosted)                 │   │
+│  │                         https://cms.handywriterz.com                  │   │
+│  │                                                                       │   │
+│  │  ┌─────────────────────────────────────────────────────────────────┐ │   │
+│  │  │                    Content Types (Domain-first)                  │ │   │
+│  │  │                                                                  │ │   │
+│  │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐           │ │   │
+│  │  │  │ Article  │ │ Service  │ │  Author  │ │ Category │           │ │   │
+│  │  │  │ ───────  │ │ ───────  │ │ ───────  │ │ ───────  │           │ │   │
+│  │  │  │ •title   │ │ •title   │ │ •name    │ │ •name    │           │ │   │
+│  │  │  │ •slug    │ │ •slug    │ │ •bio     │ │ •slug    │           │ │   │
+│  │  │  │ •domain  │ │ •domain  │ │ •avatar  │ │ •domain  │           │ │   │
+│  │  │  │ •body    │ │ •pricing │ │ •role    │ └──────────┘           │ │   │
+│  │  │  │ •author  │ │ •features│ └──────────┘                        │ │   │
+│  │  │  │ •x402*   │ │ •x402*   │                                     │ │   │
+│  │  │  └──────────┘ └──────────┘                                     │ │   │
+│  │  │                                                                  │ │   │
+│  │  │  ┌──────────┐ ┌──────────┐ ┌──────────────┐ ┌────────────────┐ │ │   │
+│  │  │  │   Tag    │ │Testimon. │ │   Domain    │ │ Landing Section│ │ │   │
+│  │  │  │ ───────  │ │ ───────  │ │ ──────────── │ │ ────────────── │ │ │   │
+│  │  │  │ •name    │ │ •quote   │ │ •domain      │ │ •title         │ │ │   │
+│  │  │  │ •slug    │ │ •author  │ │ •heroTitle   │ │ •content       │ │ │   │
+│  │  │  └──────────┘ │ •rating  │ │ •heroSubtitle│ │ •order         │ │ │   │
+│  │  │               └──────────┘ └──────────────┘ └────────────────┘ │ │   │
+│  │  └─────────────────────────────────────────────────────────────────┘ │   │
+│  │                                                                       │   │
+│  │  ┌─────────────────────────────────────────────────────────────────┐ │   │
+│  │  │                    Strapi Admin Panel                           │ │   │
+│  │  │                 /admin (Auth Required)                          │ │   │
+│  │  │                                                                  │ │   │
+│  │  │  • Content Creation     • Media Library    • User Management   │ │   │
+│  │  │  • Publishing Workflow  • Permissions      • API Tokens        │ │   │
+│  │  │  • Draft/Review/Publish • Localization     • Webhooks          │ │   │
+│  │  └─────────────────────────────────────────────────────────────────┘ │   │
+│  └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+│  ┌───────────────────────────────────────────────────────────────────────┐   │
+│  │                    AUTHENTICATED LAYER (Clerk Auth)                   │   │
+│  │                                                                       │   │
+│  │  ┌─────────────────────────────────────────────────────────────────┐ │   │
+│  │  │                   User Dashboard (/dashboard)                    │ │   │
+│  │  │                                                                  │ │   │
+│  │  │  • Orders Management      • File Sharing (R2)                   │ │   │
+│  │  │  • New Order Submission   • Messages (Mattermost)               │ │   │
+│  │  │  • Profile Settings       • Document Upload                     │ │   │
+│  │  │  • Turnitin Checks        • Support Communication               │ │   │
+│  │  └─────────────────────────────────────────────────────────────────┘ │   │
+│  │                                                                       │   │
+│  │  ┌─────────────────────────────────────────────────────────────────┐ │   │
+│  │  │              Admin Dashboard (/admin) - Editor Role              │ │   │
+│  │  │                                                                  │ │   │
+│  │  │  PURPOSE: Operations Hub (NOT content creation)                 │ │   │
+│  │  │                                                                  │ │   │
+│  │  │  ┌─────────────────────────┐  ┌─────────────────────────┐      │ │   │
+│  │  │  │    CMS Monitoring       │  │    File Operations      │      │ │   │
+│  │  │  │  • Published count      │  │  • Upload broker status │      │ │   │
+│  │  │  │  • Draft count          │  │  • R2 file management   │      │ │   │
+│  │  │  │  • Quick link to Strapi │  │  • Turnitin reports     │      │ │   │
+│  │  │  └─────────────────────────┘  └─────────────────────────┘      │ │   │
+│  │  │                                                                  │ │   │
+│  │  │  ┌─────────────────────────┐  ┌─────────────────────────┐      │ │   │
+│  │  │  │    Communications       │  │    Service Health       │      │ │   │
+│  │  │  │  • Mattermost access    │  │  • Strapi status        │      │ │   │
+│  │  │  │  • User messaging       │  │  • Mattermost status    │      │ │   │
+│  │  │  │  • Admin messaging      │  │  • Upload broker status │      │ │   │
+│  │  │  └─────────────────────────┘  └─────────────────────────┘      │ │   │
+│  │  └─────────────────────────────────────────────────────────────────┘ │   │
+│  └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Part 3: Admin Dashboard Architecture
+## Key Architectural Decisions
 
-### 3.1 Admin Capabilities
+### 1. Content Creation & Publishing (Strapi Admin)
 
-| Feature | Description |
-|---------|-------------|
-| **Content Editor** | Rich WYSIWYG with markdown support |
-| **Media Manager** | R2-backed image/file uploads |
-| **Preview System** | Token-based draft previews |
-| **Publishing Workflow** | Draft → Review → Schedule → Publish |
-| **SEO Optimizer** | Real-time SEO scoring |
-| **Analytics** | Content performance metrics |
-| **Author Management** | Invite, permissions, contributions |
-| **Bulk Operations** | Multi-select publish/unpublish |
+**Who:** Admin users with Strapi credentials  
+**Where:** `https://cms.handywriterz.com/admin`  
+**What:** All content creation, editing, and publishing workflows
 
-### 3.2 Admin Dashboard Layout
+**Policy:** Publishing is admin-only. The HandyWriterz web admin dashboard is not the editorial system; it only monitors CMS status and operational workflows. Any custom editorial UI must proxy through the server and enforce Clerk admin roles.
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│ ADMIN HEADER                                                   │
-│ Logo | Search | Notifications | Profile                        │
-├──────────────┬─────────────────────────────────────────────────┤
-│              │                                                 │
-│  SIDEBAR     │  MAIN CONTENT AREA                             │
-│              │                                                 │
-│  Dashboard   │  ┌─────────────────────────────────────────┐   │
-│  Content     │  │  QUICK STATS                            │   │
-│  ├─ Articles │  │  [Published] [Drafts] [Scheduled] [Views]│  │
-│  ├─ Services │  └─────────────────────────────────────────┘   │
-│  ├─ Pages    │                                                 │
-│  Authors     │  ┌─────────────────────────────────────────┐   │
-│  Media       │  │  RECENT ACTIVITY                        │   │
-│  Analytics   │  │  - Article "X" published 2h ago         │   │
-│  Settings    │  │  - New comment on "Y"                   │   │
-│              │  │  - Author "Z" joined                    │   │
-│              │  └─────────────────────────────────────────┘   │
-│              │                                                 │
-│              │  ┌─────────────────────────────────────────┐   │
-│              │  │  CONTENT REQUIRING ACTION               │   │
-│              │  │  [Draft] "Title" - Ready for review     │   │
-│              │  │  [Scheduled] "Title" - Publishing soon  │   │
-│              │  └─────────────────────────────────────────┘   │
-│              │                                                 │
-└──────────────┴─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                 CONTENT PUBLISHING WORKFLOW                  │
+│                                                              │
+│   Admin User                     Strapi Admin                │
+│       │                              │                       │
+│       │   1. Login to Strapi         │                       │
+│       │─────────────────────────────>│                       │
+│       │                              │                       │
+│       │   2. Create/Edit Content     │                       │
+│       │─────────────────────────────>│                       │
+│       │      (Article, Service,      │                       │
+│       │       Author, etc.)          │                       │
+│       │                              │                       │
+│       │   3. Set domain, x402 price  │                       │
+│       │─────────────────────────────>│                       │
+│       │                              │                       │
+│       │   4. Save as Draft           │                       │
+│       │─────────────────────────────>│                       │
+│       │                              │                       │
+│       │   5. Review & Publish        │                       │
+│       │─────────────────────────────>│                       │
+│       │                              │                       │
+│       │              ┌───────────────┴───────────────┐       │
+│       │              │    Content now PUBLIC         │       │
+│       │              │    via REST API               │       │
+│       │              └───────────────────────────────┘       │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### 2. Content Display (Public Website)
+
+**Who:** Anyone (no auth required)  
+**Where:** Public routes (`/`, `/articles`, `/services/:domain`, etc.)  
+**How:** React Query hooks fetch from Strapi public API
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                 PUBLIC CONTENT CONSUMPTION                   │
+│                                                              │
+│   Visitor                    React App              Strapi   │
+│      │                          │                      │     │
+│      │  Visit /articles         │                      │     │
+│      │─────────────────────────>│                      │     │
+│      │                          │                      │     │
+│      │                          │  GET /api/articles   │     │
+│      │                          │  (public endpoint)   │     │
+│      │                          │─────────────────────>│     │
+│      │                          │                      │     │
+│      │                          │  Articles data       │     │
+│      │                          │<─────────────────────│     │
+│      │                          │                      │     │
+│      │   Rendered page          │                      │     │
+│      │<─────────────────────────│                      │     │
+│      │                          │                      │     │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### 3. Admin Dashboard vs Strapi Admin
+
+| Aspect | Strapi Admin (`/admin` on CMS) | HandyWriterz Admin (`/admin` on web) |
+|--------|-------------------------------|-------------------------------------|
+| **Purpose** | Content Management System | Operations Dashboard |
+| **Content Creation** | ✅ Yes - Primary | ❌ No |
+| **Content Editing** | ✅ Yes - Full WYSIWYG | ❌ No |
+| **Publishing** | ✅ Yes - Draft/Publish workflow | ❌ No (monitoring only) |
+| **File Sharing** | Media library only | ✅ User file management |
+| **User Messages** | ❌ No | ✅ Mattermost integration |
+| **Orders** | ❌ No | ✅ Order monitoring |
+| **System Health** | Strapi plugins only | ✅ All services status |
+| **Auth System** | Strapi users | Clerk (with editor role) |
+
+---
+
+## Domain-First Content Organization
+
+### Domain Categories
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                       DOMAIN STRUCTURE                              │
+│                                                                     │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                │
+│  │ HEALTHCARE  │  │ TECHNOLOGY  │  │  BUSINESS   │                │
+│  ├─────────────┤  ├─────────────┤  ├─────────────┤                │
+│  │adult-nursing│  │ technology  │  │ enterprise  │                │
+│  │mental-health│  │     ai      │  │   general   │                │
+│  │child-nursing│  │   crypto    │  │             │                │
+│  │ social-work │  │             │  │             │                │
+│  └─────────────┘  └─────────────┘  └─────────────┘                │
+│                                                                     │
+│  Each domain has:                                                   │
+│  • Unique color gradient       • Custom icon                       │
+│  • Domain-specific articles    • Domain-specific services          │
+│  • Dedicated landing page      • Filtered testimonials             │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### URL Structure (Canonical)
+
+```
+PUBLIC ROUTES (No Auth)
+├── /                                    Homepage (featured content)
+├── /articles                            All articles listing
+│   └── /articles/:slug                  Single article page
+├── /authors                             All authors listing
+│   └── /authors/:slug                   Author profile page
+├── /domains                             Domains hub
+│   └── /domains/:domain                 Domain landing page (CMS-driven)
+│       ├── /domains/:domain/articles    Domain articles listing
+│       └── /domains/:domain/services    Domain services listing
+├── /services                            Services hub (domain directory + service CTAs)
+│   ├── /services/:domain                Domain services listing (legacy path)
+│   └── /services/:domain/:slug          Single service page (legacy path)
+├── /docs/x402                           x402 protocol documentation
+└── /api                                 API documentation
+
+AUTHENTICATED ROUTES (Clerk)
+├── /dashboard                           User dashboard
+│   ├── /dashboard/orders                Order history
+│   ├── /dashboard/new-order             New order form
+│   ├── /dashboard/messages              User messages
+│   └── /dashboard/documents             File uploads
+└── /admin                               Admin operations hub
+    ├── /admin/content                   CMS monitoring
+    ├── /admin/messaging                 Admin messaging
+    └── /admin/turnitin-reports          Plagiarism reports
 ```
 
 ---
 
-## Part 4: x402 Protocol Integration
+## Domain Page Composition (CMS-driven)
 
-### 4.1 Content Access Tiers
+Each domain page is assembled from Strapi data. The layout is consistent, the content is unique per domain.
 
-| Tier | Human Access | AI Agent Access |
-|------|--------------|-----------------|
-| **Free** | Full access | API rate-limited |
-| **Premium** | Full access | Requires x402 payment |
-| **Enterprise** | Full access + API | Custom pricing |
+**Required domain fields (Strapi `domain` collection):**
+- `name`, `slug`, `description`
+- `heroTitle`, `heroSubtitle`, `heroImage`
+- `themeColor`, `gradient`, `iconKey`
+- `seoTitle`, `seoDescription`
+- `highlights[]` (value + label + optional description)
+- `featuredServices[]` (relation to services)
+- `featuredArticles[]` (relation to articles)
+- `ctaLabel`, `ctaUrl`
 
-### 4.2 x402 Payment Flow
+**Canonical layout order:**
+1. **Hero** (domain name, mission, hero image, primary CTA)
+2. **Highlights** (domain statistics / outcomes)
+3. **Featured Services** (curated for this domain)
+4. **Featured Articles** (curated for this domain)
+5. **Testimonials** (filtered by domain tag)
+6. **Final CTA** (consultation / order flow)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                   x402 PAYMENT FLOW                             │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  AI Agent                    API Gateway                 Content│
-│     │                            │                          │   │
-│     │──── GET /api/articles ────▶│                          │   │
-│     │                            │                          │   │
-│     │◀── 402 Payment Required ───│                          │   │
-│     │     x-402-payment: {...}   │                          │   │
-│     │                            │                          │   │
-│     │──── Pay via Lightning ────▶│                          │   │
-│     │     or Stablecoin          │                          │   │
-│     │                            │                          │   │
-│     │◀── 200 OK + Content ───────│◀── Fetch Content ────────│   │
-│     │                            │                          │   │
-└─────────────────────────────────────────────────────────────────┘
-```
+**Filtering rule:** Articles and services carry a `domain` reference (relation, not a string). Domain pages query by `domain.slug` to keep canonical filtering and avoid mismatched taxonomies.
 
-### 4.3 Pricing Model
+## x402 Protocol Integration
 
-| Content Type | Price per Request |
-|--------------|-------------------|
-| Article (full) | $0.001 - $0.01 |
-| Service details | $0.005 - $0.02 |
-| Search API | $0.0001 per query |
-| Bulk export | $0.05 - $0.10 |
-
----
-
-## Part 5: Technical Implementation Plan
-
-### 5.1 Phase 1: Foundation (Week 1)
-
-1. **Strapi Content Models**
-   - Create Author collection type
-   - Create Category collection type
-   - Enhance Article with relationships
-   - Enhance Service with relationships
-   - Create SEO, Rich Content components
-
-2. **API Endpoints**
-   - `/api/articles` - List, filter, paginate
-   - `/api/articles/:slug` - Single article
-   - `/api/services` - List services
-   - `/api/domains/:domain` - Domain content
-   - `/api/authors/:slug` - Author profile
-
-### 5.2 Phase 2: Public Pages (Week 2)
-
-1. **Homepage Redesign**
-   - Hero with CMS content
-   - Featured content grid
-   - Domain showcase
-   - Testimonials carousel
-   - Newsletter signup
-
-2. **Article Page**
-   - Rich content rendering
-   - Table of contents
-   - Author bio
-   - Related content
-   - Social sharing
-
-3. **Domain Landing**
-   - Domain-specific styling
-   - Content aggregation
-   - Category filters
-   - Author spotlights
-
-### 5.3 Phase 3: Admin Dashboard (Week 3)
-
-1. **Content Management**
-   - WYSIWYG editor upgrade
-   - Media library
-   - Draft/Preview system
-   - Publishing workflow
-
-2. **Analytics**
-   - View tracking
-   - Popular content
-   - Author performance
-
-### 5.4 Phase 4: x402 Integration (Week 4)
-
-1. **Payment Gateway**
-   - x402 middleware
-   - Lightning Network integration
-   - Usage tracking
-   - Revenue dashboard
-
----
-
-## Part 6: File Structure
+### Per-Content Pricing
 
 ```
-apps/web/src/
-├── components/
-│   ├── content/
-│   │   ├── ArticleCard.tsx
-│   │   ├── ArticleHero.tsx
-│   │   ├── ArticleBody.tsx
-│   │   ├── TableOfContents.tsx
-│   │   ├── AuthorBio.tsx
-│   │   ├── RelatedContent.tsx
-│   │   └── SocialShare.tsx
-│   ├── landing/
-│   │   ├── HeroSection.tsx
-│   │   ├── FeaturedGrid.tsx
-│   │   ├── DomainShowcase.tsx
-│   │   ├── Testimonials.tsx
-│   │   └── NewsletterCTA.tsx
-│   ├── domain/
-│   │   ├── DomainHero.tsx
-│   │   ├── DomainStats.tsx
-│   │   ├── ContentFeed.tsx
-│   │   └── ExpertShowcase.tsx
-│   └── admin/
-│       ├── ContentEditor/
-│       ├── MediaManager/
-│       ├── AnalyticsDashboard/
-│       └── PublishingWorkflow/
-├── pages/
-│   ├── HomepageNew.tsx (redesigned)
-│   ├── articles/
-│   │   ├── [slug].tsx
-│   │   └── index.tsx
-│   ├── domains/
-│   │   └── [domain].tsx (unified)
-│   ├── services/
-│   │   ├── [slug].tsx
-│   │   └── index.tsx
-│   └── admin/
-│       ├── Dashboard.tsx
-│       ├── ContentManager.tsx
-│       ├── Analytics.tsx
-│       └── Settings.tsx
-├── lib/
-│   ├── cms.ts (enhanced)
-│   ├── x402.ts (new)
-│   └── analytics.ts (new)
-└── types/
-    └── cms.ts (enhanced)
-
-apps/strapi/src/
-├── api/
-│   ├── article/ (enhanced)
-│   ├── service/ (enhanced)
-│   ├── author/ (new)
-│   ├── category/ (new)
-│   ├── tag/ (new)
-│   └── testimonial/ (new)
-└── components/
-    ├── seo/ (enhanced)
-    ├── content/ (new)
-    └── pricing/ (new)
+┌─────────────────────────────────────────────────────────────────────┐
+│                     x402 PAYMENT FLOW                               │
+│                                                                     │
+│  Content in Strapi:                                                │
+│  ┌─────────────────────────────────────────────┐                   │
+│  │ Article: "Advanced AI Nursing Techniques"   │                   │
+│  │ ────────────────────────────────────────── │                   │
+│  │ x402Enabled: true                           │                   │
+│  │ x402Price: 0.005                           │                   │
+│  │ domain: "ai"                                │                   │
+│  └─────────────────────────────────────────────┘                   │
+│                                                                     │
+│  Displayed on public site:                                          │
+│  ┌─────────────────────────────────────────────┐                   │
+│  │ ┌───────────────────────────────────┐       │                   │
+│  │ │  🤖 AI-Ready  •  💰 $0.005        │       │                   │
+│  │ └───────────────────────────────────┘       │                   │
+│  │                                             │                   │
+│  │ Advanced AI Nursing Techniques              │                   │
+│  │                                             │                   │
+│  │ AI agents can pay to access this content   │                   │
+│  │ via the x402 payment protocol.              │                   │
+│  └─────────────────────────────────────────────┘                   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Part 7: Success Metrics
+## Environment Configuration
 
-| Metric | Target |
-|--------|--------|
-| Page Load Time | < 2 seconds |
-| Lighthouse Score | > 90 |
-| Content Published/Week | 10+ articles |
-| API Response Time | < 200ms |
-| x402 Revenue | $100/month (initial) |
+```bash
+# Strapi CMS (Public API for reading)
+VITE_CMS_URL=https://cms.handywriterz.com
+
+# Admin CMS proxy (server only)
+STRAPI_URL=https://cms.handywriterz.com
+STRAPI_TOKEN=server_side_token
+
+# x402 Protocol
+VITE_X402_FACILITATOR_URL=https://x402.handywriterz.com
+
+# Operations Services
+VITE_MATTERMOST_URL=https://chat.handywriterz.com
+VITE_UPLOAD_BROKER_URL=https://uploads.handywriterz.com
+
+# Auth (Clerk)
+VITE_CLERK_PUBLISHABLE_KEY=pk_live_xxx
+```
 
 ---
 
-## Next Steps
+## Summary
 
-1. Review and approve architecture
-2. Begin Phase 1: Strapi content models
-3. Set up component library for new designs
-4. Implement Homepage redesign
-5. Roll out domain pages
-6. Deploy admin dashboard improvements
-7. Integrate x402 protocol
+| Layer | Auth | Purpose |
+|-------|------|---------|
+| **Public Website** | None | Content consumption (articles, services, authors) |
+| **Strapi Admin** | Strapi Users | Content creation, editing, publishing |
+| **User Dashboard** | Clerk | Orders, files, messaging for customers |
+| **Admin Dashboard** | Clerk (Editor role) | Operations monitoring, file management, support |
+
+**Key Principle:** Content is domain-first and lives in Strapi. Only authenticated admins publish. The public web app reads without auth, and the HandyWriterz Admin Dashboard stays focused on operations (files, messaging, orders) rather than editorial control.

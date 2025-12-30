@@ -17,9 +17,9 @@ Ship a production-grade Strapi 5 CMS that lets admins publish content and drive 
 - Strapi bootstrap empty (apps/strapi/src/index.ts) -> no auto-permissions.
 
 ### Public Pages (Web)
-- Homepage uses `landing-section` with CMS-first layout: apps/web/src/pages/HomepageNew.tsx.
-- Services hub is a domain directory with service CTAs: apps/web/src/pages/services/ServicesHub.tsx.
-- Domain pages use `domain-page` + `landing-section` items: apps/web/src/pages/domains/DomainPage.tsx.
+- Homepage uses `landing-section` with fallback static content: apps/web/src/pages/Homepage.tsx.
+- Services list and detail use Strapi via `cms.ts`: apps/web/src/pages/services/ServicesHub.tsx and apps/web/src/pages/services/ServicesPage.tsx.
+- Domain pages use `domain-page` + `landing-section` items: apps/web/src/pages/domains/EnterpriseDomainPage.tsx.
 - Rich content rendering: apps/web/src/components/Content/ModernContentRenderer.tsx and apps/web/src/components/Services/RichContentRenderer.tsx.
 
 ### Admin / Publishing

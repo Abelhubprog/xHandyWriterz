@@ -1,6 +1,5 @@
 import React from 'react';
 import { Clock, Database, HardDrive, AlertCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
 
 interface DataSourceIndicatorProps {
   source: 'database' | 'cache' | 'local' | 'default' | null;
@@ -48,24 +47,18 @@ export const DataSourceIndicator: React.FC<DataSourceIndicatorProps> = ({
       color = 'text-blue-600';
   }
   
+  const title =
+    source === 'database'
+      ? description
+      : `${description}. We'll automatically update when the database connection is restored.`;
+
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className={`inline-flex items-center gap-1 text-xs ${color} ${className}`}>
-            {icon}
-            <span>{label}</span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p className="max-w-xs">{description}</p>
-          {source !== 'database' && (
-            <p className="text-xs mt-1 text-gray-500">
-              We'll automatically update when the database connection is restored.
-            </p>
-          )}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div
+      className={`inline-flex items-center gap-1 text-xs ${color} ${className}`}
+      title={title}
+    >
+      {icon}
+      <span>{label}</span>
+    </div>
   );
 } 

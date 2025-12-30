@@ -47,7 +47,7 @@ export { Spinner } from './spinner';
 // Utility Components
 export { Badge } from './badge';
 export { Avatar } from './avatar';
-export { IconButton } from './IconButton';
+export { default as IconButton } from './IconButton';
 export { StatusBadge } from './StatusBadge';
 export { RoleBadge } from './RoleBadge';
 export { Separator } from './separator';
@@ -60,9 +60,6 @@ export * from './popover';
 // Layout Components
 export { Stack } from './stack';
 export { Box } from './box';
-
-// Examples
-export { FormExample } from '../examples/FormExample';
 
 // Types
 export type {

@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 
 interface BoxProps extends React.HTMLAttributes<HTMLDivElement> {
-  as?: keyof JSX.IntrinsicElements;
+  as?: 'div' | 'span' | 'section' | 'article' | 'main' | 'header' | 'footer' | 'nav' | 'aside';
 }
 
 export function Box({ as: Component = 'div', className, ...props }: BoxProps) {

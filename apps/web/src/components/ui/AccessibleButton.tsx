@@ -25,11 +25,6 @@ interface AccessibleButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> 
    * Whether the button should be rendered with a round shape (for icon buttons)
    */
   isRound?: boolean;
-  
-  /**
-   * Optional onClick handler
-   */
-  onClick?: () => void;
 }
 
 /**
@@ -44,7 +39,6 @@ const AccessibleButton: React.FC<AccessibleButtonProps> = ({
   ariaLabel,
   className = '',
   isRound = false,
-  onClick,
   ...props
 }) => {
   // Default styling classes
@@ -58,7 +52,6 @@ const AccessibleButton: React.FC<AccessibleButtonProps> = ({
   return (
     <button
       className={combinedClasses}
-      onClick={onClick}
       aria-label={ariaLabel}
       type="button"
       {...props}

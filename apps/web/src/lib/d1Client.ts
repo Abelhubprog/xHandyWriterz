@@ -247,7 +247,7 @@ export class D1Client {
   }
 
   /**
-   * Supabase-style query builder - returns a chainable query object
+   * Query builder - returns a chainable query object
    */
   from(table: string): D1QueryBuilder {
     return new D1QueryBuilder(this, table);
@@ -255,7 +255,7 @@ export class D1Client {
 }
 
 /**
- * Query builder for Supabase-style chainable queries
+ * Query builder for chainable queries
  */
 class D1QueryBuilder {
   private client: D1Client;
@@ -421,7 +421,7 @@ class D1QueryBuilder {
     }
   }
 
-  // Aliases for execute to match Supabase patterns
+  // Aliases for execute to allow promise-style chaining
   then<T>(resolve: (value: { data: any[]; error: Error | null }) => T): Promise<T> {
     return this.execute().then(resolve);
   }

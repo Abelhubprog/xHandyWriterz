@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LoadingSpinner } from '@/apps/main/components/ui/LoadingSpinner';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface DataTableProps<T> {
   data: T[];
