@@ -37,7 +37,7 @@ export function isClerkEnabled(): boolean {
   return isValidPublishableKey(env.VITE_CLERK_PUBLISHABLE_KEY);
 }
 
-function ClerkDisabledNotice({ title, description }: { title: string; description: string }): JSX.Element {
+export function ClerkDisabledNotice({ title, description }: { title: string; description: string }): JSX.Element {
   return (
     <div className="flex min-h-[60vh] items-center justify-center p-6">
       <Card className="w-full max-w-md">
@@ -63,6 +63,17 @@ type ClerkProviderProps = {
 
 export function ClerkProvider({ children }: ClerkProviderProps): JSX.Element {
   const publishableKey = env.VITE_CLERK_PUBLISHABLE_KEY;
+
+  // Check for production key in development
+  if (import.meta.env.DEV && publishableKey?.startsWith('pk_live_')) {
+    return (
+      <ClerkDisabledNotice
+        title="Development Configuration Error"
+        description="You are using a Clerk Production Key (pk_live_...) in a development environment. Please use a Development Key (pk_test_...) for localhost."
+      />
+    );
+  }
+
   if (!isValidPublishableKey(publishableKey)) {
     if (import.meta.env.DEV) {
       // Avoid crashing local dev when env isn't wired yet.
@@ -84,8 +95,8 @@ export function ClerkProvider({ children }: ClerkProviderProps): JSX.Element {
       publishableKey={publishableKey}
       signInUrl={env.VITE_CLERK_SIGN_IN_URL}
       signUpUrl={env.VITE_CLERK_SIGN_UP_URL}
-      afterSignInUrl={env.VITE_CLERK_AFTER_SIGN_IN_URL}
-      afterSignUpUrl={env.VITE_CLERK_AFTER_SIGN_UP_URL}
+      signInFallbackRedirectUrl={env.VITE_CLERK_AFTER_SIGN_IN_URL}
+      signUpFallbackRedirectUrl={env.VITE_CLERK_AFTER_SIGN_UP_URL}
     >
       <ClerkLoadedImpl>{children}</ClerkLoadedImpl>
     </ClerkProviderImpl>
