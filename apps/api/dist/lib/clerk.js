@@ -4,9 +4,7 @@
  */
 import { createClerkClient, verifyToken } from '@clerk/backend';
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY || '';
-const CLERK_PUBLISHABLE_KEY = process.env.CLERK_PUBLISHABLE_KEY ||
-    process.env.VITE_CLERK_PUBLISHABLE_KEY ||
-    '';
+const CLERK_PUBLISHABLE_KEY = process.env.VITE_CLERK_PUBLISHABLE_KEY || '';
 // Initialize Clerk client
 const clerk = createClerkClient({
     secretKey: CLERK_SECRET_KEY,

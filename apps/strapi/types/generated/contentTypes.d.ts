@@ -107,43 +107,6 @@ export interface AdminApiTokenPermission extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface AdminAuditLog extends Struct.CollectionTypeSchema {
-  collectionName: 'strapi_audit_logs';
-  info: {
-    displayName: 'Audit Log';
-    pluralName: 'audit-logs';
-    singularName: 'audit-log';
-  };
-  options: {
-    draftAndPublish: false;
-    timestamps: false;
-  };
-  pluginOptions: {
-    'content-manager': {
-      visible: false;
-    };
-    'content-type-builder': {
-      visible: false;
-    };
-  };
-  attributes: {
-    action: Schema.Attribute.String & Schema.Attribute.Required;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    date: Schema.Attribute.DateTime & Schema.Attribute.Required;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<'oneToMany', 'admin::audit-log'> &
-      Schema.Attribute.Private;
-    payload: Schema.Attribute.JSON;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    user: Schema.Attribute.Relation<'oneToOne', 'admin::user'>;
-  };
-}
-
 export interface AdminPermission extends Struct.CollectionTypeSchema {
   collectionName: 'admin_permissions';
   info: {
@@ -470,6 +433,7 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
 export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
   collectionName: 'articles';
   info: {
+    description: 'Long-form content articles';
     displayName: 'Article';
     pluralName: 'articles';
     singularName: 'article';
@@ -478,28 +442,289 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    author: Schema.Attribute.String;
-    category: Schema.Attribute.String;
-    content: Schema.Attribute.Blocks & Schema.Attribute.Required;
+    author: Schema.Attribute.Relation<'manyToOne', 'api::author.author'>;
+    authorName: Schema.Attribute.String;
+    body: Schema.Attribute.RichText;
+    categories: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::category.category'
+    >;
+    content: Schema.Attribute.RichText;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     datePublished: Schema.Attribute.DateTime;
-    heroImage: Schema.Attribute.Media<'images' | 'files'>;
+    domain: Schema.Attribute.Enumeration<
+      [
+        'adult-health',
+        'mental-health',
+        'child-nursing',
+        'social-work',
+        'technology',
+        'ai',
+        'crypto',
+        'enterprise',
+        'general',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'general'>;
+    excerpt: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 300;
+      }>;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    heroImage: Schema.Attribute.Media<'images'>;
+    images: Schema.Attribute.Media<'images', true>;
+    likeCount: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::article.article'
     > &
       Schema.Attribute.Private;
+    previewToken: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    readingTime: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<5>;
+    relatedArticles: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::article.article'
+    >;
+    scheduledAt: Schema.Attribute.DateTime;
+    seo: Schema.Attribute.Component<'seo.seo', false>;
     slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
+    status: Schema.Attribute.Enumeration<
+      ['draft', 'review', 'scheduled', 'published']
+    > &
+      Schema.Attribute.DefaultTo<'draft'>;
+    summary: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 500;
+      }>;
+    tags: Schema.Attribute.JSON;
+    tagsList: Schema.Attribute.Relation<'manyToMany', 'api::tag.tag'>;
     title: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 255;
       }>;
+    typeTags: Schema.Attribute.JSON;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    viewCount: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    x402Enabled: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    x402Price: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0.001>;
+  };
+}
+
+export interface ApiAuthorAuthor extends Struct.CollectionTypeSchema {
+  collectionName: 'authors';
+  info: {
+    description: 'Content authors and expert contributors';
+    displayName: 'Author';
+    pluralName: 'authors';
+    singularName: 'author';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    articles: Schema.Attribute.Relation<'oneToMany', 'api::article.article'>;
+    avatar: Schema.Attribute.Media<'images'>;
+    bio: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    credentials: Schema.Attribute.Text;
+    email: Schema.Attribute.Email;
+    expertise: Schema.Attribute.JSON;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    linkedin: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::author.author'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    role: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Author'>;
+    services: Schema.Attribute.Relation<'oneToMany', 'api::service.service'>;
+    shortBio: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }>;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    socialLinks: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
+    twitter: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    website: Schema.Attribute.String;
+  };
+}
+
+export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
+  collectionName: 'categories';
+  info: {
+    description: 'Content categories for organization';
+    displayName: 'Category';
+    pluralName: 'categories';
+    singularName: 'category';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    articles: Schema.Attribute.Relation<'manyToMany', 'api::article.article'>;
+    children: Schema.Attribute.Relation<'oneToMany', 'api::category.category'>;
+    color: Schema.Attribute.String & Schema.Attribute.DefaultTo<'#6366f1'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    domain: Schema.Attribute.Enumeration<
+      [
+        'adult-health',
+        'mental-health',
+        'child-nursing',
+        'social-work',
+        'technology',
+        'ai',
+        'crypto',
+        'enterprise',
+        'general',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'general'>;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    icon: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::category.category'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    parent: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiDomainPageDomainPage extends Struct.CollectionTypeSchema {
+  collectionName: 'domain_pages';
+  info: {
+    description: 'CMS-managed domain landing pages (Adult Nursing, AI, Crypto, etc.)';
+    displayName: 'Domain Page';
+    pluralName: 'domain-pages';
+    singularName: 'domain-page';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ctaLabel: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Get Started'>;
+    ctaUrl: Schema.Attribute.String;
+    description: Schema.Attribute.Text;
+    faqs: Schema.Attribute.Component<'domain.domain-faq', true>;
+    featuredArticles: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::article.article'
+    >;
+    featuredServices: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::service.service'
+    >;
+    features: Schema.Attribute.Component<'domain.domain-feature', true>;
+    gradient: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'from-indigo-500 to-purple-600'>;
+    heroImage: Schema.Attribute.Media<'images'>;
+    heroSubtitle: Schema.Attribute.Text;
+    heroTitle: Schema.Attribute.String & Schema.Attribute.Required;
+    heroVideo: Schema.Attribute.Media<'videos'>;
+    highlights: Schema.Attribute.Component<'domain.domain-highlight', true>;
+    iconKey: Schema.Attribute.String;
+    isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    keywords: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::domain-page.domain-page'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    secondaryCtaLabel: Schema.Attribute.String;
+    secondaryCtaUrl: Schema.Attribute.String;
+    seoDescription: Schema.Attribute.Text;
+    seoImage: Schema.Attribute.Media<'images'>;
+    seoTitle: Schema.Attribute.String;
+    showInFooter: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    showInNav: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    tagline: Schema.Attribute.String;
+    testimonials: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::testimonial.testimonial'
+    >;
+    themeColor: Schema.Attribute.String & Schema.Attribute.DefaultTo<'#6366f1'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiLandingSectionLandingSection
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'landing_sections';
+  info: {
+    displayName: 'Landing Section';
+    pluralName: 'landing-sections';
+    singularName: 'landing-section';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    anchorId: Schema.Attribute.String;
+    body: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ctaLabel: Schema.Attribute.String;
+    ctaUrl: Schema.Attribute.String;
+    eyebrow: Schema.Attribute.String;
+    heading: Schema.Attribute.String;
+    items: Schema.Attribute.Component<'landing.landing-item', true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::landing-section.landing-section'
+    > &
+      Schema.Attribute.Private;
+    media: Schema.Attribute.Media<'images' | 'files' | 'videos'>;
+    order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    pageSlug: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    secondaryCtaLabel: Schema.Attribute.String;
+    secondaryCtaUrl: Schema.Attribute.String;
+    sectionKey: Schema.Attribute.String & Schema.Attribute.Required;
+    subheading: Schema.Attribute.Text;
+    theme: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -509,6 +734,7 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
 export interface ApiServiceService extends Struct.CollectionTypeSchema {
   collectionName: 'services';
   info: {
+    description: 'Service offerings and products';
     displayName: 'Service';
     pluralName: 'services';
     singularName: 'service';
@@ -522,8 +748,10 @@ export interface ApiServiceService extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
-    body: Schema.Attribute.Blocks &
-      Schema.Attribute.Required &
+    attachments: Schema.Attribute.Media<'images' | 'files' | 'videos', true>;
+    author: Schema.Attribute.String;
+    authorProfile: Schema.Attribute.Relation<'manyToOne', 'api::author.author'>;
+    body: Schema.Attribute.RichText &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -532,15 +760,23 @@ export interface ApiServiceService extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    description: Schema.Attribute.RichText &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     domain: Schema.Attribute.Enumeration<
       [
-        'nursing',
+        'adult-health',
+        'mental-health',
+        'child-nursing',
+        'social-work',
+        'technology',
         'ai',
         'crypto',
-        'marketing',
         'enterprise',
-        'education',
-        'research',
+        'general',
       ]
     > &
       Schema.Attribute.Required &
@@ -556,9 +792,8 @@ export interface ApiServiceService extends Struct.CollectionTypeSchema {
         };
       }> &
       Schema.Attribute.DefaultTo<false>;
-    heroImage: Schema.Attribute.Media<
-      'images' | 'files' | 'videos' | 'audios'
-    > &
+    features: Schema.Attribute.JSON;
+    heroImage: Schema.Attribute.Media<'images'> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -576,7 +811,10 @@ export interface ApiServiceService extends Struct.CollectionTypeSchema {
         };
       }> &
       Schema.Attribute.DefaultTo<0>;
+    previewToken: Schema.Attribute.String;
+    pricing: Schema.Attribute.JSON;
     publishedAt: Schema.Attribute.DateTime;
+    seo: Schema.Attribute.Component<'seo.seo', false>;
     slug: Schema.Attribute.UID<'title'> &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -584,13 +822,19 @@ export interface ApiServiceService extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
-    Summary: Schema.Attribute.String &
-      Schema.Attribute.Required &
+    summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 500;
       }>;
+    testimonials: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::testimonial.testimonial'
+    >;
     title: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique &
@@ -602,6 +846,99 @@ export interface ApiServiceService extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 255;
       }>;
+    typeTags: Schema.Attribute.JSON;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    x402Enabled: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    x402Price: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0.005>;
+  };
+}
+
+export interface ApiTagTag extends Struct.CollectionTypeSchema {
+  collectionName: 'tags';
+  info: {
+    description: 'Tags for cross-domain content tagging';
+    displayName: 'Tag';
+    pluralName: 'tags';
+    singularName: 'tag';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    articles: Schema.Attribute.Relation<'manyToMany', 'api::article.article'>;
+    color: Schema.Attribute.String & Schema.Attribute.DefaultTo<'#6366f1'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::tag.tag'> &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiTestimonialTestimonial extends Struct.CollectionTypeSchema {
+  collectionName: 'testimonials';
+  info: {
+    description: 'Customer testimonials and reviews';
+    displayName: 'Testimonial';
+    pluralName: 'testimonials';
+    singularName: 'testimonial';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    authorAvatar: Schema.Attribute.Media<'images'>;
+    authorCompany: Schema.Attribute.String;
+    authorName: Schema.Attribute.String & Schema.Attribute.Required;
+    authorRole: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    domain: Schema.Attribute.Enumeration<
+      [
+        'adult-health',
+        'mental-health',
+        'child-nursing',
+        'social-work',
+        'technology',
+        'ai',
+        'crypto',
+        'enterprise',
+        'general',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'general'>;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::testimonial.testimonial'
+    > &
+      Schema.Attribute.Private;
+    order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    quote: Schema.Attribute.Text & Schema.Attribute.Required;
+    rating: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 5;
+          min: 1;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<5>;
+    service: Schema.Attribute.Relation<'manyToOne', 'api::service.service'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1112,7 +1449,6 @@ declare module '@strapi/strapi' {
     export interface ContentTypeSchemas {
       'admin::api-token': AdminApiToken;
       'admin::api-token-permission': AdminApiTokenPermission;
-      'admin::audit-log': AdminAuditLog;
       'admin::permission': AdminPermission;
       'admin::role': AdminRole;
       'admin::session': AdminSession;
@@ -1120,7 +1456,13 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::article.article': ApiArticleArticle;
+      'api::author.author': ApiAuthorAuthor;
+      'api::category.category': ApiCategoryCategory;
+      'api::domain-page.domain-page': ApiDomainPageDomainPage;
+      'api::landing-section.landing-section': ApiLandingSectionLandingSection;
       'api::service.service': ApiServiceService;
+      'api::tag.tag': ApiTagTag;
+      'api::testimonial.testimonial': ApiTestimonialTestimonial;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

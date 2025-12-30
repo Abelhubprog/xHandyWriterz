@@ -1,6 +1,5 @@
 import { Breadcrumbs as MuiBreadcrumbs, Link, Typography } from '@mui/material';
-import NextLink from 'next/link';
-import { useRouter } from 'next/router';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useMemo } from 'react';
 
 interface BreadcrumbItem {
@@ -9,10 +8,10 @@ interface BreadcrumbItem {
 }
 
 export default function Breadcrumbs() {
-  const router = useRouter();
+  const location = useLocation();
 
   const breadcrumbs = useMemo(() => {
-    const paths = router.asPath.split('/').filter(Boolean);
+    const paths = location.pathname.split('/').filter(Boolean);
     const items: BreadcrumbItem[] = [
       { label: 'Home', href: '/' }
     ];
@@ -44,7 +43,7 @@ export default function Breadcrumbs() {
     }
 
     return items;
-  }, [router.asPath]);
+  }, [location.pathname]);
 
   if (breadcrumbs.length <= 1) return null;
 
@@ -68,8 +67,8 @@ export default function Breadcrumbs() {
         return (
           <Link
             key={item.label}
-            component={NextLink}
-            href={item.href || '#'}
+            component={RouterLink}
+            to={item.href || '#'}
             underline="hover"
             color="inherit"
           >

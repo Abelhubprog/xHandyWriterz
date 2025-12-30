@@ -245,6 +245,186 @@ export class D1Client {
   isConfigured(): boolean {
     return !!(this.apiToken && this.accountId && this.databaseId);
   }
+
+  /**
+   * Supabase-style query builder - returns a chainable query object
+   */
+  from(table: string): D1QueryBuilder {
+    return new D1QueryBuilder(this, table);
+  }
+}
+
+/**
+ * Query builder for Supabase-style chainable queries
+ */
+class D1QueryBuilder {
+  private client: D1Client;
+  private table: string;
+  private selectFields: string = '*';
+  private whereConditions: { field: string; operator: string; value: any }[] = [];
+  private orderByField?: string;
+  private orderDirection: 'ASC' | 'DESC' = 'ASC';
+  private limitCount?: number;
+  private offsetCount?: number;
+
+  constructor(client: D1Client, table: string) {
+    this.client = client;
+    this.table = table;
+  }
+
+  select(fields: string = '*'): this {
+    this.selectFields = fields;
+    return this;
+  }
+
+  eq(field: string, value: any): this {
+    this.whereConditions.push({ field, operator: '=', value });
+    return this;
+  }
+
+  neq(field: string, value: any): this {
+    this.whereConditions.push({ field, operator: '!=', value });
+    return this;
+  }
+
+  gt(field: string, value: any): this {
+    this.whereConditions.push({ field, operator: '>', value });
+    return this;
+  }
+
+  gte(field: string, value: any): this {
+    this.whereConditions.push({ field, operator: '>=', value });
+    return this;
+  }
+
+  lt(field: string, value: any): this {
+    this.whereConditions.push({ field, operator: '<', value });
+    return this;
+  }
+
+  lte(field: string, value: any): this {
+    this.whereConditions.push({ field, operator: '<=', value });
+    return this;
+  }
+
+  like(field: string, value: string): this {
+    this.whereConditions.push({ field, operator: 'LIKE', value });
+    return this;
+  }
+
+  order(field: string, options?: { ascending?: boolean }): this {
+    this.orderByField = field;
+    this.orderDirection = options?.ascending === false ? 'DESC' : 'ASC';
+    return this;
+  }
+
+  limit(count: number): this {
+    this.limitCount = count;
+    return this;
+  }
+
+  offset(count: number): this {
+    this.offsetCount = count;
+    return this;
+  }
+
+  private buildWhereClause(): { clause: string; params: any[] } {
+    if (this.whereConditions.length === 0) {
+      return { clause: '', params: [] };
+    }
+    const conditions = this.whereConditions.map((c, i) => `${c.field} ${c.operator} ?`);
+    const params = this.whereConditions.map(c => c.value);
+    return { clause: `WHERE ${conditions.join(' AND ')}`, params };
+  }
+
+  async execute(): Promise<{ data: any[]; error: Error | null }> {
+    try {
+      const { clause: whereClause, params } = this.buildWhereClause();
+      let sql = `SELECT ${this.selectFields} FROM ${this.table}`;
+      
+      if (whereClause) {
+        sql += ` ${whereClause}`;
+      }
+      
+      if (this.orderByField) {
+        sql += ` ORDER BY ${this.orderByField} ${this.orderDirection}`;
+      }
+      
+      if (this.limitCount !== undefined) {
+        sql += ` LIMIT ${this.limitCount}`;
+      }
+      
+      if (this.offsetCount !== undefined) {
+        sql += ` OFFSET ${this.offsetCount}`;
+      }
+
+      const result = await this.client.query(sql, params);
+      return { data: result.results, error: null };
+    } catch (error) {
+      return { data: [], error: error as Error };
+    }
+  }
+
+  async insert(data: Record<string, any> | Record<string, any>[]): Promise<{ data: any; error: Error | null }> {
+    try {
+      const records = Array.isArray(data) ? data : [data];
+      if (records.length === 0) {
+        return { data: null, error: new Error('No data to insert') };
+      }
+
+      const fields = Object.keys(records[0]);
+      const placeholders = fields.map(() => '?').join(', ');
+      
+      for (const record of records) {
+        const values = fields.map(f => record[f]);
+        const sql = `INSERT INTO ${this.table} (${fields.join(', ')}) VALUES (${placeholders})`;
+        await this.client.query(sql, values);
+      }
+      
+      return { data: records, error: null };
+    } catch (error) {
+      return { data: null, error: error as Error };
+    }
+  }
+
+  async update(data: Record<string, any>): Promise<{ data: any; error: Error | null }> {
+    try {
+      const { clause: whereClause, params: whereParams } = this.buildWhereClause();
+      const fields = Object.keys(data);
+      const setClause = fields.map(f => `${f} = ?`).join(', ');
+      const values = fields.map(f => data[f]);
+      
+      let sql = `UPDATE ${this.table} SET ${setClause}`;
+      if (whereClause) {
+        sql += ` ${whereClause}`;
+      }
+      
+      await this.client.query(sql, [...values, ...whereParams]);
+      return { data, error: null };
+    } catch (error) {
+      return { data: null, error: error as Error };
+    }
+  }
+
+  async delete(): Promise<{ data: null; error: Error | null }> {
+    try {
+      const { clause: whereClause, params } = this.buildWhereClause();
+      let sql = `DELETE FROM ${this.table}`;
+      if (whereClause) {
+        sql += ` ${whereClause}`;
+      }
+      
+      await this.client.query(sql, params);
+      return { data: null, error: null };
+    } catch (error) {
+      return { data: null, error: error as Error };
+    }
+  }
+
+  // Aliases for execute to match Supabase patterns
+  then<T>(resolve: (value: { data: any[]; error: Error | null }) => T): Promise<T> {
+    return this.execute().then(resolve);
+  }
 }
 
 // Export singleton instance

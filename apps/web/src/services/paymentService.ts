@@ -256,6 +256,84 @@ export class PaymentService {
       currency,
     }).format(amount);
   }
+
+  // ============================================
+  // Additional methods for component compatibility
+  // ============================================
+
+  /**
+   * Get payments for a specific user
+   * Alias for getPaymentHistory for naming consistency
+   */
+  async getUserPayments(userId: string): Promise<Payment[]> {
+    return this.getPaymentHistory(userId);
+  }
+
+  /**
+   * Create a new payment
+   */
+  async createPayment(paymentData: {
+    userId: string;
+    amount: number;
+    currency?: string;
+    method: string;
+    orderId?: string;
+    metadata?: Record<string, any>;
+  }): Promise<Payment> {
+    try {
+      const response = await fetch(`${this.apiUrl}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...paymentData,
+          currency: paymentData.currency || 'usd',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create payment: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Create payment error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get payment status
+   */
+  async getPaymentStatus(paymentId: string): Promise<Payment['status']> {
+    try {
+      const payment = await this.getPaymentDetails(paymentId);
+      return payment.status;
+    } catch (error) {
+      console.error('Get payment status error:', error);
+      return 'failed';
+    }
+  }
+
+  /**
+   * Cancel a payment
+   */
+  async cancelPayment(paymentId: string): Promise<Payment> {
+    try {
+      const response = await fetch(`${this.apiUrl}/${paymentId}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to cancel payment: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Cancel payment error:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

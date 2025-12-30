@@ -68,6 +68,8 @@ const envSchema = z.object({
 });
 
 function getEnvVars() {
+  const isProd = import.meta.env.PROD;
+
   // Use import.meta.env directly with type safety
   const envVars = {
     // API
@@ -110,7 +112,7 @@ function getEnvVars() {
     VITE_MATTERMOST_API_URL: import.meta.env.VITE_MATTERMOST_API_URL,
     VITE_MM_AUTH_URL: import.meta.env.VITE_MM_AUTH_URL,
     VITE_CLERK_MM_TOKEN_TEMPLATE: import.meta.env.VITE_CLERK_MM_TOKEN_TEMPLATE,
-  VITE_MATTERMOST_TEAM_ID: import.meta.env.VITE_MATTERMOST_TEAM_ID,
+    VITE_MATTERMOST_TEAM_ID: import.meta.env.VITE_MATTERMOST_TEAM_ID,
 
     // Public Features
     VITE_ENABLE_PUBLIC_ACCESS: import.meta.env.VITE_ENABLE_PUBLIC_ACCESS || 'true',
@@ -136,10 +138,36 @@ function getEnvVars() {
     VITE_PREFERRED_WALLET: import.meta.env.VITE_PREFERRED_WALLET || 'metamask'
   };
 
-  const result = envSchema.safeParse(envVars);
+  if (isProd) {
+    const missing: string[] = [];
 
+    const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+    if (!clerkKey || clerkKey === 'pk_test_default') missing.push('VITE_CLERK_PUBLISHABLE_KEY');
+
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl) missing.push('VITE_API_URL');
+    if (apiUrl && /(localhost|127\.0\.0\.1)/i.test(apiUrl)) {
+      throw new Error('[env] VITE_API_URL must not point to localhost in production');
+    }
+
+    const appUrl = import.meta.env.VITE_APP_URL;
+    if (!appUrl) missing.push('VITE_APP_URL');
+    if (appUrl && /(localhost|127\.0\.0\.1)/i.test(appUrl)) {
+      throw new Error('[env] VITE_APP_URL must not point to localhost in production');
+    }
+
+    const cmsUrl = import.meta.env.VITE_CMS_URL;
+    if (!cmsUrl) missing.push('VITE_CMS_URL');
+
+    if (missing.length) {
+      throw new Error(`[env] Missing required environment variables for production: ${missing.join(', ')}`);
+    }
+  }
+
+  const result = envSchema.safeParse(envVars);
   if (!result.success) {
-    // Instead of throwing, try to parse with defaults
+    // Dev: keep local bring-up smooth, but surface schema issues in console
+    console.warn('[env] Invalid environment variables; falling back to schema defaults', result.error);
     return envSchema.parse(envVars);
   }
 

@@ -137,7 +137,7 @@
 - [COMP-48] `docs/dataflow.md` previously updated to include personas, flows, and fallback strategies.
 - [COMP-49] `docs/context.md` provides condensed architecture snapshot.
 - [COMP-50] `config/taxonomy.ts` and `config/taxonomy.json` define service domain taxonomy for UI mapping.
-- [COMP-51] `apps/web/functions/sitemap.xml.ts` generates dynamic sitemap for SEO.
+- [COMP-51] `apps/api/src/routes/sitemap.ts` generates dynamic sitemap for SEO.
 - [COMP-52] `apps/web/public/robots.txt` enumerates crawler rules.
 - [COMP-53] `apps/web/src/env.ts` defines Zod schema for environment variables consumed by the SPA.
 - [COMP-54] `apps/web/src/env.d.ts` ensures TypeScript knows about Vite env variables.
@@ -344,7 +344,7 @@
 - [PUBLISH-39] Admin quick actions link to content creation, leveraging Strapi endpoints.
 - [PUBLISH-40] `ArticleEditor` (implied) uses Strapi API to load and update article drafts.
 - [PUBLISH-41] Web SPA uses `HelmetProvider` to update document head with Strapi-provided SEO metadata.
-- [PUBLISH-42] `apps/web/functions/sitemap.xml.ts` enumerates Strapi-managed routes for search engines.
+- [PUBLISH-42] `apps/api/src/routes/sitemap.ts` enumerates Strapi-managed routes for search engines.
 - [PUBLISH-43] `robots.txt` ensures published pages accessible to crawlers.
 - [PUBLISH-44] `sitemap.xml.ts` uses fetch to Strapi to build dynamic sitemap (future extension).
 - [PUBLISH-45] Content flows from Strapi to SPA to end user with fallback to Microfeed to ensure zero downtime.

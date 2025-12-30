@@ -547,8 +547,8 @@ d:\HandyWriterzNEW\
 │   │   │   │   │   ├── DocumentsUpload.tsx
 │   │   │   │   │   └── Dashboard.tsx
 │   │   │   │   ├── services/
-│   │   │   │   │   └── ServicesHub.tsx
-│   │   │   │   └── HomepageNew.tsx
+│   │   │   │   │   └── ServicesPage.tsx
+│   │   │   │   └── Homepage.tsx
 │   │   │   ├── components/
 │   │   │   │   ├── layouts/
 │   │   │   │   │   ├── Navbar.tsx

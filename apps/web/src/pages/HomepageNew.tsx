@@ -273,7 +273,7 @@ export default function Homepage() {
                   <motion.div variants={fadeInUp}>
                     <FeaturedGrid
                       articles={articles as any}
-                      variant="hero-grid"
+                      layout="hero-grid"
                       showViewAll
                       viewAllLink="/articles"
                     />
@@ -603,7 +603,7 @@ const article = await response.json();`}</code>
                     <AuthorGrid
                       authors={authors as any}
                       variant="compact"
-                      columns={4}
+                      maxItems={4}
                       showViewAll
                       viewAllLink="/authors"
                     />

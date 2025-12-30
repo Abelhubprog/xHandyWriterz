@@ -35,6 +35,8 @@ export interface StrapiAuthor {
   avatar?: StrapiMedia;
   credentials?: string;
   featured?: boolean;
+  articleCount?: number;
+  totalViews?: number;
   socialLinks?: {
     twitter?: string;
     linkedin?: string;
