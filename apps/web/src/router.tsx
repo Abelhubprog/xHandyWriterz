@@ -80,10 +80,14 @@ const childRoutes: RouteObject[] = [
   { path: 'learning-hub', element: <LearningHub /> },
   { path: 'auth/admin-login', element: <AdminLogin /> },
   { path: 'sign-in', element: <Login /> },
+  { path: 'sign-in/*', element: <Login /> },
   { path: 'sign-up', element: <SignUp /> },
+  { path: 'sign-up/*', element: <SignUp /> },
   // Legacy aliases to avoid 404s
   { path: 'auth/login', element: <Login /> },
+  { path: 'auth/login/*', element: <Login /> },
   { path: 'auth/register', element: <SignUp /> },
+  { path: 'auth/register/*', element: <SignUp /> },
   { path: 'check-turnitin', element: <TurnitinCheck /> },
   { path: 'turnitin/submit', element: <TurnitinSubmission /> },
   
