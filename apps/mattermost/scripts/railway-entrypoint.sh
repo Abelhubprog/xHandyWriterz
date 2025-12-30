@@ -55,3 +55,21 @@ sanitize_var MM_FILESETTINGS_EXPORTAMAZONS3ENDPOINT
 sanitize_var MM_R2_ENDPOINT
 
 exec mattermost server
+POSTGRES_HOST="${MM_SQLSETTINGS_DATASOURCE:-}""
+if [ -n "$POSTGRES_HOST" ]; then
+  # Extract host/port from postgres://user:pass@host:port/db?params
+  HOST=$(echo "$POSTGRES_HOST" | sed -E 's#^postgres://[^@]+@([^:/]+).*#\1#')
+  PORT=$(echo "$POSTGRES_HOST" | sed -E 's#^postgres://[^@]+@[^:/]+:([0-9]+).*#\1#')
+  PORT=${PORT:-5432}
+  echo "[railway-entrypoint] Waiting for Postgres at $HOST:$PORT..."
+  for i in $(seq 1 30); do
+    nc -z "$HOST" "$PORT" && break
+    sleep 2
+  done
+  nc -z "$HOST" "$PORT" || {
+    echo "[railway-entrypoint] ERROR: Postgres not reachable at $HOST:$PORT after 60s. Exiting."
+    exit 1
+  }
+fi
+
+exec mattermost server
