@@ -42,6 +42,9 @@ const Contact = React.lazy(() => import('./pages/Contact'));
 const FAQ = React.lazy(() => import('./pages/FAQ'));
 const HowItWorks = React.lazy(() => import('./pages/HowItWorks'));
 const Support = React.lazy(() => import('./pages/Support'));
+const Payment = React.lazy(() => import('./pages/Payment'));
+const Privacy = React.lazy(() => import('./pages/Privacy'));
+const Terms = React.lazy(() => import('./pages/Terms'));
 // Dashboard pages
 const DashboardWrapper = React.lazy(() => import('./components/Dashboard/DashboardWrapper'));
 const Orders = React.lazy(() => import('./pages/dashboard/Orders'));
@@ -110,6 +113,9 @@ const childRoutes: RouteObject[] = [
   { path: 'faq', element: <FAQ /> },
   { path: 'how-it-works', element: <HowItWorks /> },
   { path: 'support', element: <Support /> },
+  { path: 'payment', element: <Payment /> },
+  { path: 'privacy', element: <Privacy /> },
+  { path: 'terms', element: <Terms /> },
   { path: 'preview', element: <PreviewPage /> },
   
   // Documentation routes
