@@ -7,7 +7,7 @@ USER root
 COPY config/mattermost.json /mattermost/config/config.json
 RUN chown mattermost:mattermost /mattermost/config/config.json
 
-COPY scripts/railway-entrypoint.sh /usr/local/bin/railway-entrypoint.sh
+COPY ./scripts/railway-entrypoint.sh /usr/local/bin/railway-entrypoint.sh
 RUN chmod +x /usr/local/bin/railway-entrypoint.sh \
 	&& chown mattermost:mattermost /usr/local/bin/railway-entrypoint.sh
 
