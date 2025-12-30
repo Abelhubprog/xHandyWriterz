@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import DatabaseService from '@/services/databaseService';
+import databaseService from '@/services/databaseService';
+import type { Comment as CommentType } from '@/services/databaseService';
 import { formatRelativeTime } from '@/utils/formatDate';
 
-interface Comment {
+interface CommentSectionComment {
   id: string;
   content: string;
   created_at: string;
@@ -19,27 +20,42 @@ interface CommentSectionProps {
   isStatic?: boolean;
 }
 
+// Helper to get user display info from Clerk user
+const getUserDisplayInfo = (user: any) => ({
+  imageUrl: user?.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || user?.firstName || 'User')}`,
+  name: user?.fullName || user?.firstName || 'User',
+  id: user?.id || '',
+});
+
 const CommentSection: React.FC<CommentSectionProps> = ({ postId, servicePageId, isStatic = false }) => {
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<CommentSectionComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const userInfo = getUserDisplayInfo(user);
 
   // Load comments
   useEffect(() => {
     const loadComments = async () => {
       try {
         let commentsData;
-        if (postId) {
-          commentsData = await DatabaseService.getCommentsByPostId(postId);
-        } else if (servicePageId) {
-          // Reuse same API for now, can be updated later to have separate function
-          commentsData = await DatabaseService.getCommentsByPostId(servicePageId);
+        const targetId = postId || servicePageId;
+        if (targetId) {
+          commentsData = await databaseService.getCommentsByPostId(targetId);
         }
         
         if (commentsData) {
-          setComments(commentsData);
+          // Transform API response to component format
+          setComments(commentsData.map((c: any) => ({
+            id: c.id,
+            content: c.content,
+            created_at: c.createdAt || c.created_at,
+            user_profiles: {
+              full_name: c.author?.name || 'Anonymous',
+              avatar_url: c.author?.imageUrl || `https://ui-avatars.com/api/?name=User`,
+            },
+          })));
         }
       } catch (err) {
         setError('Failed to load comments');
@@ -68,16 +84,27 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, servicePageId, 
     setError(null);
     
     try {
-      let comment;
-      if (postId) {
-        comment = await DatabaseService.submitComment(postId, user.id, newComment);
-      } else if (servicePageId) {
-        comment = await DatabaseService.submitComment(servicePageId, user.id, newComment);
-      }
-      
-      if (comment) {
-        setComments([comment, ...comments]);
-        setNewComment('');
+      const targetId = postId || servicePageId;
+      if (targetId) {
+        const comment = await databaseService.submitComment({
+          postId: targetId,
+          userId: user.id,
+          content: newComment,
+        });
+        
+        if (comment) {
+          // Add new comment to list with current user's info
+          setComments([{
+            id: comment.id,
+            content: comment.content,
+            created_at: typeof comment.createdAt === 'string' ? comment.createdAt : new Date().toISOString(),
+            user_profiles: {
+              full_name: userInfo.name,
+              avatar_url: userInfo.imageUrl,
+            },
+          }, ...comments]);
+          setNewComment('');
+        }
       }
     } catch (err) {
       setError('Failed to submit comment');
@@ -96,8 +123,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, servicePageId, 
           <div className="flex gap-4 items-start">
             <div className="flex-shrink-0">
               <img 
-                src={user.avatarUrl || 'https://ui-avatars.com/api/?name=' + user.name} 
-                alt={user.name} 
+                src={userInfo.imageUrl} 
+                alt={userInfo.name} 
                 className="w-10 h-10 rounded-full"
               />
             </div>

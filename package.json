@@ -2,20 +2,38 @@
   "name": "handywriterz-monorepo",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@9.15.1",
+  "packageManager": "pnpm@10.16.1",
   "engines": {
     "node": ">=20.10.0 <23"
   },
   "scripts": {
     "preinstall": "corepack enable",
-    "dev": "pnpm --filter web dev",
-    "dev:web": "pnpm --filter web dev",
-    "build": "pnpm --filter web build",
-    "build:web": "pnpm --filter web build",
-    "lint": "pnpm --filter web lint",
-    "type-check": "pnpm --filter web type-check"
+    "dev": "pnpm --filter @handywriterz/web dev",
+    "dev:web": "pnpm --filter @handywriterz/web dev",
+    "dev:api": "pnpm --filter @handywriterz/api dev",
+    "dev:strapi": "pnpm --filter strapi dev",
+
+    "build": "pnpm --filter @handywriterz/web build",
+    "build:web": "pnpm --filter @handywriterz/web build",
+    "build:api": "pnpm --filter @handywriterz/api build",
+    "build:ci": "pnpm --filter @handywriterz/api build && pnpm --filter @handywriterz/web build",
+
+    "lint": "pnpm --filter @handywriterz/web lint",
+    "lint:web": "pnpm --filter @handywriterz/web lint",
+
+    "type-check": "pnpm --filter @handywriterz/web type-check && pnpm --filter @handywriterz/api type-check",
+    "type-check:web": "pnpm --filter @handywriterz/web type-check",
+    "type-check:api": "pnpm --filter @handywriterz/api type-check",
+
+    "start:web": "pnpm --filter @handywriterz/web start",
+    "start:api": "pnpm --filter @handywriterz/api start",
+
+    "check": "pnpm lint:web && pnpm type-check && pnpm build:ci"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2"
+  },
+  "devDependencies": {
+    "baseline-browser-mapping": "^2.9.11"
   }
 }

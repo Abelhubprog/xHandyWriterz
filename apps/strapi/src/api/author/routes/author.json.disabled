@@ -1,0 +1,22 @@
+{
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/authors",
+      "handler": "api::author.author.find",
+      "config": {
+        "policies": [],
+        "middlewares": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/authors/:id",
+      "handler": "api::author.author.findOne",
+      "config": {
+        "policies": [],
+        "middlewares": []
+      }
+    }
+  ]
+}

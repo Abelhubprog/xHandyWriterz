@@ -110,7 +110,6 @@ export default function Services() {
       return response;
     },
     placeholderData: (previous) => previous,
-    keepPreviousData: true,
   });
 
   const { data, error, isLoading, isFetching } = servicesQuery;

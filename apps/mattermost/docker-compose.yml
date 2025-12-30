@@ -1,14 +1,12 @@
-﻿version: '3.9'
-
-services:
+﻿services:
   postgres:
     image: postgres:15
     restart: unless-stopped
     env_file: .env
     environment:
-      POSTGRES_DB: ${MM_DB_NAME}
-      POSTGRES_USER: ${MM_DB_USER}
-      POSTGRES_PASSWORD: ${MM_DB_PASSWORD}
+      POSTGRES_DB: ${MM_DB_NAME:-mattermost}
+      POSTGRES_USER: ${MM_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${MM_DB_PASSWORD:-postgres}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
@@ -23,28 +21,33 @@ services:
     environment:
       MM_SERVICESETTINGS_SITEURL: http://localhost:8065
       MM_SQLSETTINGS_DRIVERNAME: postgres
-      MM_SQLSETTINGS_DATASOURCE: postgres://${MM_DB_USER}:${MM_DB_PASSWORD}@postgres:5432/${MM_DB_NAME}?sslmode=${MM_DB_SSL_MODE}
-      MM_FILESETTINGS_DRIVERNAME: amazons3
-      MM_FILESETTINGS_AMAZONS3ENDPOINT: ${MM_R2_ENDPOINT}
-      MM_FILESETTINGS_AMAZONS3ACCESSKEYID: ${MM_R2_ACCESS_KEY_ID}
-      MM_FILESETTINGS_AMAZONS3SECRETACCESSKEY: ${MM_R2_SECRET_ACCESS_KEY}
-      MM_FILESETTINGS_AMAZONS3BUCKET: ${MM_R2_BUCKET}
-      MM_FILESETTINGS_AMAZONS3REGION: ${MM_R2_REGION}
-      MM_FILESETTINGS_AMAZONS3SSL: "true"
+      MM_SQLSETTINGS_DATASOURCE: postgres://${MM_DB_USER:-postgres}:${MM_DB_PASSWORD:-postgres}@postgres:5432/${MM_DB_NAME:-mattermost}?sslmode=${MM_DB_SSL_MODE:-disable}
+
+      # Local dev default: keep files on the local volume. To use S3/R2/MinIO, set MM_FILE_DRIVER=amazons3.
+      MM_FILESETTINGS_DRIVERNAME: ${MM_FILE_DRIVER:-local}
+
+      # If using S3/R2/MinIO (MM_FILE_DRIVER=amazons3), these defaults point to the bundled MinIO.
+      MM_FILESETTINGS_AMAZONS3ENDPOINT: ${MM_R2_ENDPOINT:-http://minio:9000}
+      MM_FILESETTINGS_AMAZONS3ACCESSKEYID: ${MM_R2_ACCESS_KEY_ID:-minioadmin}
+      MM_FILESETTINGS_AMAZONS3SECRETACCESSKEY: ${MM_R2_SECRET_ACCESS_KEY:-minioadmin}
+      MM_FILESETTINGS_AMAZONS3BUCKET: ${MM_R2_BUCKET:-chat-uploads}
+      MM_FILESETTINGS_AMAZONS3REGION: ${MM_R2_REGION:-us-east-1}
+      MM_FILESETTINGS_AMAZONS3SSL: ${MM_S3_SSL:-"false"}
       MM_FILESETTINGS_AMAZONS3SIGNV2: "false"
       MM_SERVICESETTINGS_ENABLELOCALMODE: "false"
       MM_SERVICESETTINGS_ENABLECOMMANDS: "true"
       MM_AUTHSETTINGS_ENABLESIGNUPWITHEMAIL: "false"
-      MM_AUTHSETTINGS_ENABLESIGNUPWITHEMAIL: "false"
       MM_EMAILSETTINGS_ENABLESIGNUPWITHEMAIL: "false"
-      MM_OAUTHSETTINGS_ENABLE: "true"
+
+      # Disable OIDC by default for local dev; enable explicitly when wiring Clerk/Railway.
+      MM_OAUTHSETTINGS_ENABLE: ${MM_OAUTH_ENABLE:-"false"}
       MM_OAUTHSETTINGS_SERVICENAME: Clerk
-      MM_OAUTHSETTINGS_AUTHORITY: ${MM_OIDC_SERVICE_PROVIDER_IDENTIFIER}
-      MM_OAUTHSETTINGS_DISCOVERYENDPOINT: ${MM_OIDC_DISCOVERY_ENDPOINT}
-      MM_OAUTHSETTINGS_CLIENTID: ${MM_OIDC_CLIENT_ID}
-      MM_OAUTHSETTINGS_CLIENTSECRET: ${MM_OIDC_CLIENT_SECRET}
-      MM_OAUTHSETTINGS_ENABLESIGNUPWITHOIDC: "true"
-      MM_OAUTHSETTINGS_ENABLESIGNINWITHOIDC: "true"
+      MM_OAUTHSETTINGS_AUTHORITY: ${MM_OIDC_SERVICE_PROVIDER_IDENTIFIER:-}
+      MM_OAUTHSETTINGS_DISCOVERYENDPOINT: ${MM_OIDC_DISCOVERY_ENDPOINT:-}
+      MM_OAUTHSETTINGS_CLIENTID: ${MM_OIDC_CLIENT_ID:-}
+      MM_OAUTHSETTINGS_CLIENTSECRET: ${MM_OIDC_CLIENT_SECRET:-}
+      MM_OAUTHSETTINGS_ENABLESIGNUPWITHOIDC: ${MM_OAUTH_ENABLE:-"false"}
+      MM_OAUTHSETTINGS_ENABLESIGNINWITHOIDC: ${MM_OAUTH_ENABLE:-"false"}
       MM_OAUTHSETTINGS_EMAILATTRIBUTE: email
       MM_OAUTHSETTINGS_USERNAMEATTRIBUTE: preferred_username
       MM_OAUTHSETTINGS_LOGINBUTTONTEXT: "Sign in with Clerk"
@@ -58,18 +61,18 @@ services:
       - "8065:8065"
 
   minio:
-    image: minio/minio:RELEASE.2025-01-10T00-00-00Z
+    image: minio/minio:latest
     restart: unless-stopped
     env_file: .env
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     volumes:
       - minio-data:/data
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9100:9000"
+      - "9101:9001"
 
   create-bucket:
     image: minio/mc:latest
@@ -78,11 +81,11 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     env_file: .env
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     command: |
-      "/usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} && \
-       /usr/bin/mc mb -p local/${MINIO_BUCKET_NAME} || true"
+      "/usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin} && \
+       /usr/bin/mc mb -p local/${MINIO_BUCKET_NAME:-chat-uploads} || true"
 
 volumes:
   postgres-data:

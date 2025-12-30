@@ -9,14 +9,13 @@
                 },
     "scripts":  {
                     "dev":  "vite --port 5173",
-                    "dev:api":  "wrangler pages dev ./public --port 8789 --local --compatibility-date=2025-06-17 --compatibility-flags=nodejs_compat",
                     "dev:clean":  "vite --force",
-                    "build":  "tsc -p tsconfig.app.json --skipLibCheck \u0026\u0026 vite build",
+                    "build":  "tsc -p tsconfig.json \u0026\u0026 vite build",
                     "preview":  "node scripts/preview.mjs",
                     "start":  "node scripts/server.mjs",
                     "start:preview":  "node scripts/preview.mjs",
                     "lint":  "eslint --config eslint.config.js \"src/**/*.{ts,tsx,js,jsx}\"",
-                    "type-check":  "tsc -p tsconfig.app.json --noEmit --skipLibCheck",
+                    "type-check":  "tsc -p tsconfig.json --noEmit",
                     "clean":  "rm -rf node_modules/.vite dist"
                 },
     "dependencies":  {
@@ -24,7 +23,6 @@
                          "@clerk/backend":  "^2.14.0",
                          "@clerk/clerk-react":  "^5.31.9",
                          "@clerk/types":  "^4.86.0",
-                         "@cloudflare/workers-types":  "^4.20250607.0",
                          "@emotion/react":  "^11.14.0",
                          "@emotion/styled":  "^11.14.0",
                          "@hookform/resolvers":  "^3.9.0",
@@ -117,8 +115,7 @@
                             "tailwindcss":  "^3.4.1",
                             "typescript":  "^5.7.2",
                             "vite":  "^5.4.10",
-                            "vitest":  "^3.2.4",
-                            "wrangler":  "^4.19.1"
+                            "vitest":  "^3.2.4"
                         },
     "packageManager":  "pnpm@10.16.1+sha512.0e155aa2629db8672b49e8475da6226aa4bdea85fdcdfdc15350874946d4f3c91faaf64cbdc4a5d1ab8002f473d5c3fcedcd197989cf0390f9badd3c04678706"
 }

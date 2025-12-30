@@ -78,8 +78,15 @@ const listSchema = z.object({
 
 type ResolvedUser = { userId: string } | null;
 
-async function resolveUser(req: { headers: Record<string, string | undefined> }, allowAnonymous: boolean): Promise<ResolvedUser> {
-  const authHeader = req.headers.authorization;
+function getHeaderValue(headers: Request['headers'], name: string): string | undefined {
+  const value = headers[name.toLowerCase() as keyof typeof headers];
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) return value[0];
+  return undefined;
+}
+
+async function resolveUser(req: Pick<Request, 'headers'>, allowAnonymous: boolean): Promise<ResolvedUser> {
+  const authHeader = getHeaderValue(req.headers, 'authorization');
   if (authHeader) {
     const user = await verifyClerkToken(authHeader.replace('Bearer ', ''));
     if (user) {
@@ -98,6 +105,10 @@ function sanitizeFileName(name: string): string {
   return name.replace(/[^a-zA-Z0-9_.-]/g, '_');
 }
 
+async function presignUrl(command: PutObjectCommand | GetObjectCommand): Promise<string> {
+  return getSignedUrl(s3Client as unknown as any, command as any, { expiresIn: PRESIGN_EXPIRES });
+}
+
 async function buildPresignedPut(key: string, contentType: string, userId: string, contentLength?: number) {
   const command = new PutObjectCommand({
     Bucket: BUCKET,
@@ -110,7 +121,7 @@ async function buildPresignedPut(key: string, contentType: string, userId: strin
     },
   });
 
-  const url = await getSignedUrl(s3Client, command, { expiresIn: PRESIGN_EXPIRES });
+  const url = await presignUrl(command);
 
   return {
     url,
@@ -149,7 +160,7 @@ async function handlePresignGet(req: Request, res: Response) {
       Key: key,
     });
 
-    const url = await getSignedUrl(s3Client as any, command, { expiresIn: PRESIGN_EXPIRES });
+    const url = await presignUrl(command);
 
     res.json({
       url,

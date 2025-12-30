@@ -358,6 +358,118 @@ export class DatabaseService {
       throw error;
     }
   }
+
+  // ============================================
+  // Comment-related methods
+  // ============================================
+
+  /**
+   * Get comments for a specific post
+   */
+  async getCommentsByPostId(postId: string): Promise<Comment[]> {
+    try {
+      const response = await fetch(`${this.apiUrl}/comments?postId=${postId}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch comments: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.comments || data.rows || [];
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Submit a new comment
+   */
+  async submitComment(comment: {
+    postId: string;
+    userId: string;
+    content: string;
+    parentId?: string;
+  }): Promise<Comment> {
+    try {
+      const response = await fetch(`${this.apiUrl}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(comment),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to submit comment: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a comment
+   */
+  async deleteComment(commentId: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.apiUrl}/comments/${commentId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete comment: ${response.statusText}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a comment
+   */
+  async updateComment(
+    commentId: string,
+    content: string
+  ): Promise<Comment> {
+    try {
+      const response = await fetch(`${this.apiUrl}/comments/${commentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update comment: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      throw error;
+    }
+  }
+}
+
+// Comment interface
+export interface Comment {
+  id: string;
+  postId: string;
+  userId: string;
+  content: string;
+  parentId?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  author?: {
+    id: string;
+    name: string;
+    imageUrl?: string;
+  };
+  replies?: Comment[];
 }
 
 // Export singleton instance

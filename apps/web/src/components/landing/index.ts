@@ -2,7 +2,7 @@
 // World-class components for CMS-driven content pages
 
 // Article Components
-export { ArticleCard, type ArticleCardProps, type Article } from './ArticleCard';
+export { ArticleCard, type ArticleCardProps } from './ArticleCard';
 export { FeaturedGrid, type FeaturedGridProps } from './FeaturedGrid';
 
 // Author Components

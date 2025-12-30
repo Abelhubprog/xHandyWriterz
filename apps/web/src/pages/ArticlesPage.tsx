@@ -53,9 +53,11 @@ const stagger = {
 };
 
 // Domain filter options
+import { DOMAIN_CONFIG } from '@/contexts/CMSContext';
+
 const DOMAIN_OPTIONS = [
   { value: '', label: 'All Domains' },
-  ...DOMAINS.map(d => ({ value: d.slug, label: d.name })),
+  ...DOMAINS.map(d => ({ value: d, label: DOMAIN_CONFIG[d]?.name || d })),
 ];
 
 // View mode component
@@ -263,6 +265,7 @@ export default function ArticlesPage() {
                   <button
                     onClick={() => setSearchQuery('')}
                     className="absolute right-5 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-colors"
+                    aria-label="Clear search"
                   >
                     <X className="w-4 h-4 text-blue-200" />
                   </button>
@@ -282,6 +285,7 @@ export default function ArticlesPage() {
                 <select
                   value={selectedDomain}
                   onChange={(e) => setSelectedDomain(e.target.value)}
+                  aria-label="Filter by domain"
                   className="appearance-none px-4 py-2 pr-10 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 >
                   {DOMAIN_OPTIONS.map(opt => (
@@ -297,6 +301,7 @@ export default function ArticlesPage() {
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
+                    aria-label="Filter by category"
                     className="appearance-none px-4 py-2 pr-10 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   >
                     <option value="">All Categories</option>

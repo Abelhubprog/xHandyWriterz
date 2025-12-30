@@ -92,7 +92,7 @@ export default function ServicesHub({ className = '' }: ServicesHubProps) {
       });
       return response.items;
     },
-    keepPreviousData: true,
+    placeholderData: (previous) => previous,
   });
 
   const filteredContent = useMemo(() => {

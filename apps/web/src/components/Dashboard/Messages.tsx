@@ -24,7 +24,7 @@ import {
   Tooltip,
   Divider
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { styled } from '@mui/system';
 import { 
   Send as SendIcon, 
   AttachFile as AttachFileIcon,
@@ -77,53 +77,53 @@ interface Profile {
   role?: string;
 }
 
-const MessageList = styled(List)(({ theme }) => ({
+const MessageList = styled(List)(({ theme }: { theme?: any }) => ({
   height: '60vh',
   overflowY: 'auto',
-  padding: theme.spacing(1),
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: theme.shape.borderRadius,
+  padding: theme?.spacing?.(1) || '8px',
+  backgroundColor: theme?.palette?.background?.paper || '#fff',
+  borderRadius: theme?.shape?.borderRadius || '4px',
 }));
 
-const ConversationItem = styled(ListItem)<{ selected?: boolean }>(({ theme, selected }) => ({
-  borderRadius: theme.shape.borderRadius,
-  marginBottom: theme.spacing(1),
-  backgroundColor: selected ? theme.palette.action.selected : 'transparent',
+const ConversationItem = styled(ListItem)<{ selected?: boolean }>(({ theme, selected }: { theme?: any; selected?: boolean }) => ({
+  borderRadius: theme?.shape?.borderRadius || '4px',
+  marginBottom: theme?.spacing?.(1) || '8px',
+  backgroundColor: selected ? (theme?.palette?.action?.selected || 'rgba(0, 0, 0, 0.08)') : 'transparent',
   '&:hover': {
-    backgroundColor: selected ? theme.palette.action.selected : theme.palette.action.hover,
+    backgroundColor: selected ? (theme?.palette?.action?.selected || 'rgba(0, 0, 0, 0.08)') : (theme?.palette?.action?.hover || 'rgba(0, 0, 0, 0.04)'),
   },
 }));
 
-const MessageItem = styled(Box)<{ isSent: boolean }>(({ theme, isSent }) => ({
+const MessageItem = styled(Box)<{ isSent: boolean }>(({ theme, isSent }: { theme?: any; isSent: boolean }) => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: isSent ? 'flex-end' : 'flex-start',
-  marginBottom: theme.spacing(2),
+  marginBottom: theme?.spacing?.(2) || '16px',
 }));
 
-const MessageBubble = styled(Box)<{ isSent: boolean }>(({ theme, isSent }) => ({
-  backgroundColor: isSent ? theme.palette.primary.main : theme.palette.grey[100],
-  color: isSent ? theme.palette.primary.contrastText : theme.palette.text.primary,
+const MessageBubble = styled(Box)<{ isSent: boolean }>(({ theme, isSent }: { theme?: any; isSent: boolean }) => ({
+  backgroundColor: isSent ? (theme?.palette?.primary?.main || '#1976d2') : (theme?.palette?.grey?.[100] || '#f5f5f5'),
+  color: isSent ? (theme?.palette?.primary?.contrastText || '#fff') : (theme?.palette?.text?.primary || '#000'),
   borderRadius: '18px',
-  padding: theme.spacing(1.5, 2),
+  padding: theme?.spacing?.(1.5, 2) || '12px 16px',
   maxWidth: '70%',
   wordBreak: 'break-word',
 }));
 
-const MessageTime = styled(Typography)(({ theme }) => ({
+const MessageTime = styled(Typography)(({ theme }: { theme?: any }) => ({
   fontSize: '0.75rem',
-  color: theme.palette.text.secondary,
-  marginTop: theme.spacing(0.5),
+  color: theme?.palette?.text?.secondary || '#666',
+  marginTop: theme?.spacing?.(0.5) || '4px',
 }));
 
-const MessageAttachment = styled(Box)(({ theme }) => ({
+const MessageAttachment = styled(Box)(({ theme }: { theme?: any }) => ({
   display: 'flex',
   alignItems: 'center',
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: theme.shape.borderRadius,
-  padding: theme.spacing(0.5, 1),
-  marginTop: theme.spacing(1),
-  border: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme?.palette?.background?.paper || '#fff',
+  borderRadius: theme?.shape?.borderRadius || '4px',
+  padding: theme?.spacing?.(0.5, 1) || '4px 8px',
+  marginTop: theme?.spacing?.(1) || '8px',
+  border: `1px solid ${theme?.palette?.divider || '#e0e0e0'}`,
 }));
 
 const VisuallyHiddenInput = styled('input')({
@@ -540,7 +540,7 @@ const Messages: React.FC = () => {
         <Paper sx={{ p: 2, mb: 4 }}>
           <Grid container gap="2">
             {/* Conversations List */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Box sx={{ mb: 2 }}>
                 <TextField
                   fullWidth
@@ -718,7 +718,7 @@ const Messages: React.FC = () => {
             </Grid>
 
             {/* Messages */}
-            <Grid item xs={12} md={8}>
+            <Grid size={{ xs: 12, md: 8 }}>
               {selectedConversation ? (
                 <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

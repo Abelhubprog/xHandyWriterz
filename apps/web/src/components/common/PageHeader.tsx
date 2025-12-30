@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Container } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { styled } from '@mui/system';
 
 interface PageHeaderProps {
   title: string;
@@ -10,12 +10,12 @@ interface PageHeaderProps {
 
 const HeaderContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
-  backgroundColor: theme.palette.primary.main,
+  backgroundColor: (theme as any).palette?.primary?.main || '#1976d2',
   backgroundSize: 'cover',
   backgroundPosition: 'center',
-  color: theme.palette.common.white,
-  padding: theme.spacing(8, 0),
-  marginBottom: theme.spacing(4),
+  color: (theme as any).palette?.common?.white || '#fff',
+  padding: (theme as any).spacing?.(8, 0) || '64px 0',
+  marginBottom: (theme as any).spacing?.(4) || '32px',
   '&::before': {
     content: '""',
     position: 'absolute',

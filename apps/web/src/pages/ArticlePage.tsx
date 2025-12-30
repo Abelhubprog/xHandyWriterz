@@ -21,7 +21,7 @@ import {
   Eye,
   Share2,
   Bookmark,
-  BookmarkCheck,
+  BookmarkMinus,
   Twitter,
   Facebook,
   Linkedin,
@@ -409,7 +409,10 @@ export default function ArticlePage() {
           {/* Share & Bookmark */}
           <div className="flex items-center justify-between pb-8 border-b border-gray-200 dark:border-gray-800">
             <ShareButtons title={article.title} url={currentUrl} />
-            <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors">
+            <button
+              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
+              aria-label="Bookmark article"
+            >
               <Bookmark className="w-5 h-5" />
             </button>
           </div>

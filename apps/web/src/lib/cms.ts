@@ -1,6 +1,8 @@
 ﻿import { env } from '@/env';
 import type {
   ArticleSummary,
+  DomainFaq,
+  DomainFeature,
   DomainHighlight,
   DomainListItem,
   DomainPage,
