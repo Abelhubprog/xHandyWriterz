@@ -218,7 +218,7 @@
         "MaxFileSize": 104857600,
         "MaxImageResolution": 33177600,
         "MaxImageDecoderConcurrency": -1,
-        "DriverName": "local",
+        "DriverName": "amazons3",
         "Directory": "./data/",
         "EnablePublicLink": false,
         "ExtractContent": true,
