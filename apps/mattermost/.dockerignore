@@ -1,0 +1,6 @@
+# Ignore nothing by default
+# (Explicitly allow config/ and scripts/ for Docker build context)
+!config/
+!scripts/
+!config/mattermost.json
+!scripts/railway-entrypoint.sh
