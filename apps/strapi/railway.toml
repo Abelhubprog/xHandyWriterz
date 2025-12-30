@@ -1,5 +1,6 @@
 [build]
 builder = "NIXPACKS"
+contextPath = "."
 
 [deploy]
 healthcheckPath = "/_health"
