@@ -62,13 +62,40 @@ if [ -n "$POSTGRES_HOST" ]; then
   PORT=${PORT:-5432}
   echo "[railway-entrypoint] Waiting for Postgres at $HOST:$PORT..."
   for i in $(seq 1 30); do
-    nc -z "$HOST" "$PORT" && break
+    if command -v nc >/dev/null 2>&1; then
+      nc -z "$HOST" "$PORT" && break
+    elif command -v bash >/dev/null 2>&1; then
+      bash -c ">/dev/tcp/${HOST}/${PORT}" >/dev/null 2>&1 && break
+    else
+      if command -v getent >/dev/null 2>&1; then
+        getent hosts "$HOST" >/dev/null 2>&1 && break
+      fi
+    fi
     sleep 2
   done
-  nc -z "$HOST" "$PORT" || {
-    echo "[railway-entrypoint] ERROR: Postgres not reachable at $HOST:$PORT after 60s. Exiting."
-    exit 1
-  }
+
+  # Final check using whatever method is available
+  if command -v nc >/dev/null 2>&1; then
+    nc -z "$HOST" "$PORT" || {
+      echo "[railway-entrypoint] ERROR: Postgres not reachable at $HOST:$PORT after 60s. Exiting."
+      exit 1
+    }
+  elif command -v bash >/dev/null 2>&1; then
+    bash -c ">/dev/tcp/${HOST}/${PORT}" >/dev/null 2>&1 || {
+      echo "[railway-entrypoint] ERROR: Postgres not reachable at $HOST:$PORT after 60s. Exiting."
+      exit 1
+    }
+  else
+    # No robust TCP check available; attempt a best-effort DNS resolution and warn.
+    if command -v getent >/dev/null 2>&1; then
+      getent hosts "$HOST" >/dev/null 2>&1 || {
+        echo "[railway-entrypoint] ERROR: Could not resolve Postgres host $HOST. Exiting."
+        exit 1
+      }
+    else
+      echo "[railway-entrypoint] WARNING: No 'nc', 'bash /dev/tcp' or 'getent' available to validate Postgres connectivity. Proceeding to start Mattermost (may fail)."
+    fi
+  fi
 fi
 
 exec mattermost server
