@@ -54,14 +54,22 @@ sanitize_var MM_FILESETTINGS_EXPORTAMAZONS3ENDPOINT
 # Some setups use an intermediate variable that then gets mapped into MM_*.
 sanitize_var MM_R2_ENDPOINT
 
-POSTGRES_HOST="${MM_SQLSETTINGS_DATASOURCE:-}"
-if [ -n "$POSTGRES_HOST" ]; then
-  # Extract host/port from postgres://user:pass@host:port/db?params
-  HOST=$(echo "$POSTGRES_HOST" | sed -E 's#^postgres://[^@]+@([^:/]+).*#\1#')
-  PORT=$(echo "$POSTGRES_HOST" | sed -E 's#^postgres://[^@]+@[^:/]+:([0-9]+).*#\1#')
+POSTGRES_RAW="${MM_SQLSETTINGS_DATASOURCE:-}"
+if [ -n "$POSTGRES_RAW" ]; then
+  # Extract the first postgres/postgresql DSN if the env contains multiple values
+  CLEAN_DS=$(echo "$POSTGRES_RAW" | grep -o -E 'postgresql?://[^[:space:]]+' | head -n1 2>/dev/null || true)
+  if [ -z "$CLEAN_DS" ]; then
+    CLEAN_DS="$POSTGRES_RAW"
+  fi
+
+  # Extract host/port from DSN like postgres://user:pass@host:port/db?params
+  HOST=$(echo "$CLEAN_DS" | sed -E 's#^postgresql?://[^@]+@([^:/]+).*#\1#')
+  PORT=$(echo "$CLEAN_DS" | sed -E 's#^postgresql?://[^@]+@[^:/]+:([0-9]+).*#\1#')
   PORT=${PORT:-5432}
-  echo "[railway-entrypoint] Waiting for Postgres at $HOST:$PORT..."
-  for i in $(seq 1 30); do
+
+  echo "[railway-entrypoint] Waiting for Postgres at $HOST:$PORT (from DSN)..."
+  # Increase attempts to allow cloud DB cold-starts
+  for i in $(seq 1 60); do
     if command -v nc >/dev/null 2>&1; then
       nc -z "$HOST" "$PORT" && break
     elif command -v bash >/dev/null 2>&1; then
@@ -77,16 +85,15 @@ if [ -n "$POSTGRES_HOST" ]; then
   # Final check using whatever method is available
   if command -v nc >/dev/null 2>&1; then
     nc -z "$HOST" "$PORT" || {
-      echo "[railway-entrypoint] ERROR: Postgres not reachable at $HOST:$PORT after 60s. Exiting."
+      echo "[railway-entrypoint] ERROR: Postgres not reachable at $HOST:$PORT after timeout. Exiting."
       exit 1
     }
   elif command -v bash >/dev/null 2>&1; then
     bash -c ">/dev/tcp/${HOST}/${PORT}" >/dev/null 2>&1 || {
-      echo "[railway-entrypoint] ERROR: Postgres not reachable at $HOST:$PORT after 60s. Exiting."
+      echo "[railway-entrypoint] ERROR: Postgres not reachable at $HOST:$PORT after timeout. Exiting."
       exit 1
     }
   else
-    # No robust TCP check available; attempt a best-effort DNS resolution and warn.
     if command -v getent >/dev/null 2>&1; then
       getent hosts "$HOST" >/dev/null 2>&1 || {
         echo "[railway-entrypoint] ERROR: Could not resolve Postgres host $HOST. Exiting."
@@ -96,6 +103,7 @@ if [ -n "$POSTGRES_HOST" ]; then
       echo "[railway-entrypoint] WARNING: No 'nc', 'bash /dev/tcp' or 'getent' available to validate Postgres connectivity. Proceeding to start Mattermost (may fail)."
     fi
   fi
+fi
 fi
 
 exec mattermost server
