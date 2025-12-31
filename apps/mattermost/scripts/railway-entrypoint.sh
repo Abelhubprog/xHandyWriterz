@@ -104,6 +104,4 @@ if [ -n "$POSTGRES_RAW" ]; then
     fi
   fi
 fi
-fi
-
 exec mattermost server
