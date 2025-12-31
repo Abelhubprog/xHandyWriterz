@@ -54,6 +54,18 @@ sanitize_var MM_FILESETTINGS_EXPORTAMAZONS3ENDPOINT
 # Some setups use an intermediate variable that then gets mapped into MM_*.
 sanitize_var MM_R2_ENDPOINT
 
+# If Railway (or platform) provides $PORT, bind Mattermost to it so routing works
+if [ -n "${PORT:-}" ]; then
+  export MM_SERVICESETTINGS_LISTENADDRESS=":${PORT}"
+  echo "[railway-entrypoint] Exported MM_SERVICESETTINGS_LISTENADDRESS=:${PORT}"
+fi
+
+# Allow setting canonical domain via CANONICAL_DOMAIN env (preferred)
+if [ -n "${CANONICAL_DOMAIN:-}" ]; then
+  export MM_SERVICESETTINGS_SITEURL="https://${CANONICAL_DOMAIN}"
+  echo "[railway-entrypoint] Exported MM_SERVICESETTINGS_SITEURL=https://${CANONICAL_DOMAIN}"
+fi
+
 POSTGRES_RAW="${MM_SQLSETTINGS_DATASOURCE:-}"
 if [ -n "$POSTGRES_RAW" ]; then
   # Extract the first postgres/postgresql DSN if the env contains multiple values
