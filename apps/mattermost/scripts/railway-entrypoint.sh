@@ -54,8 +54,7 @@ sanitize_var MM_FILESETTINGS_EXPORTAMAZONS3ENDPOINT
 # Some setups use an intermediate variable that then gets mapped into MM_*.
 sanitize_var MM_R2_ENDPOINT
 
-exec mattermost server
-POSTGRES_HOST="${MM_SQLSETTINGS_DATASOURCE:-}""
+POSTGRES_HOST="${MM_SQLSETTINGS_DATASOURCE:-}"
 if [ -n "$POSTGRES_HOST" ]; then
   # Extract host/port from postgres://user:pass@host:port/db?params
   HOST=$(echo "$POSTGRES_HOST" | sed -E 's#^postgres://[^@]+@([^:/]+).*#\1#')
